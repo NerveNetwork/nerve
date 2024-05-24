@@ -82,5 +82,9 @@ public interface ConverterCmdConstant {
     String FIND_BY_WITHDRAWAL_TX_HASH = "cv_findByWithdrawalTxHash";
     String RETRY_VIRTUAL_BANK = "cv_retryVirtualBank";
     String GAS_LIMIT_OF_HETEROGENEOUS_CHAINS = "cv_gasLimitOfHeterogeneousChains";
+    String CHAIN_WITHDRAWAL_FEE = "cv_chainWithdrawalFee";
+    String HAS_RECORD_FEE_PAYMENT = "cv_hasRecordFeePayment";
+    String WITHDRAWAL_FEE_LOG = "cv_withdrawalFeeLog";
+    String MINIMUM_FEE_OF_WITHDRAWAL = "cv_minimumFeeOfWithdrawal";
 
 }

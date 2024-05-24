@@ -23,7 +23,6 @@
  */
 package network.nerve.converter.heterogeneouschain.eth.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Address;
 import io.nuls.core.constant.BaseConstant;
@@ -32,35 +31,28 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.crypto.Sha256Hash;
 import io.nuls.core.crypto.Sha512Hash;
 import io.nuls.core.io.IoUtils;
-import io.nuls.core.log.Log;
 import io.nuls.core.model.ArraysTool;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.parse.SerializeUtils;
 import network.nerve.converter.heterogeneouschain.eth.base.Base;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
-import network.nerve.converter.heterogeneouschain.btc.BTCUtilsTest;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
-import org.bitcoinj.base.SegwitAddress;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.crypto.*;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.wallet.DeterministicSeed;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.math.ec.FixedPointCombMultiplier;
 import org.ethereum.crypto.ECKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.web3j.crypto.*;
-import org.web3j.protocol.ObjectMapperFactory;
 import org.web3j.utils.Numeric;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
 
 import static io.nuls.core.crypto.ECKey.CURVE;
 import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.PUBLIC_KEY_UNCOMPRESSED_PREFIX;
@@ -93,7 +85,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b";
+        String prikey = "c48f55dbe619e83502be1f72c875ed616aeaab6108196f0d644d72e992f6a155";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -362,8 +354,8 @@ public class EthAccountTest extends Base {
 
         // 79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
 
-        SegwitAddress segwitAddress = SegwitAddress.fromProgram(MainNetParams.get(), 1, HexUtil.decode(outKey));
-        System.out.println("toBech32: " + segwitAddress.toBech32());
+        //SegwitAddress segwitAddress = SegwitAddress.fromProgram(MainNetParams.get(), 1, HexUtil.decode(outKey));
+        //System.out.println("toBech32: " + segwitAddress.toBech32());
         //
         //Bech32.Bech32Data decode = Bech32.decode(address);
         //System.out.println("data: " + HexUtil.encode(decode.data));
@@ -400,18 +392,18 @@ public class EthAccountTest extends Base {
         //System.out.println("toBech32: " + segwitAddress.toBech32());
     }
 
-    @Test
+    /*@Test
     public void testTapTweak() throws Exception {
         test1();
         //test2();
         test3();
         test4();
         //test5();
-    }
+    }*/
 
     //String pub = "02872aa57efbea3a0e1ec23eccb74bb9c64b9d35e4dc75319506ae52cc80b2391d";
     String pub = "02cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115";
-    @Test
+    /*@Test
     public void test5() throws Exception {
         org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode(pub));
         ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
@@ -465,7 +457,7 @@ public class EthAccountTest extends Base {
         ECPoint Q = pubKeyPoint.add(tMultiplyG);
 
         printQxcoordAndSegwitAddress(Q);
-    }
+    }*/
     /** taprootAddress generation rules (ECPoint.addMethod error, related totaprootIncompatible rules, unknown reason)
     Compute the public key P = privkey * G.
     Let Pb be the serialization of P in x-only form.
@@ -474,7 +466,7 @@ public class EthAccountTest extends Base {
     Let Qb be the serialization of Q in x-only form.
     The address is bech32m_encode(payload=Qb, version=1).
     */
-    @Test
+    /*@Test
     public void test3() throws Exception {
         org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode(pub));
         ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
@@ -532,9 +524,9 @@ public class EthAccountTest extends Base {
         System.out.println();
 
 
-    }
+    }*/
 
-    private static final BigInteger p = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16);
+    /*private static final BigInteger p = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16);
 
     public static ECPoint point_mul(ECPoint P, BigInteger n) {
         ECPoint R = null;
@@ -572,7 +564,7 @@ public class EthAccountTest extends Base {
         }
         BigInteger x3 = (lam.multiply(lam).subtract(x(P1)).subtract(x(P2))).mod(p);
         return org.bitcoinj.crypto.ECKey.CURVE.getCurve().createPoint(x3, (lam.multiply(x(P1).subtract(x3)).subtract(y(P1))).mod(p));
-    }
+    }*/
 
     public static byte[] taggedHash(String tag, byte[] msg) {
         byte[] tagHash = Sha256Hash.hash(tag.getBytes());
@@ -587,7 +579,7 @@ public class EthAccountTest extends Base {
         return Sha256Hash.hash(input);
     }
 
-    public static byte[] taggedHash5(String tag, byte[] msg) throws Exception {
+    /*public static byte[] taggedHash5(String tag, byte[] msg) throws Exception {
         byte[] tagHash = Sha256Hash.hash(tag.getBytes());
         byte[] input = new byte[tagHash.length + msg.length];
         System.arraycopy(tagHash, 0, input, 0, tagHash.length);
@@ -614,7 +606,7 @@ public class EthAccountTest extends Base {
         BigInteger tagHashBig = new BigInteger(tagHash);
         BigInteger input = tagHashBig.add(tagHashBig).add(new BigInteger(msg));
         return Sha256Hash.hash(input.toByteArray());
-    }
+    }*/
 
     /**
      * Isolation Witness Address Native
@@ -646,19 +638,19 @@ public class EthAccountTest extends Base {
     //    }
     //}
 
-    @Test
+    /*@Test
     public void btcAddressTest() {
         boolean mainnet = true;
         String pubKey = "03c08a1dc38138e28be8af6268da3d3bb58db64fd13c8cd2bc9870ac4ad59787b5";
         System.out.println(genSegWitCompatibleAddress(pubKey, mainnet));
         System.out.println(getBtcSegregatedWitnessAddressByPubkey(pubKey));
-    }
+    }*/
     /**
      * Generate native isolation witness address
      * @param mnemonic
      * @return
      */
-    public static String getBtcSegregatedWitnessAddress(String prikey) {
+    /*public static String getBtcSegregatedWitnessAddress(String prikey) {
         String address = "";
         try {
             NetworkParameters networkParameters = MainNetParams.get();
@@ -671,9 +663,9 @@ public class EthAccountTest extends Base {
             e.printStackTrace();
         }
         return address;
-    }
+    }*/
 
-    @Test
+    /*@Test
     public void segWitCompatibleAddressTest() {
         boolean mainnet = true;
         //String pubKey = "03f028892bad7ed57d2fb57bf33081d5cfcf6f9ed3d3d7f159c2e2fff579dc341a";
@@ -703,7 +695,7 @@ public class EthAccountTest extends Base {
             e.printStackTrace();
         }
         return address;
-    }
+    }*/
 
     @Test
     public void btcPriTest() throws Exception {
@@ -772,9 +764,12 @@ public class EthAccountTest extends Base {
 
     @Test
     public void addressByPubkey() {
-        String compressedPubHex = "039e66a8c9371278966124a1e4f5f93b1fc8573b33661145f42936f8346c4c376f";
-        io.nuls.core.crypto.ECKey ecKey = io.nuls.core.crypto.ECKey.fromPublicOnly(Numeric.hexStringToByteArray(compressedPubHex));
+        String pubHex = "0x0400fc78c84f04ba951bca59c40e781c7c540b8d543bad1ea4431522b8853e7dae3b17f092d6c21addb3f8b9fbbd4231db129f76d047b9f483fb5b3ff855b88a99";
+        io.nuls.core.crypto.ECKey ecKey = io.nuls.core.crypto.ECKey.fromPublicOnly(Numeric.hexStringToByteArray(pubHex));
         String uncompressedPubHex = Numeric.toHexStringNoPrefix(ecKey.getPubKeyPoint().getEncoded(false));
+        String compressedPubHex = Numeric.toHexStringNoPrefix(ecKey.getPubKeyPoint().getEncoded(true));
+        System.out.println(String.format("uncompressedPubHex : %s", uncompressedPubHex));
+        System.out.println(String.format("compressedPubHex : %s", compressedPubHex));
         String address = Numeric.prependHexPrefix(Keys.getAddress(Numeric.prependHexPrefix(uncompressedPubHex.substring(2))));
         System.out.println(address);
     }
@@ -966,16 +961,6 @@ public class EthAccountTest extends Base {
     }
 
     /**
-     * Introduction test for mnemonic words
-     */
-    @Test
-    public void importByMnemonicest() throws Exception {
-        String mnemonic = "deny they health custom company worth tank hungry police direct eternal urban";
-        String password = "";
-        System.out.println(JSONUtils.obj2PrettyJson(importByMnemonic("m/44'/60'/0'/0/0", Arrays.asList(mnemonic.split(" ")), password)));
-    }
-
-    /**
      * Introduction test for mnemonic wordsII
      */
     @Test
@@ -992,73 +977,6 @@ public class EthAccountTest extends Base {
     public void test() {
         String b64 = "ZGVueSB0aGV5IGhlYWx0aCBjdXN0b20gY29tcGFueSB3b3J0aCB0YW5rIGh1bmdyeSBwb2xpY2UgZGlyZWN0IGV0ZXJuYWwgdXJiYW4=";
         System.out.println(Numeric.toHexString(Base64.getDecoder().decode(b64)));
-    }
-
-    /**
-     * Importing wallets through mnemonics
-     *
-     * @param path      Mnemonic path  What protocol does the user provide for generating
-     * @param mnemonics Mnemonic words
-     * @param password  password
-     * @return
-     */
-    private Map importByMnemonic(String path, List<String> mnemonics, String password) {
-        //There are regulations regarding the protocol and path, and it is also necessary to verify them here
-        if (!path.startsWith("m") && !path.startsWith("M")) {
-            throw new RuntimeException("Please enter the correct path");
-        }
-
-        String[] pathArray = path.split("/");
-        long creationTimeSeconds = System.currentTimeMillis() / 1000;
-        //The main difference here is that it will be different. Originally, it was randomly generated, but this time we will replace it with user mnemonic word construction
-        DeterministicSeed ds = new DeterministicSeed(mnemonics, null, "", creationTimeSeconds);
-        //Root private key
-        byte[] seedBytes = ds.getSeedBytes();
-        System.out.println("seedBytes: " + Numeric.toHexString(seedBytes));
-        //Mnemonic words
-        List<String> mnemonic = ds.getMnemonicCode();
-        try {
-            //Mnemonic seed
-            byte[] mnemonicSeedBytes = MnemonicCode.INSTANCE.toEntropy(mnemonic);
-            ECKeyPair mnemonicKeyPair = ECKeyPair.create(mnemonicSeedBytes);
-            WalletFile walletFile = Wallet.createLight(password, mnemonicKeyPair);
-            ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-            //Save thiskeystore Delete after use
-            String jsonStr = objectMapper.writeValueAsString(walletFile);
-            //validate
-            WalletFile checkWalletFile = objectMapper.readValue(jsonStr, WalletFile.class);
-            ECKeyPair ecKeyPair = Wallet.decrypt(password, checkWalletFile);
-            byte[] checkMnemonicSeedBytes = Numeric.hexStringToByteArray(ecKeyPair.getPrivateKey().toString(16));
-            List<String> checkMnemonic = MnemonicCode.INSTANCE.toMnemonic(checkMnemonicSeedBytes);
-        } catch (MnemonicException.MnemonicLengthException | MnemonicException.MnemonicWordException | MnemonicException.MnemonicChecksumException | CipherException | IOException e) {
-            Log.error("Account generation exception", e);
-        }
-        if (seedBytes == null) {
-            return null;
-        }
-        DeterministicKey dkKey = HDKeyDerivation.createMasterPrivateKey(seedBytes);
-        for (int i = 1; i < pathArray.length; i++) {
-            ChildNumber childNumber;
-            if (pathArray[i].endsWith("'")) {
-                int number = Integer.parseInt(pathArray[i].substring(0,
-                        pathArray[i].length() - 1));
-                childNumber = new ChildNumber(number, true);
-            } else {
-                int number = Integer.parseInt(pathArray[i]);
-                childNumber = new ChildNumber(number, false);
-            }
-            dkKey = HDKeyDerivation.deriveChildKey(dkKey, childNumber);
-        }
-        ECKeyPair keyPair = ECKeyPair.create(dkKey.getPrivKeyBytes());
-        String privateKey = keyPair.getPrivateKey().toString(16);
-        String publicKey = keyPair.getPublicKey().toString(16);
-        String address = "0x" + Keys.getAddress(publicKey);
-        Map resultMap = new LinkedHashMap();
-        resultMap.put("mnemonic", mnemonic);
-        resultMap.put("privateKey", privateKey);
-        resultMap.put("publicKey", publicKey);
-        resultMap.put("address", address);
-        return resultMap;
     }
 
 

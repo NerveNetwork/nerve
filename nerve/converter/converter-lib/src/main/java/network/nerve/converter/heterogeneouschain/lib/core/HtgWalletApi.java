@@ -63,7 +63,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     private static LoadingCache<TxKey, org.web3j.protocol.core.methods.response.Transaction> TX_CACHE = CacheBuilder.newBuilder()
             .initialCapacity(50)
             .maximumSize(200)
-            .expireAfterAccess(20, TimeUnit.MINUTES)
+            .expireAfterWrite(20, TimeUnit.MINUTES)
             .build(new CacheLoader<TxKey, org.web3j.protocol.core.methods.response.Transaction>() {
                 @Override
                 public org.web3j.protocol.core.methods.response.Transaction load(TxKey txKey) throws Exception {
@@ -74,7 +74,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     private static LoadingCache<TxKey, TransactionReceipt> TX_RECEIPT_CACHE = CacheBuilder.newBuilder()
             .initialCapacity(50)
             .maximumSize(200)
-            .expireAfterAccess(20, TimeUnit.MINUTES)
+            .expireAfterWrite(20, TimeUnit.MINUTES)
             .build(new CacheLoader<TxKey, TransactionReceipt>() {
                 @Override
                 public TransactionReceipt load(TxKey txKey) throws Exception {

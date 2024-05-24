@@ -807,6 +807,14 @@ public class TrxWalletApiTest extends Base {
     }
 
     @Test
+    public void balanceTest() throws Exception {
+        setMain();
+        String addr = "TVhwJEU8vZ1xxV87Uja17tdZ7y6EpXTTYh";
+        BigDecimal accountBalance = BigDecimal.valueOf(wrapper.getAccountBalance(addr));
+        System.out.println(String.format("addr: %s, balance: %s", addr, accountBalance));
+    }
+
+    @Test
     public void getTxAndParseInput() throws Exception {
         setMain();
         String txHash = "a904f0139eb4c2aa9396aa4584944598d262906105d4b9b6677ab4b688807be4";
@@ -845,6 +853,17 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
+        setMain();
+        String txHash = "8d0e702f85d492bd1e05671a70d5ab931be4c5b17ebe80019a87be9f138d7314";
+        Chain.Transaction tx = wrapper.getTransactionById(txHash);
+        System.out.println(tx.getRet(0).getContractRet());
+        System.out.println(tx.toString());
+        System.out.println(TrxUtil.calcTxHash(tx));
+        System.out.println(tx.getRet(0).getContractRet() == Chain.Transaction.Result.contractResult.SUCCESS);
+    }
+
+    @Test
+    public void getTxData() throws Exception {
         setMain();
         String txHash = "12c56780bb77f11ac7299e28dc6514a55eb02a2be22303b49a44bef6664c8e2f";
         Chain.Transaction tx = wrapper.getTransactionById(txHash);
@@ -1032,6 +1051,12 @@ public class TrxWalletApiTest extends Base {
         }
     }
 
+    @Test
+    public void getBlockTest() throws Exception {
+        setMain();
+        Response.BlockExtention block = walletApi.getBlockByHeight(60499553l);
+        System.out.println(block);
+    }
     @Test
     public void getBlock() throws Exception {
         setMain();

@@ -238,6 +238,13 @@ public class ExeProposalProcessTask implements Runnable {
                                 ProposalTypeEnum.TRANSACTION_WHITELIST,
                                 proposalPO.getHash().toHex());
                         break;
+                    case CLOSE_HTG_CHAIN:
+                        // swapmodule Used forSwapCustomized transaction fees
+                        publishProposalConfirmed(proposalPO, pendingPO);
+                        chain.getLogger().info("[Create Proposal Confirmation-{}] proposalHash:{}",
+                                ProposalTypeEnum.CLOSE_HTG_CHAIN,
+                                proposalPO.getHash().toHex());
+                        break;
                     case OTHER:
                     default:
                         break;

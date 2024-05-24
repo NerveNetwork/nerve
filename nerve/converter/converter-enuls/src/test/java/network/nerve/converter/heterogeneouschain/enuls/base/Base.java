@@ -31,9 +31,11 @@ import network.nerve.converter.heterogeneouschain.enuls.context.EnulsContext;
 import network.nerve.converter.heterogeneouschain.enuls.core.BeanUtilTest;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -51,10 +53,14 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 
 /**
@@ -70,6 +76,10 @@ public class Base {
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
     protected EnulsContext htgContext;
+    String testEthRpcAddress = "https://beta.evmapi.nuls.io";
+    int testChainId = 120;
+    String mainEthRpcAddress = "https://evmapi2.nuls.io";// https://evmapi2.nuls.io
+    int mainChainId = 119;
 
     @BeforeClass
     public static void initClass() {
@@ -78,28 +88,52 @@ public class Base {
 
     @Before
     public void setUp() throws Exception {
-        String ethRpcAddress = "https://beta.evmapi.nuls.io";
         htgWalletApi = new HtgWalletApi();
-        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
+        Web3j web3j = Web3j.build(new HttpService(testEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
-        htgWalletApi.setEthRpcAddress(ethRpcAddress);
+        htgWalletApi.setEthRpcAddress(testEthRpcAddress);
         htgContext = new EnulsContext();
         htgContext.setLogger(Log.BASIC_LOGGER);
         HeterogeneousCfg cfg = new HeterogeneousCfg();
-        cfg.setChainIdOnHtgNetwork(120);
+        cfg.setChainIdOnHtgNetwork(testChainId);
         htgContext.setConfig(cfg);
         BeanUtilTest.setBean(htgWalletApi, "htgContext", htgContext);
+    }
+
+    protected void setTestProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(testEthRpcAddress, okHttpClient));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(testEthRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(testChainId);
     }
 
     protected void setMain() {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://evmapi.nuls.io";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
-        htgContext.getConfig().setChainIdOnHtgNetwork(119);
+        htgContext.getConfig().setChainIdOnHtgNetwork(mainChainId);
+    }
+
+    protected void setMainProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(mainChainId);
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
@@ -138,6 +172,18 @@ public class Base {
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
 
+    protected String sendMainAssetWithdrawBySignData(String txKey, String toAddress, String value, String signData) throws Exception {
+        BigInteger bValue = new BigDecimal(value).movePointRight(18).toBigInteger();
+        Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
+    }
+
+    protected String sendERC20WithdrawBySignData(String txKey, String toAddress, String value, String erc20, int tokenDecimals, String signData) throws Exception {
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
+        Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
+    }
+
     protected String sendERC20Withdraw(String txKey, String toAddress, String value, String erc20, int tokenDecimals, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).movePointRight(tokenDecimals).toBigInteger();
         String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, true, erc20, VERSION);
@@ -153,18 +199,19 @@ public class Base {
         Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.CHANGE);
     }
-    protected String sendChangeWithSignData(String txKey, String[] adds, int count, String[] removes, String signData) throws Exception {
-        List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
-        List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
-        Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
-        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.CHANGE);
-    }
 
     protected String sendUpgrade(String txKey, String upgradeContract, int signCount) throws Exception {
         String vHash = HtgUtil.encoderUpgrade(htgContext, txKey, upgradeContract, VERSION);
         String signData = this.ethSign(vHash, signCount);
         Function function =  HtgUtil.getCreateOrSignUpgradeFunction(txKey, upgradeContract, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.UPGRADE);
+    }
+
+    protected String sendChangeWithSignData(String txKey, String[] adds, int count, String[] removes, String signData) throws Exception {
+        List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
+        List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
+        Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.CHANGE);
     }
 
     protected String ethSign(String hashStr, int signCount) {

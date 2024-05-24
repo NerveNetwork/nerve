@@ -67,7 +67,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     private static LoadingCache<TxKey, Chain.Transaction> TX_CACHE = CacheBuilder.newBuilder()
             .initialCapacity(50)
             .maximumSize(200)
-            .expireAfterAccess(20, TimeUnit.MINUTES)
+            .expireAfterWrite(20, TimeUnit.MINUTES)
             .build(new CacheLoader<TxKey, Chain.Transaction>() {
                 @Override
                 public Chain.Transaction load(TxKey txKey) throws Exception {
@@ -78,7 +78,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     private static LoadingCache<TxKey, Response.TransactionInfo> TX_RECEIPT_CACHE = CacheBuilder.newBuilder()
             .initialCapacity(50)
             .maximumSize(200)
-            .expireAfterAccess(20, TimeUnit.MINUTES)
+            .expireAfterWrite(20, TimeUnit.MINUTES)
             .build(new CacheLoader<TxKey, Response.TransactionInfo>() {
                 @Override
                 public Response.TransactionInfo load(TxKey txKey) throws Exception {

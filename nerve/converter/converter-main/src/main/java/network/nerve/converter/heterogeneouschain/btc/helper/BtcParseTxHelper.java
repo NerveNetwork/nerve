@@ -27,21 +27,30 @@ import com.neemre.btcdcli4j.core.domain.RawInput;
 import com.neemre.btcdcli4j.core.domain.RawOutput;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import io.nuls.base.basic.AddressTool;
+import io.nuls.base.data.NulsHash;
+import io.nuls.base.data.Transaction;
+import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.btc.model.BtcUnconfirmedTxPo;
+import network.nerve.converter.btc.txdata.CheckWithdrawalUsedUTXOData;
 import network.nerve.converter.btc.txdata.RechargeData;
+import network.nerve.converter.btc.txdata.UTXOData;
+import network.nerve.converter.btc.txdata.UsedUTXOData;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.btc.context.BtcContext;
 import network.nerve.converter.heterogeneouschain.btc.core.BtcWalletApi;
+import network.nerve.converter.heterogeneouschain.btc.utils.BtcUtil;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
+import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -162,6 +171,7 @@ public class BtcParseTxHelper implements BeanInitial {
         } else {
             po.setBlockHeight(Long.valueOf(walletApi.getBlockHeaderByHash(txInfo.getBlockHash()).getHeight()));
         }
+        po.setBlockHash(txInfo.getBlockHash());
         po.setTxTime(txInfo.getBlockTime());
         po.setDecimals(htgContext.ASSET_NAME().decimals());
         po.setIfContractAsset(false);
@@ -169,8 +179,130 @@ public class BtcParseTxHelper implements BeanInitial {
         return po;
     }
 
+    public HeterogeneousTransactionInfo parseWithdrawalTransaction(RawTransaction txInfo, Long blockHeight, boolean validate) throws Exception {
+        if (txInfo == null) {
+            logger().warn("Transaction does not exist");
+            return null;
+        }
+        String htgTxHash = txInfo.getTxId();
+        if (HtgUtil.isEmptyList(txInfo.getVOut())) {
+            return null;
+        }
+        if (HtgUtil.isEmptyList(txInfo.getVIn())) {
+            return null;
+        }
+
+        String multiAddr = null;
+        List<UsedUTXOData> usedUTXOList = new ArrayList<>();
+        List<RawInput> inputList = txInfo.getVIn();
+        for (RawInput input : inputList) {
+            String inputAddress = BtcUtil.takeAddressWithP2WSH(input, htgContext.getConverterCoreApi().isNerveMainnet());
+            if (htgListener.isListeningAddress(inputAddress)) {
+                multiAddr = inputAddress;
+                usedUTXOList.add(new UsedUTXOData(input.getTxId(), input.getVOut()));
+            }
+        }
+        if (!htgContext.MULTY_SIGN_ADDRESS().equals(multiAddr)) {
+            return null;
+        }
+        List<RawOutput> outputList = txInfo.getVOut();
+        BigInteger value = BigInteger.ZERO;
+        String txTo = null;
+        for (RawOutput output : outputList) {
+            String outputAddress = output.getScriptPubKey().getAddress();
+            if (StringUtils.isBlank(outputAddress)) {
+                continue;
+            }
+            // except current nerve multi-signature address
+            if (!htgListener.isListeningAddress(outputAddress)) {
+                if (txTo == null) {
+                    txTo = outputAddress;
+                } else if (!txTo.equals(outputAddress)) {
+                    // Only one receiver is allowed here
+                    return null;
+                }
+                value = value.add(output.getValue().movePointRight(htgContext.ASSET_NAME().decimals()).toBigInteger());
+            }
+        }
+        if (value.compareTo(BigInteger.ZERO) == 0) {
+            return null;
+        }
+        // check withdrawal info
+        String nerveTxHash = null;
+        boolean error = true;
+        Transaction nerveTx = null;
+        do {
+            String opReturnInfo = walletApi.getOpReturnHex(txInfo);
+            if (StringUtils.isBlank(opReturnInfo)) {
+                logger().warn("Withdrawal information Data Illegal transaction[{}], opReturnInfo: {}", htgTxHash, opReturnInfo);
+                break;
+            }
+            byte[] opReturnInfoBytes;
+            try {
+                opReturnInfoBytes = HexUtil.decode(opReturnInfo);
+            } catch (Exception e) {
+                logger().warn(String.format("Illegal withdrawal information[1] transaction[%s], opReturnInfo: %s", htgTxHash, opReturnInfo), e);
+                break;
+            }
+            if (opReturnInfoBytes.length != NulsHash.HASH_LENGTH) {
+                logger().warn(String.format("Illegal withdrawal information[2] transaction[%s], opReturnInfo: %s", htgTxHash, opReturnInfo));
+                break;
+            }
+            nerveTxHash = opReturnInfo;
+            if ((nerveTx = htgContext.getConverterCoreApi().getNerveTx(nerveTxHash)) == null) {
+                htgListener.removeListeningTx(htgTxHash);
+                htgContext.logger().warn("Illegal transaction business[{}], not found NERVE Transaction, Type: WITHDRAWAL, Key: {}", htgTxHash, nerveTxHash);
+                break;
+            }
+            if (nerveTx.getType() != TxType.WITHDRAWAL && nerveTx.getType() != TxType.CHANGE_VIRTUAL_BANK) {
+                htgContext.logger().warn("Illegal transaction business[{}], not found NERVE Transaction, Type: WITHDRAWAL, Key: {}", htgTxHash, nerveTxHash);
+                break;
+            }
+            error = false;
+        } while (false);
+        if (validate && error) {
+            return null;
+        }
+
+        BtcUnconfirmedTxPo po = new BtcUnconfirmedTxPo();
+        po.setCheckWithdrawalUsedUTXOData(new CheckWithdrawalUsedUTXOData(usedUTXOList).serialize());
+        po.setFrom(multiAddr);
+        po.setTo(txTo);
+        po.setFee(BigInteger.ZERO);
+        po.setValue(value);
+        po.setDecimals(htgContext.getConfig().getDecimals());
+        po.setAssetId(htgContext.HTG_ASSET_ID());
+        if (nerveTx.getType() == TxType.WITHDRAWAL) {
+            po.setTxType(HeterogeneousChainTxType.WITHDRAW);
+        } else {
+            po.setTxType(HeterogeneousChainTxType.CHANGE);
+        }
+        po.setTxHash(htgTxHash);
+        if (blockHeight != null) {
+            po.setBlockHeight(blockHeight);
+        } else {
+            po.setBlockHeight(Long.valueOf(walletApi.getBlockHeaderByHash(txInfo.getBlockHash()).getHeight()));
+        }
+        po.setBlockHash(txInfo.getBlockHash());
+        po.setTxTime(txInfo.getBlockTime());
+        po.setDecimals(htgContext.ASSET_NAME().decimals());
+        po.setIfContractAsset(false);
+        po.setNerveTxHash(nerveTxHash);
+        String btcFeeReceiverPub = htgContext.getConverterCoreApi().getBtcFeeReceiverPub();
+        String btcFeeReceiver = BtcUtil.getBtcLegacyAddress(btcFeeReceiverPub, htgContext.getConverterCoreApi().isNerveMainnet());
+        List<HeterogeneousAddress> signers = new ArrayList<>();
+        signers.add(new HeterogeneousAddress(htgContext.getConfig().getChainId(), btcFeeReceiver));
+        po.setSigners(signers);
+        return po;
+    }
+
     public HeterogeneousTransactionInfo parseDepositTransaction(String txHash, boolean validate) throws Exception {
         RawTransaction txInfo = walletApi.getTransactionByHash(txHash);
         return this.parseDepositTransaction(txInfo, null, validate);
+    }
+
+    public HeterogeneousTransactionInfo parseWithdrawalTransaction(String txHash, boolean validate) throws Exception {
+        RawTransaction txInfo = walletApi.getTransactionByHash(txHash);
+        return this.parseWithdrawalTransaction(txInfo, null, validate);
     }
 }

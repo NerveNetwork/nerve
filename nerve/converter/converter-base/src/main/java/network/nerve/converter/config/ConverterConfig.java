@@ -103,6 +103,33 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
      * Heterogeneous Chain Version2Start initializing virtual bank public key
      */
     private String initVirtualBankPubKeyList;
+    private String initBtcPubKeyList;
+    private String initFchPubKeyList;
+    private String bitcoinSysWithdrawalFeePubKey;
+
+    public String getBitcoinSysWithdrawalFeePubKey() {
+        return bitcoinSysWithdrawalFeePubKey;
+    }
+
+    public void setBitcoinSysWithdrawalFeePubKey(String bitcoinSysWithdrawalFeePubKey) {
+        this.bitcoinSysWithdrawalFeePubKey = bitcoinSysWithdrawalFeePubKey;
+    }
+
+    public String getInitBtcPubKeyList() {
+        return initBtcPubKeyList;
+    }
+
+    public void setInitBtcPubKeyList(String initBtcPubKeyList) {
+        this.initBtcPubKeyList = initBtcPubKeyList;
+    }
+
+    public String getInitFchPubKeyList() {
+        return initFchPubKeyList;
+    }
+
+    public void setInitFchPubKeyList(String initFchPubKeyList) {
+        this.initFchPubKeyList = initFchPubKeyList;
+    }
 
     public boolean isHeterogeneousMainNet() {
         return heterogeneousMainNet;

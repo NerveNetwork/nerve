@@ -1271,7 +1271,7 @@ public class HtgParseTxHelper implements BeanInitial {
                             (fromAddress.equalsIgnoreCase(htgContext.MULTY_SIGN_ADDRESS()) || fromAddress.equalsIgnoreCase(HtgConstant.ZERO_ADDRESS))) {
                         String toAddress = HtgConstant.HEX_PREFIX + topics.get(2).substring(26, length);
                         if (!receive.equalsIgnoreCase(toAddress)) {
-                            logger().warn("Withdrawal transactions[{}]The receiving address of does not match", txHash);
+                            logger().warn("Withdrawal transactions [{}] The receiving address of does not match", txHash);
                             continue;
                         }
                         correctErc20 = true;
@@ -1294,16 +1294,16 @@ public class HtgParseTxHelper implements BeanInitial {
                 if (eventHash.equals(HtgConstant.EVENT_HASH_TRANSFERFUNDS)) {
                     if (isERC20 || !contract.equals(htgContext.MULTY_SIGN_ADDRESS())) {
                         if (isERC20) {
-                            logger().warn("Withdrawal transactions[{}]Conflict in withdrawal type[0]", txHash);
+                            logger().warn("Withdrawal transactions [{}] Conflict in withdrawal type[0]", txHash);
                         } else {
-                            logger().warn("Withdrawal transactions[{}]The address of the multiple signed contracts does not match", txHash);
+                            logger().warn("Withdrawal transactions [{}] The address of the multiple signed contracts does not match", txHash);
                         }
                         return false;
                     }
                     String data = log.getData();
                     String toAddress = HtgConstant.HEX_PREFIX + data.substring(26, 66);
                     if (!receive.equalsIgnoreCase(toAddress)) {
-                        logger().warn("Withdrawal transactions[{}]The receiving address of does not match[Withdrawal of main assets]", txHash);
+                        logger().warn("Withdrawal transactions [{}] The receiving address of does not match [Withdrawal of main assets]", txHash);
                         return false;
                     }
                     correctMainAsset = true;
@@ -1317,11 +1317,11 @@ public class HtgParseTxHelper implements BeanInitial {
                 }
             }
             if (!hasReceiveAddress) {
-                logger().warn("Withdrawal transactions[{}]The receiving address of does not match", txHash);
+                logger().warn("Withdrawal transactions [{}] The receiving address of does not match", txHash);
                 return false;
             }
             if (correctErc20 && correctMainAsset) {
-                logger().warn("Withdrawal transactions[{}]Conflict in withdrawal type[1]", txHash);
+                logger().warn("Withdrawal transactions [{}] Conflict in withdrawal type[1]", txHash);
                 return false;
             }
             if (correctMainAsset) {

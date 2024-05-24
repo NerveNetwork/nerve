@@ -24,6 +24,14 @@
 
 package network.nerve.converter.heterogeneouschain.lib.storage;
 
+import io.nuls.core.exception.NulsException;
+import network.nerve.converter.btc.txdata.UsedUTXOData;
+import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
+import network.nerve.converter.btc.txdata.WithdrawalUTXORebuildPO;
+import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
+
+import java.math.BigInteger;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,4 +51,27 @@ public interface HtgMultiSignAddressHistoryStorageService {
     void saveVersion(byte version) throws Exception;
 
     byte getVersion();
+
+    boolean hasMultiSignAddressPubs(String address);
+
+    List<String> getMultiSignAddressPubs(String address);
+
+    void saveMultiSignAddressPubs(String address, String[] pubs) throws Exception;
+
+    void saveChainWithdrawalFee(WithdrawalFeeLog feeLog) throws Exception;
+    BigInteger getChainWithdrawalFee();
+    WithdrawalFeeLog queryChainWithdrawalFeeLog(String htgTxHash) throws NulsException;
+
+    void saveWithdrawalUTXOs(WithdrawalUTXOTxData txData) throws Exception;
+
+    boolean isLockedUTXO(String txid, int vout);
+
+    String getNerveHashByLockedUTXO(String txid, int vout);
+
+    WithdrawalUTXOTxData checkLockedUTXO(String nerveTxHash, List<UsedUTXOData> usedUTXOs) throws Exception;
+
+    WithdrawalUTXOTxData takeWithdrawalUTXOs(String nerveTxhash);
+
+    void saveWithdrawalUTXORebuildPO(String nerveTxHash, WithdrawalUTXORebuildPO po) throws Exception;
+    WithdrawalUTXORebuildPO getWithdrawalUTXORebuildPO(String nerveTxHash) throws Exception;
 }

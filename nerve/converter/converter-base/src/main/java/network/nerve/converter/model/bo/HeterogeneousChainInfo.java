@@ -35,6 +35,15 @@ public class HeterogeneousChainInfo implements Serializable {
     private String chainName;
     private String multySignAddress;
 
+    public HeterogeneousChainInfo() {
+    }
+
+    public HeterogeneousChainInfo(Integer chainId, String chainName, String multySignAddress) {
+        this.chainId = chainId;
+        this.chainName = chainName;
+        this.multySignAddress = multySignAddress;
+    }
+
     public Integer getChainId() {
         return chainId;
     }

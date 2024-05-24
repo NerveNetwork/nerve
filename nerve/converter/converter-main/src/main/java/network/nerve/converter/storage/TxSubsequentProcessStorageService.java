@@ -37,10 +37,12 @@ import java.util.List;
 public interface TxSubsequentProcessStorageService {
 
     boolean save(Chain chain, TxSubsequentProcessPO po);
-
     TxSubsequentProcessPO get(Chain chain, String txHash);
-
     void delete(Chain chain, String txhash);
+    boolean saveBackup(Chain chain, TxSubsequentProcessPO po);
+
+    TxSubsequentProcessPO getBackup(Chain chain, String txHash);
+    void deleteBackup(Chain chain, String txhash);
 
     List<TxSubsequentProcessPO> findAll(Chain chain);
 }

@@ -39,6 +39,7 @@ import io.nuls.transaction.storage.LockedAddressStorageService;
 import io.nuls.transaction.utils.TxUtil;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static io.nuls.transaction.utils.LoggerUtil.LOG;
 
@@ -126,6 +127,9 @@ public class TxCmd extends BaseCmd {
             String txStr = (String) params.get("tx");
             //taketxStrConvert toTransactionobject
             Transaction transaction = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
+            if (transaction.getType() == TxType.SWAP_TRADE_SWAP_STABLE_REMOVE_LP) {
+                TimeUnit.SECONDS.sleep(2);//TODO pending remove
+            }
             //Put the transaction into the local transaction queue to be verified
             txService.newTx(chain, transaction);
             Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_4);

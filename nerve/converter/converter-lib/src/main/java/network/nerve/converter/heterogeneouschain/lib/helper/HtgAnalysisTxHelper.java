@@ -58,17 +58,6 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
     private HtgPendingTxHelper htgPendingTxHelper;
     private HtgContext htgContext;
 
-    //public HtgAnalysisTxHelper(BeanMap beanMap) {
-    //    this.htUnconfirmedTxStorageService = (HtgUnconfirmedTxStorageService) beanMap.get("htUnconfirmedTxStorageService");
-    //    this.htgERC20Helper = (HtgERC20Helper) beanMap.get("htgERC20Helper");
-    //    this.htWalletApi = (HtgWalletApi) beanMap.get("htWalletApi");
-    //    this.htListener = (HtgListener) beanMap.get("htListener");
-    //    this.htgParseTxHelper = (HtgParseTxHelper) beanMap.get("htgParseTxHelper");
-    //    this.htgStorageHelper = (HtgStorageHelper) beanMap.get("htgStorageHelper");
-    //    this.htgPendingTxHelper = (HtgPendingTxHelper) beanMap.get("htgPendingTxHelper");
-    //    this.htgContext = (HtgContext) beanMap.get("htgContext");
-    //}
-
     @Override
     public void analysisTx(Transaction tx, long txTime, long blockHeight) throws Exception {
         boolean isDepositTx = false;
@@ -86,12 +75,12 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             }
             String from = tx.getFrom().toLowerCase();
             if (htgContext.FILTER_ACCOUNT_SET().contains(from)) {
-                htgContext.logger().warn("filterFrom[{}]Transaction[{}]", from, tx.getHash());
+                htgContext.logger().warn("filterFrom [{}] Transaction [{}]", from, tx.getHash());
                 return;
             }
             // Broadcasting transactions
             if (htListener.isListeningTx(tx.getHash())) {
-                htgContext.logger().info("Listening to local broadcasts{}Online transactions[{}]", htgContext.getConfig().getSymbol(), tx.getHash());
+                htgContext.logger().info("Listening to local broadcasts {} Online transactions[{}]", htgContext.getConfig().getSymbol(), tx.getHash());
                 isBroadcastTx = true;
                 break;
             }
@@ -121,7 +110,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                     isBroadcastTx = true;
                     txType = htInput.getTxType();
                     nerveTxHash = htInput.getNerveTxHash();
-                    htgContext.logger().info("Listening to{}Network based[{}]transaction[{}], nerveTxHash: {}", htgContext.getConfig().getSymbol(), txType, tx.getHash(), nerveTxHash);
+                    htgContext.logger().info("Listening to {} Network based [{}] transaction [{}], nerveTxHash: {}", htgContext.getConfig().getSymbol(), txType, tx.getHash(), nerveTxHash);
                     break;
                 }
             }
@@ -131,7 +120,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                     tx.getValue().compareTo(BigInteger.ZERO) > 0 &&
                     tx.getInput().equals(HtgConstant.HEX_PREFIX)) {
                 if (!htgParseTxHelper.validationEthDeposit(tx)) {
-                    htgContext.logger().error("[{}]No, it's notMainAssetRecharge transaction[2]", htTxHash);
+                    htgContext.logger().error("[{}] No, it's not MainAsset Recharge transaction[2]", htTxHash);
                     break;
                 }
                 isDepositTx = true;
@@ -142,7 +131,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                 po.setDecimals(htgContext.getConfig().getDecimals());
                 po.setAssetId(htgContext.HTG_ASSET_ID());
                 po.setNerveAddress(HtgUtil.covertNerveAddressByEthTx(tx, htgContext.NERVE_CHAINID()));
-                htgContext.logger().info("Listening to{}Network basedMainAssetRecharge transaction[1][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+                htgContext.logger().info("Listening to {} Network based MainAsset Recharge transaction[1][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
                         htgContext.getConfig().getSymbol(), tx.getHash(),
                         from, po.getTo(), po.getValue(), po.getNerveAddress());
                 break;
@@ -154,13 +143,13 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                     // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
                     if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                             && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                        htgContext.logger().warn("[{}]Illegal{}Online recharge transactions[5], ERC20[{}]BoundNERVEAssets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                        htgContext.logger().warn("[{}] Illegal {} Online recharge transactions[5], ERC20 [{}] Bound NERVE Assets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                         break;
                     }
                     isDepositTx = true;
                     txType = HeterogeneousChainTxType.DEPOSIT;
                     po.setNerveAddress(HtgUtil.covertNerveAddressByEthTx(tx, htgContext.NERVE_CHAINID()));
-                    htgContext.logger().info("Listening to{}Network basedERC20Recharge transaction[1][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+                    htgContext.logger().info("Listening to {} Network based ERC20 Recharge transaction[1][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
                             htgContext.getConfig().getSymbol(), tx.getHash(),
                             from, po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
                     break;
@@ -175,16 +164,16 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             }
             // add by pierre at 2022/6/29 Add recharge pause mechanism
             if (htgContext.getConverterCoreApi().isPauseInHeterogeneousAsset(htgContext.HTG_CHAIN_ID(), po.getAssetId())) {
-                htgContext.logger().warn("[Recharge pause] transaction[{}]", htTxHash);
+                htgContext.logger().warn("[Recharge pause] transaction [{}]", htTxHash);
                 return;
             }
         }
-        // Check if it has been affectedNerveNetwork confirmation, the cause is the current node parsingethThe transaction is slower than other nodes, and the current node only resolves this transaction after other nodes confirm it
+        // Check if it has been affected NerveNetwork confirmation, the cause is the current node parsing eth The transaction is slower than other nodes, and the current node only resolves this transaction after other nodes confirm it
         HtgUnconfirmedTxPo txPoFromDB = null;
         if (isBroadcastTx || isDepositTx) {
             txPoFromDB = htUnconfirmedTxStorageService.findByTxHash(htTxHash);
             if (txPoFromDB != null && txPoFromDB.isDelete()) {
-                htgContext.logger().info("{}transaction[{}]Has been[Nervenetwork]Confirm, no further processing", htgContext.getConfig().getSymbol(), htTxHash);
+                htgContext.logger().info("{} transaction [{}] Has been [Nervenetwork] Confirm, no further processing", htgContext.getConfig().getSymbol(), htTxHash);
                 return;
             }
         }
@@ -198,7 +187,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             this.dealBroadcastTx(nerveTxHash, txType, tx, blockHeight, txTime, txPoFromDB);
             return;
         }
-        // Confirmation required for deposit of recharge transactions30In the pending confirmation transaction queue of blocks
+        // Confirmation required for deposit of recharge transactions 30 In the pending confirmation transaction queue of blocks
         if (isDepositTx) {
             po.setTxType(txType);
             po.setTxHash(htTxHash);
@@ -209,7 +198,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             htgStorageHelper.saveTxInfo(po);
             htUnconfirmedTxStorageService.save(po);
             htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
-            // towardsNERVEOnline recharge pending confirmation transaction
+            // towards NERVE Online recharge pending confirmation transaction
             htgPendingTxHelper.commitNervePendingDepositTx(po,
                     (extend, logger) -> {
                         return htgParseTxHelper.parseOneClickCrossChainData(extend, logger);
@@ -225,21 +214,21 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
         String htTxHash = tx.getHash();
         // Calling for multiple signed contractscrossOutThe recharge method of functions
         if (!htgParseTxHelper.validationEthDepositByCrossOut(tx, po)) {
-            htgContext.logger().error("[{}]Illegal{}Online recharge transactions[3]", htTxHash, htgContext.getConfig().getSymbol());
+            htgContext.logger().error("[{}] Illegal {} Online recharge transactions[3]", htTxHash, htgContext.getConfig().getSymbol());
             return false;
         }
         if (!po.isIfContractAsset()) {
-            htgContext.logger().info("Listening to{}Network basedMainAssetRecharge transaction[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+            htgContext.logger().info("Listening to {} Network based MainAsset Recharge transaction[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
         } else {
             // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
             if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                htgContext.logger().warn("[{}]Illegal{}Online recharge transactions[4], ERC20[{}]BoundNERVEAssets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                htgContext.logger().warn("[{}] Illegal {} Online recharge transactions[4], ERC20 [{}] Bound NERVE Assets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                 return false;
             }
-            htgContext.logger().info("Listening to{}Network basedERC20Recharge transaction[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+            htgContext.logger().info("Listening to {} Network based ERC20 Recharge transaction[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
         }
@@ -250,25 +239,25 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
         String htTxHash = tx.getHash();
         // Calling for multiple signed contractscrossOutIIThe recharge method of functions
         if (!htgParseTxHelper.validationEthDepositByCrossOutII(tx, null, po)) {
-            htgContext.logger().error("[{}]Illegal{}Network rechargeIItransaction[0]", htTxHash, htgContext.getConfig().getSymbol());
+            htgContext.logger().error("[{}] Illegal {} Network rechargeII transaction[0]", htTxHash, htgContext.getConfig().getSymbol());
             return false;
         }
         // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
         if (po.isIfContractAsset() && htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                 && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-            htgContext.logger().warn("[{}]Illegal{}Network rechargeIItransaction[0], ERC20[{}]BoundNERVEAssets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+            htgContext.logger().warn("[{}] Illegal {} Network rechargeII transaction[0], ERC20 [{}] Bound NERVE Assets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
             return false;
         }
         if (po.isDepositIIMainAndToken()) {
-            htgContext.logger().info("Listening to{}Network basedERC20/{}Simultaneously rechargeIItransaction[0][{}], from: {}, to: {}, erc20Value: {}, nerveAddress: {}, contract: {}, decimals: {}, mainAssetValue: {}",
+            htgContext.logger().info("Listening to {} Network based ERC20/{} Simultaneously rechargeII transaction[0][{}], from: {}, to: {}, erc20Value: {}, nerveAddress: {}, contract: {}, decimals: {}, mainAssetValue: {}",
                     htgContext.getConfig().getSymbol(), htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals(), po.getDepositIIMainAssetValue());
         } else if (po.isIfContractAsset()) {
-            htgContext.logger().info("Listening to{}Network basedERC20RechargeIItransaction[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+            htgContext.logger().info("Listening to {} Network based ERC20 RechargeII transaction[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
         } else {
-            htgContext.logger().info("Listening to{}Network basedMainAssetRechargeIItransaction[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+            htgContext.logger().info("Listening to {} Network based MainAsset RechargeII transaction[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
         }
@@ -281,7 +270,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
         // inspectnerveTxHashIs it legal
         if (htgContext.getConverterCoreApi().getNerveTx(nerveTxHash) == null) {
             htListener.removeListeningTx(htTxHash);
-            htgContext.logger().warn("Illegal transaction business[{}], not foundNERVETransaction, Type: {}, Key: {}", htTxHash, txType, nerveTxHash);
+            htgContext.logger().warn("Illegal transaction business [{}], not found NERVE Transaction, Type: {}, Key: {}", htTxHash, txType, nerveTxHash);
             return;
         }
         HtgUnconfirmedTxPo txPo = txPoFromDB;
@@ -324,7 +313,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             }
             // Transactions set to complete with signatures, when multiple signatures exist
             if (txPo.getSigners() != null && !txPo.getSigners().isEmpty()) {
-                htgContext.logger().info("Multiple signatures completed[{}]transaction[{}], signers: {}", txType, htTxHash, Arrays.toString(txPo.getSigners().toArray()));
+                htgContext.logger().info("Multiple signatures completed [{}] transaction [{}], signers: {}", txType, htTxHash, Arrays.toString(txPo.getSigners().toArray()));
                 txPo.setStatus(MultiSignatureStatus.COMPLETED);
                 // Save parsed signed completed transactions
                 if (txInfo != null) {
@@ -333,14 +322,14 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                     htgStorageHelper.saveTxInfo(txPo);
                 }
             } else {
-                htgContext.logger().error("[fail]Failed to resolve the event of completing multiple signatures[{}]transaction[{}]", txType, htTxHash);
+                htgContext.logger().error("[fail] Failed to resolve the event of completing multiple signatures [{}] transaction[ {}]", txType, htTxHash);
                 txPo.setStatus(MultiSignatureStatus.FAILED);
             }
 
         }
         htUnconfirmedTxStorageService.save(txPo);
         if (!isLocalSent) {
-            htgContext.logger().info("from{}Transactions analyzed by the network[{}], newly added to the pending confirmation queue", htgContext.getConfig().getSymbol(), htTxHash);
+            htgContext.logger().info("from {} Transactions analyzed by the network [{}], newly added to the pending confirmation queue", htgContext.getConfig().getSymbol(), htTxHash);
             htgContext.UNCONFIRMED_TX_QUEUE().offer(txPo);
         }
         // Remove listening

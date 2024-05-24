@@ -27,6 +27,8 @@ package network.nerve.converter.core.business;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
+import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedVirtualBank;
 import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
@@ -184,11 +186,11 @@ public interface AssembleTxService {
      */
     Transaction createConfirmWithdrawalTx(Chain chain,
                                           ConfirmWithdrawalTxData confirmWithdrawalTxData,
-                                          long txTime) throws NulsException;
+                                          long txTime, byte[] remark) throws NulsException;
 
     Transaction createConfirmWithdrawalTxWithoutSign(Chain chain,
                                                      ConfirmWithdrawalTxData confirmWithdrawalTxData,
-                                                     long txTime) throws NulsException;
+                                                     long txTime, byte[] remark) throws NulsException;
 
 
     /**
@@ -383,4 +385,10 @@ public interface AssembleTxService {
 
     Transaction createRechargeTxOfBtcSys(Chain nerveChain, RechargeTxOfBtcSysDTO dto) throws NulsException;
     Transaction createRechargeTxOfBtcSysWithoutSign(Chain nerveChain, RechargeTxOfBtcSysDTO dto) throws NulsException;
+
+    Transaction createWithdrawUTXOTx(Chain chain, WithdrawalUTXOTxData txData, long txTime) throws NulsException;
+    Transaction createWithdrawUTXOTxWithoutSign(Chain chain, WithdrawalUTXOTxData txData, long txTime) throws NulsException;
+
+    Transaction createWithdrawlFeeLogTx(Chain chain, WithdrawalFeeLog txData, long txTime, byte[] remark) throws NulsException;
+    Transaction createWithdrawlFeeLogTxWithoutSign(Chain chain, WithdrawalFeeLog txData, long txTime, byte[] remark) throws NulsException;
 }

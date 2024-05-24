@@ -482,7 +482,6 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
-
     /**
      * Processing messages for virtual bank change transactions
      * 1.Verify signature
@@ -528,6 +527,10 @@ public class MessageServiceImpl implements MessageService {
                 String[] outAddress = new String[outSize];
                 if (null != txData.getOutAgents()) {
                     getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents());
+                }
+                if (converterCoreApi.checkChangeP35(txHash)) {
+                    inAddress = converterCoreApi.inChangeP35();
+                    outAddress = converterCoreApi.outChangeP35();
                 }
                 addressCache.put(hChainId, new String[][]{inAddress, outAddress});
             }
@@ -657,7 +660,7 @@ public class MessageServiceImpl implements MessageService {
                     String[][] addressData = addressCache.get(hChainId);
                     String[] inAddress = addressData[0];
                     String[] outAddress = addressData[1];
-                    // Processing messages and Byzantine verification, updatecompSignPOetc.
+                    // Processing messages and Byzantine verification, update compSignPO etc.
                     if (isCreate) {
                         // Create heterogeneous chain transactions
                         StringBuilder signatureDataBuilder = new StringBuilder();
@@ -669,7 +672,14 @@ public class MessageServiceImpl implements MessageService {
                                 continue;
                             }
                             signatureDataBuilder.append(HexUtil.encode(heterogeneousSign.getSignature()));
+                            if (hChainId > 200) {
+                                // split ',' for the signature of the bitSys'chain, due to the non-fixed length signature
+                                signatureDataBuilder.append(",");
+                            }
                             count++;
+                        }
+                        if (hChainId > 200) {
+                            signatureDataBuilder.deleteCharAt(signatureDataBuilder.length() - 1);
                         }
                         // Reaching the minimum number of signatures is the only valid call data
                         if (count >= byzantineMinPassCount) {
@@ -859,13 +869,18 @@ public class MessageServiceImpl implements MessageService {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
             }
             VirtualBankDirector director = virtualBankAllHistoryStorageService.findBySignAddress(chain, signAddress);
-            HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(heterogeneousChainId);
-            if (null == heterogeneousAddress) {
-                chain.getLogger().warn("Heterogeneous chain address signature message[changeVirtualBank] No heterogeneous chain address obtained, agentAddress:{}", agentAddress);
-                chain.getLogger().warn("(Negligible)Unable to obtain heterogeneous chain address: If the current node processes virtual bank change transactions slightly slower(Not yet completedcommit, Causing inability to obtain heterogeneous chain addresses)");
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+            if (heterogeneousChainId > 200) {
+                // fill in the pubkey on the bitSys'chain
+                address[i] = director.getSignAddrPubKey();
+            } else {
+                HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(heterogeneousChainId);
+                if (null == heterogeneousAddress) {
+                    chain.getLogger().warn("Heterogeneous chain address signature message[changeVirtualBank] No heterogeneous chain address obtained, agentAddress:{}", agentAddress);
+                    chain.getLogger().warn("(Negligible)Unable to obtain heterogeneous chain address: If the current node processes virtual bank change transactions slightly slower(Not yet completedcommit, Causing inability to obtain heterogeneous chain addresses)");
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+                }
+                address[i] = heterogeneousAddress.getAddress();
             }
-            address[i] = heterogeneousAddress.getAddress();
         }
     }
 
@@ -927,6 +942,11 @@ public class MessageServiceImpl implements MessageService {
             int heterogeneousChainId = assetInfo.getChainId();
             BigInteger amount = withdrawCoinTo.getAmount();
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            // check BTC sys' chains
+            if (heterogeneousChainId > 200) {
+                withdrawMessageForBTC(chain, docking, tx.getType(), signAddress, hash, toAddress, amount, assetInfo.getAssetId(), HexUtil.encode(sign.getSignature()), nodeId, message, compSignPO);
+                return;
+            }
             // Verify the correctness of the signature based on the transaction
             Boolean msgPass = docking.verifySignWithdrawII(
                     signAddress,
@@ -982,6 +1002,77 @@ public class MessageServiceImpl implements MessageService {
             // Store updated compSignPO
             componentSignStorageService.save(chain, compSignPO);
         }
+    }
+
+    private void withdrawMessageForBTC(Chain chain, IHeterogeneousChainDocking docking,
+                                       int txType,
+                                       String signAddress,
+                                       NulsHash hash,
+                                       String toAddress,
+                                       BigInteger amount,
+                                       int assetId,
+                                       String signature,
+                                       String nodeId,
+                                       ComponentSignMessage message,
+                                       ComponentSignByzantinePO compSignPO
+                                       ) throws NulsException {
+        int heterogeneousChainId = docking.getChainId();
+        String txHash = hash.toHex();
+        // Verify the correctness of the signature based on the transaction
+        Boolean msgPass = docking.getBitCoinApi().verifySignWithdraw(
+                signAddress,
+                txHash,
+                toAddress,
+                amount,
+                assetId,
+                signature);
+        if (!msgPass) {
+            LoggerUtil.LOG.error("[Heterogeneous chain address signature message - Signature verification failed-withdraw], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
+                    nodeId, txHash, heterogeneousChainId, signAddress, signature);
+            return;
+        }
+        // Verification passed, relay the message
+        NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.COMPONENT_SIGN);
+
+        // Processing messages and Byzantine verification, updatecompSignPOetc.
+        if (!compSignPO.getCurrentSigned()) {
+            LoggerUtil.LOG.debug("[Heterogeneous chain address signature message Execute current node signature] txHash:{}", txHash);
+            // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
+            String signStrData = docking.getBitCoinApi().signWithdraw(txHash, toAddress, amount, assetId);
+            String currentHaddress = docking.getCurrentSignAddress();
+            if (StringUtils.isBlank(currentHaddress)) {
+                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+            }
+            broadcastCurrentSign(chain, hash, compSignPO, signStrData, new HeterogeneousAddress(heterogeneousChainId, currentHaddress), message.getVirtualBankTotal());
+        }
+        boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO);
+        if (byzantinePass && !compSignPO.getByzantinePass()) {
+            // Create heterogeneous chain transactions
+            StringBuilder signatureDataBuilder = new StringBuilder();
+            // Splice all signatures
+            for (ComponentSignMessage msg : compSignPO.getListMsg()) {
+                signatureDataBuilder.append(HexUtil.encode(msg.getListSign().get(0).getSignature())).append(",");
+            }
+            signatureDataBuilder.deleteCharAt(signatureDataBuilder.length() - 1);
+            ComponentCallParm callParm = new ComponentCallParm(
+                    docking.getChainId(),
+                    txType,
+                    txHash,
+                    toAddress,
+                    amount,
+                    assetId,
+                    signatureDataBuilder.toString());
+            List<ComponentCallParm> callParmsList = compSignPO.getCallParms();
+            if (null == callParmsList) {
+                callParmsList = new ArrayList<>();
+            }
+            callParmsList.add(callParm);
+            compSignPO.setCallParms(callParmsList);
+            compSignPO.setByzantinePass(byzantinePass);
+            chain.getLogger().info("[Heterogeneous chain address signature message-Byzantine passage-withdraw] Storage heterogeneous chain component execution withdrawal call parameters. hash:{}", txHash);
+        }
+        // Store updated compSignPO
+        componentSignStorageService.save(chain, compSignPO);
     }
 
 
@@ -1253,6 +1344,10 @@ public class MessageServiceImpl implements MessageService {
                 if (null != txData.getOutAgents()) {
                     getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents());
                 }
+                if (converterCoreApi.checkChangeP35(txHash)) {
+                    inAddress = converterCoreApi.inChangeP35();
+                    outAddress = converterCoreApi.outChangeP35();
+                }
                 addressCache.put(hChainId, new String[][]{inAddress, outAddress});
             }
             // Verify the correctness of the received message
@@ -1395,7 +1490,13 @@ public class MessageServiceImpl implements MessageService {
                                 continue;
                             }
                             signatureDataBuilder.append(HexUtil.encode(heterogeneousSign.getSignature()));
+                            if (hChainId > 200) {
+                                signatureDataBuilder.append(",");
+                            }
                             count++;
+                        }
+                        if (hChainId > 200) {
+                            signatureDataBuilder.deleteCharAt(signatureDataBuilder.length() - 1);
                         }
                         // Reaching the minimum number of signatures is the only valid call data
                         if (count >= byzantineMinPassCount) {

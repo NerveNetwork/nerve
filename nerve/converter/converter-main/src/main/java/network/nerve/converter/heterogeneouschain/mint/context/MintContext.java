@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2017-2018 nuls.io
+ * Copyright (c) 2019-2022 nerve.network
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,33 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package network.nerve.swap.utils;
+package network.nerve.converter.heterogeneouschain.mint.context;
 
-import org.bitcoinj.base.Address;
-import org.bitcoinj.base.BitcoinNetwork;
-import org.bitcoinj.wallet.Wallet;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContextNew;
 
-import static org.bitcoinj.base.BitcoinNetwork.MAINNET;
-import static org.bitcoinj.base.BitcoinNetwork.TESTNET;
+import java.io.Serializable;
+import java.math.BigInteger;
+
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_20;
 
 /**
- * @author: PierreLuo
- * @date: 2024/1/16
+ * @author: Mimi
+ * @date: 2020-02-26
  */
-public class BTCUtils {
+public class MintContext extends HtgContextNew implements Serializable {
 
-    public static boolean validateAddress(String addr, boolean mainnet) {
-        BitcoinNetwork network = mainnet ? MAINNET : TESTNET;
-        Wallet basic = Wallet.createBasic(network);
-        try {
-            Address address = basic.parseAddress(addr);
-            if (address != null) {
-                return true;
-            }
-        } catch (Exception e) {
-            return false;
-        }
-        return false;
+    public MintContext() {
+        super.SET_VERSION((byte) 3);
+    }
+
+    @Override
+    public int HTG_CHAIN_ID() {
+        return 142;
+    }
+
+    @Override
+    public BigInteger initialGas() {
+        return GWEI_20;
     }
 
 }

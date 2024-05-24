@@ -23,12 +23,16 @@
  */
 package network.nerve.converter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.nuls.base.basic.AddressTool;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
+import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +46,37 @@ import java.util.stream.Collectors;
 public class TempTest {
     int rpcVersion = -1;
     String apiUrl = null;
+
+    @Test
+    public void listFilterTest() throws Exception {
+        List<HeterogeneousChainInfo> list = new ArrayList<>();
+        list.add(new HeterogeneousChainInfo(111, "aaa", "0x2804a4296211ab079aed4e12120808f1703841b3"));
+        list.add(new HeterogeneousChainInfo(222, "bbb", "0x1EA3FfD41c3ed3e3f788830aAef553F8F691aD8C"));
+        list.add(new HeterogeneousChainInfo(333, "ccc", "0x5e7E2AbAa58e108f5B9D5D30A76253Fa8Cb81f9d"));
+        list.add(new HeterogeneousChainInfo(444, "ddd", "0x3c2ff003fF996836d39601cA22394A58ca9c473b"));
+        list.add(new HeterogeneousChainInfo(201, "btc", "39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV"));
+        list.add(new HeterogeneousChainInfo(201, "btc", "2NDu3vcpjyiMgvRjDpQfbyh9uF2McfDJ3NF"));
+        list.add(new HeterogeneousChainInfo(201, "btc", "tb1qtskq8773jlhjqm7ad6a8kxhxleznp0nech0wpk0nxt45khuy0vmqwzeumf"));
+        list.add(new HeterogeneousChainInfo(555, "eee", "0x6c2039B5fDaE068baD4931E8Cc0b8E3a542937ac"));
+        list.stream().filter(
+                // Bitcoin chain’s multi-signature address hard upgrade
+                info -> !(info.getChainId() == 201
+                        && (info.getMultySignAddress().equals("39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV")
+                        || info.getMultySignAddress().equals("2NDu3vcpjyiMgvRjDpQfbyh9uF2McfDJ3NF")))
+        ).forEach(info -> {
+            try {
+                System.out.println(JSONUtils.obj2json(info));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Test
+    public void pubTest() {
+        String pub = "222222222222222222222222222222222222222222222222222222222222222222";
+        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pub, 5)));
+    }
 
     @Test
     public void rpcFromAssetSystemTest() {

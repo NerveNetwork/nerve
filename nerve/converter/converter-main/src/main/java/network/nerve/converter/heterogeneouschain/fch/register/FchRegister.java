@@ -23,13 +23,17 @@
  */
 package network.nerve.converter.heterogeneouschain.fch.register;
 
+import com.neemre.btcdcli4j.core.client.BtcdClient;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.heterogeneouschain.btc.core.BtcWalletApi;
 import network.nerve.converter.heterogeneouschain.fch.context.FchContext;
+import network.nerve.converter.heterogeneouschain.fch.core.FchBitCoinApi;
 import network.nerve.converter.heterogeneouschain.fch.core.FchWalletApi;
 import network.nerve.converter.heterogeneouschain.fch.docking.FchDocking;
 import network.nerve.converter.heterogeneouschain.fch.handler.FchBlockHandler;
@@ -51,8 +55,10 @@ import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
 import network.nerve.converter.heterogeneouschain.lib.storage.*;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
+import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -116,6 +122,17 @@ public class FchRegister extends HtgRegister {
         htgCallBackManager = (HtgCallBackManager) beanMap.get(HtgCallBackManager.class);
     }
 
+    @Override
+    public void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception {
+        super.registerCallBack(registerInfo);
+        String multiSigAddress = registerInfo.getMultiSigAddress();
+        boolean hasPubs = htgMultiSignAddressHistoryStorageService.hasMultiSignAddressPubs(multiSigAddress);
+        if (!hasPubs) {
+            String initialBtcPubKeyList = registerInfo.getConverterCoreApi().getInitialFchPubKeyList();
+            htgMultiSignAddressHistoryStorageService.saveMultiSignAddressPubs(multiSigAddress, initialBtcPubKeyList.split(","));
+        }
+    }
+
     protected void initScheduled() {
         blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory(blockSyncThreadName()));
         blockSyncExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(FchBlockHandler.class), 60, getHtgContext().getConfig().getBlockQueuePeriod(), TimeUnit.SECONDS);
@@ -143,6 +160,7 @@ public class FchRegister extends HtgRegister {
                 beanMap.add(HtgCallBackManager.class, htgCallBackManager);
             }
 
+            beanMap.add(FchBitCoinApi.class);
             beanMap.add(FchWalletApi.class);
             beanMap.add(FchBlockHandler.class);
             beanMap.add(FchConfirmTxHandler.class);
@@ -173,5 +191,26 @@ public class FchRegister extends HtgRegister {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void shutdownConfirm() {
+        if (!this.shutdownPending) {
+            throw new RuntimeException("Error steps to close the chain.");
+        }
+        blockSyncExecutor.shutdown();
+
+        IConverterCoreApi coreApi = getHtgContext().getConverterCoreApi();
+        List<Runnable> confirmTxHandlers = coreApi.getHtgConfirmTxHandlers();
+        boolean has1 = false;
+        int index1 = 0;
+        for (Runnable runnable : confirmTxHandlers) {
+            if (runnable.equals((Runnable) beanMap.get(FchConfirmTxHandler.class))) {
+                has1 = true;
+                break;
+            }
+            index1++;
+        }
+        if (has1) confirmTxHandlers.remove(index1);
     }
 }

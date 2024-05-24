@@ -168,16 +168,21 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                         true);
                 asyncProcessedTxStorageService.saveComponentCall(chain, callPO, false);
 
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(txData.getHeterogeneousChainId());
+                if (docking != null) {
+                    docking.txConfirmedCheck(txData.getHeterogeneousTxHash(), blockHeader.getHeight(), txData.getWithdrawalTxHash().toHex(), tx.getRemark());
+                }
+
                 // Update the transaction status of heterogeneous chain components // add by Mimi at 2020-03-12
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
-                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
-                    docking.txConfirmedCompleted(txData.getHeterogeneousTxHash(), blockHeader.getHeight(), txData.getWithdrawalTxHash().toHex());
+                    docking.txConfirmedCompleted(txData.getHeterogeneousTxHash(), blockHeader.getHeight(), txData.getWithdrawalTxHash().toHex(), tx.getRemark());
                     //Put into the subsequent processing queue, Possible initiation of handling fee subsidy transactions
                     TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                     pendingPO.setTx(tx);
                     pendingPO.setBlockHeader(blockHeader);
                     pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
                     txSubsequentProcessStorageService.save(chain, pendingPO);
+                    txSubsequentProcessStorageService.deleteBackup(chain, txData.getWithdrawalTxHash().toHex());
                     chain.getPendingTxQueue().offer(pendingPO);
 
                 }

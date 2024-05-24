@@ -27,6 +27,7 @@ import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
@@ -106,7 +107,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
      * @param signers          Transaction signature address list
      */
     @Override
-    public void txConfirmed(HeterogeneousChainTxType txType, String nerveTxHash, String txHash, Long blockHeight, Long txTime, String multiSignAddress, List<HeterogeneousAddress> signers) throws Exception {
+    public void txConfirmed(HeterogeneousChainTxType txType, String nerveTxHash, String txHash, Long blockHeight, Long txTime, String multiSignAddress, List<HeterogeneousAddress> signers, byte[] remark) throws Exception {
         NulsHash nerveHash = NulsHash.fromHex(nerveTxHash);
         // Check if the confirmation transaction was initiated by the proposal
         NulsHash nerveProposalHash = proposalStorageService.getExeBusiness(nerveChain, nerveTxHash);
@@ -131,7 +132,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 txData.setHeterogeneousTxHash(txHash);
                 txData.setWithdrawalTxHash(nerveHash);
                 txData.setListDistributionFee(signers);
-                assembleTxService.createConfirmWithdrawalTx(nerveChain, txData, txTime);
+                assembleTxService.createConfirmWithdrawalTx(nerveChain, txData, txTime, remark);
                 break;
             case CHANGE:
                 // Query and merge databases, check if change transactions are merged
@@ -152,7 +153,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                     }
                     HeterogeneousConfirmedVirtualBank bank = new HeterogeneousConfirmedVirtualBank(realNerveTxHash, hChainId, multiSignAddress, txHash, realTxTime, signers);
                     this.checkProposal(realNerveTxHash, txHash, realTxTime, signers);
-                    this.confirmChangeTx(realNerveTxHash, bank, mergeCount);
+                    this.confirmChangeTx(realNerveTxHash, bank, mergeCount, remark);
                 }
                 break;
             case RECOVERY:
@@ -173,6 +174,21 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 }
                 break;
         }
+    }
+
+    @Override
+    public void txRecordWithdrawFee(HeterogeneousChainTxType txType, String txHash, String blockHash, Long blockHeight, Long txTime, long fee, byte[] remark) throws Exception {
+        if (hChainId < 200) {
+            throw new RuntimeException("not support method");
+        }
+        WithdrawalFeeLog txData = new WithdrawalFeeLog();
+        txData.setBlockHeight(blockHeight);
+        txData.setBlockHash(blockHash);
+        txData.setHtgTxHash(txHash);
+        txData.setHtgChainId(hChainId);
+        txData.setFee(fee);
+        txData.setRecharge(txType == HeterogeneousChainTxType.WITHDRAW_FEE_RECHARGE);
+        assembleTxService.createWithdrawlFeeLogTx(nerveChain, txData, txTime, remark);
     }
 
     @Override
@@ -203,7 +219,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         }
     }
 
-    private int confirmChangeTx(String nerveTxHash, HeterogeneousConfirmedVirtualBank bank, int mergeCount) throws Exception {
+    private int confirmChangeTx(String nerveTxHash, HeterogeneousConfirmedVirtualBank bank, int mergeCount, byte[] remark) throws Exception {
         AtomicInteger count = countHash.get(nerveTxHash);
         if (count == null) {
             count = new AtomicInteger(0);
@@ -227,7 +243,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 ConfirmedChangeVirtualBankTxData txData = ConverterUtil.getInstance(confirmedTx.getTxData(), ConfirmedChangeVirtualBankTxData.class);
                 List<HeterogeneousConfirmedVirtualBank> listConfirmed = txData.getListConfirmed();
                 for (HeterogeneousConfirmedVirtualBank virtualBank : listConfirmed) {
-                    heterogeneousDockingManager.getHeterogeneousDocking(virtualBank.getHeterogeneousChainId()).txConfirmedCompleted(virtualBank.getHeterogeneousTxHash(), nerveChain.getLatestBasicBlock().getHeight(), nerveTxHash);
+                    heterogeneousDockingManager.getHeterogeneousDocking(virtualBank.getHeterogeneousChainId()).txConfirmedCompleted(virtualBank.getHeterogeneousTxHash(), nerveChain.getLatestBasicBlock().getHeight(), nerveTxHash, remark);
                 }
                 // Cleaning Counters
                 countHash.remove(nerveTxHash);

@@ -136,7 +136,8 @@ public class LedgerTempBalanceManager {
         byte[] currentNonceBytes = Arrays.copyOfRange(hashBytes, hashBytes.length - 8, hashBytes.length);
         CoinData coinData;
         try {
-            coinData = tx.getCoinDataInstance();
+            coinData = new CoinData();
+            coinData.parse(tx.getCoinData(), 0);
         } catch (NulsException e) {
             throw new NulsRuntimeException(e);
         }

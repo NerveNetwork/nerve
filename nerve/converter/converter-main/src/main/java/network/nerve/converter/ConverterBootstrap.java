@@ -269,6 +269,14 @@ public class ConverterBootstrap extends RpcModule {
             Log.warn("Failed to get height_1_34_0", e);
         }
         try {
+            long heightVersion1_35_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_35_0"));
+            // v1.35.0 Protocol upgrade height
+            ConverterContext.PROTOCOL_1_35_0 = heightVersion1_35_0;
+            ConverterContext.protocolHeightMap.put(35, heightVersion1_35_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_35_0", e);
+        }
+        try {
             int sigMode = Integer.parseInt(configurationLoader.getValue(ModuleE.Constant.ACCOUNT, "sigMode"));
             ConverterContext.SIG_MODE = sigMode;
         } catch (Exception e) {
@@ -421,6 +429,7 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.INIT_VIRTUAL_BANK_HEIGHT = converterConfig.getInitVirtualBankHeight();
         // Collection and distribution of public keys for handling fees
         ConverterContext.FEE_PUBKEY = HexUtil.decode(converterConfig.getFeePubkey());
+        ConverterContext.BITCOIN_SYS_WITHDRAWAL_FEE_ADDRESS = AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(converterConfig.getBitcoinSysWithdrawalFeePubKey(), converterConfig.getChainId()));
         // Trigger the high cycle of executing virtual bank change transactions
         ConverterContext.EXECUTE_CHANGE_VIRTUAL_BANK_PERIODIC_HEIGHT = converterConfig.getExecuteChangeVirtualBankPeriodicHeight();
         // Withdrawal of black hole public key

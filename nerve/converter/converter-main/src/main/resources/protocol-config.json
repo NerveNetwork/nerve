@@ -178,6 +178,22 @@
         "verifySignature": false,
         "verifyFee": false,
         "handler": "HeterogeneousMainAssetBindV1"
+      },
+      {
+        "type": "85",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "WithdrawalUTXOsV1"
+      },
+      {
+        "type": "86",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "WithdrawalUTXOFeePaymentV1"
       }
     ],
     "validMsgs": [

@@ -974,23 +974,31 @@ public class EnulsWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
+        setMainProxy();
         //0x131fd12c7cba20000
         // Directly callingerc20contract
-        String directTxHash = "0xf63d0a95eda1fe09531784cd11037c43c41af7a92cb72689dcd5e4f4a18228d0";
+        String directTxHash = "0x5025cbc3038fa84066935fb5e244b4291999ace2da2c2d48318265c55ae789ba";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(JSONUtils.obj2PrettyJson(tx));
     }
 
     @Test
     public void getTxReceipt() throws Exception {
-        String directTxHash = "0xf63d0a95eda1fe09531784cd11037c43c41af7a92cb72689dcd5e4f4a18228d0";
+        setMainProxy();
+        String directTxHash = "0x5025cbc3038fa84066935fb5e244b4291999ace2da2c2d48318265c55ae789ba";
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
     }
 
     @Test
+    public void getNonce() throws Exception {
+        setMainProxy();
+        System.out.println(htgWalletApi.getLatestNonce("0xDCA09A08e961Ca8268bB08051E8AAB075e2861aF"));
+    }
+
+    @Test
     public void getCurrentGasPrice() throws IOException {
-        setMain();
+        setMainProxy();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());

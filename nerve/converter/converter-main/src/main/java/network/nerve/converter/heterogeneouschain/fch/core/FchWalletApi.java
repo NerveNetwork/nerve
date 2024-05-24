@@ -63,7 +63,7 @@ public class FchWalletApi implements BeanInitial {
 
     private String rpc = "https://cid.cash/APIP";
     private String via = "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD";
-    private byte[] sessionKey = HexUtil.decode("17fd649617d838b514ba8338caf050c4753a51d1a471c11e1ee743329828dd8a");
+    private byte[] sessionKey = HexUtil.decode("47a75483f8800d0c36f6e11c7502b7b6f7522713d800790d665b89736f776cbc");
     private ReentrantLock checkLock = new ReentrantLock();
     private int rpcVersion = -1;
     private boolean reSyncBlock = false;
@@ -192,7 +192,7 @@ public class FchWalletApi implements BeanInitial {
         long balance = responseBody.getBalance();
         if (balance < 1000000000l) {
             // Last 1000,000 requests
-            String warn = String.format("[%s]Access paidAPIThe number of times is about to run out, and the remaining amount is insufficient 10, please use %s towards FUmo2eez6VK2sfGWjek9i9aK5y1mdHSnqv Transfer", symbol(), via);
+            String warn = String.format("[%s]Access paid API The number of times is about to run out, and the remaining amount is insufficient 10, please use %s towards FUmo2eez6VK2sfGWjek9i9aK5y1mdHSnqv Transfer", symbol(), via);
             getLog().warn(warn);
         }
         if (getLog().isDebugEnabled())

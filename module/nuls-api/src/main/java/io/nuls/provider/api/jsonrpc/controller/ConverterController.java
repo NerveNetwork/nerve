@@ -516,4 +516,85 @@ public class ConverterController {
         Result<Map<String, Object>> result = converterTools.commonRequest("cv_gasLimitOfHeterogeneousChains", params1);
         return ResultUtil.getJsonRpcResult(result);
     }
+
+
+    @RpcMethod("getChainWithdrawalFee")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "WITHDRAWAL_FEE"),
+    }))
+    public RpcResult getChainWithdrawalFee(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("heterogeneousChainId", chainId);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_chainWithdrawalFee", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("hasRecordFeePayment")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
+            @Parameter(parameterName = "htgTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    }))
+    public RpcResult hasRecordFeePayment(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        String htgTxHash = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("heterogeneousChainId", chainId);
+        params1.put("htgTxHash", htgTxHash);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_hasRecordFeePayment", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getWithdrawalFeeLog")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
+            @Parameter(parameterName = "htgTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class))
+    public RpcResult getWithdrawalFeeLogFromDB(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        String htgTxHash = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("heterogeneousChainId", chainId);
+        params1.put("htgTxHash", htgTxHash);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_withdrawalFeeLog", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getMinimumFeeOfWithdrawal")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "heterogeneousChainId"),
+            @Parameter(parameterName = "nerveTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "nerve tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "minimumFee", description = "minimumFee"),
+            @Key(name = "utxoSize", description = "utxoSize"),
+            @Key(name = "feeRate", description = "feeRate")
+    }))
+    public RpcResult getMinimumFeeOfWithdrawal(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        String txHash = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("heterogeneousChainId", chainId);
+        params1.put("nerveTxHash", txHash);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_minimumFeeOfWithdrawal", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
 }

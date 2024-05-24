@@ -77,22 +77,22 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
                     htgContext.logger().error(e);
                 }
                 if (LoggerUtil.LOG.isDebugEnabled()) {
-                    LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
+                    LoggerUtil.LOG.debug("[{}] Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
                 }
                 return;
             }
             clearDB = false;
             if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("[{}Block parsing task] - every other{}Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
+                LoggerUtil.LOG.debug("[{} Block parsing task] - every other {} Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
             }
             try {
                 htgCommonHelper.clearHash();
             } catch (Exception e) {
-                htgContext.logger().error("Clearing recharge transactionshashFailed to revalidate collection", e);
+                htgContext.logger().error("Clearing recharge transactions hash Failed to revalidate collection", e);
             }
             htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
             if (htgWalletApi.isReSyncBlock()) {
-                htgContext.logger().info("[{}]Delete all local blocks from the network and wait for the next round of execution", htgContext.getConfig().getSymbol());
+                htgContext.logger().info("[{}] Delete all local blocks from the network and wait for the next round of execution", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteAllLocalBlockHeader();
                 htgWalletApi.setReSyncBlock(false);
                 return;
@@ -115,7 +115,7 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
             Long localBlockHeight = localMax.getHeight();
             long difference = blockHeightFromEth - localBlockHeight;
             // When starting a node, the latest local altitude matchesHTGWhen the height of a network block differs by two or more blocks, it will be removed from theHTGNetwork height begins to synchronize
-            if (firstSync && Math.abs(difference) >= 2) {
+            if (firstSync && Math.abs(difference) >= 20) {
                 EthBlock.Block block = htgWalletApi.getBlockByHeight(blockHeightFromEth);
                 if(block == null) {
                     htgContext.logger().info("Unable to obtain {} Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
@@ -130,11 +130,11 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
             // Verify if the latest block is correct
             int resultCode = checkNewestBlock(localMax);
             if (resultCode == 0) {
-                htgContext.logger().error("obtain{}Block failure", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("obtain {} Block failure", htgContext.getConfig().getSymbol());
                 return;
             } else if (resultCode == 1) {
                 htgWalletApi.clearCache();
-                htgContext.logger().error("{}Block fork", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("{} Block fork", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteByHeightAndUpdateMemory(localBlockHeight);
                 return;
             }
@@ -148,7 +148,7 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
                 try {
                     EthBlock.Block block = htgWalletApi.getBlockByHeight(localBlockHeight);
                     if(block == null) {
-                        htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
+                        htgContext.logger().info("Unable to obtain{} Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                         break;
                     }
                     htgBlockAnalysisHelper.analysisEthBlock(block, htgAnalysisTxHelper);

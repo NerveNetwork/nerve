@@ -39,6 +39,7 @@ import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
@@ -52,10 +53,7 @@ import network.nerve.converter.model.txdata.ChangeVirtualBankTxData;
 import network.nerve.converter.model.txdata.ConfirmedChangeVirtualBankTxData;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.TransactionCall;
-import network.nerve.converter.storage.AsyncProcessedTxStorageService;
-import network.nerve.converter.storage.CfmChangeBankStorageService;
-import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
-import network.nerve.converter.storage.MergeComponentStorageService;
+import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.ConverterSignValidUtil;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
@@ -87,6 +85,8 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
     private MergeComponentStorageService mergeComponentStorageService;
     @Autowired
     private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
+    @Autowired
+    private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
 
     @Override
     public int getType() {
@@ -197,14 +197,22 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
                         true);
                 asyncProcessedTxStorageService.saveComponentCall(chain, callPO, false);
 
+                List<HeterogeneousConfirmedVirtualBank> listConfirmed = txData.getListConfirmed();
+                for (HeterogeneousConfirmedVirtualBank bank : listConfirmed) {
+                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(bank.getHeterogeneousChainId());
+                    if (docking != null) {
+                        docking.txConfirmedCheck(bank.getHeterogeneousTxHash(), blockHeader.getHeight(), changeVirtualBankTxHash.toHex(), tx.getRemark());
+                    }
+                }
+
                 if (isCurrentDirector && syncStatus == SyncStatusEnum.RUNNING.value()) {
                     // Update the transaction status of heterogeneous chain components // add by Mimi at 2020-03-12
-                    List<HeterogeneousConfirmedVirtualBank> listConfirmed = txData.getListConfirmed();
                     for (HeterogeneousConfirmedVirtualBank bank : listConfirmed) {
-                        heterogeneousDockingManager.getHeterogeneousDocking(bank.getHeterogeneousChainId()).txConfirmedCompleted(bank.getHeterogeneousTxHash(), blockHeader.getHeight(), changeVirtualBankTxHash.toHex());
+                        heterogeneousDockingManager.getHeterogeneousDocking(bank.getHeterogeneousChainId()).txConfirmedCompleted(bank.getHeterogeneousTxHash(), blockHeader.getHeight(), changeVirtualBankTxHash.toHex(), tx.getRemark());
                     }
                     // Remove the collected heterogeneous chain confirmation information // add by Mimi at 2020-03-12
                     heterogeneousConfirmedChangeVBStorageService.deleteByTxHash(hash.toHex());
+                    txSubsequentProcessStorageService.deleteBackup(chain, txData.getChangeVirtualBankTxHash().toHex());
                 }
 
                 MergedComponentCallPO mergedTxPO = mergeComponentStorageService.findMergedTx(chain, changeVirtualBankTxHash.toHex());

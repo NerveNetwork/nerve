@@ -189,6 +189,7 @@ public class ConverterContext {
     public static long PROTOCOL_1_31_0 = 0L;
     public static long PROTOCOL_1_33_0 = 0L;
     public static long PROTOCOL_1_34_0 = 0L;
+    public static long PROTOCOL_1_35_0 = 0L;
     /**
      * 0=local,1=signatrue-machine
      */
@@ -224,4 +225,6 @@ public class ConverterContext {
     public static Map<Long, Map> HTG_RPC_CHECK_MAP = new HashMap<>();
 
     public static byte[] AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0;
+
+    public static String BITCOIN_SYS_WITHDRAWAL_FEE_ADDRESS = null;
 }

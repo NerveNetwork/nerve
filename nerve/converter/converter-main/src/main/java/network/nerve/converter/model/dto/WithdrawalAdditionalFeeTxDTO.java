@@ -57,6 +57,25 @@ public class WithdrawalAdditionalFeeTxDTO {
      */
     private SignAccountDTO signAccount;
 
+    private boolean rebuild;
+    private Integer htgChainId;
+
+    public Integer getHtgChainId() {
+        return htgChainId;
+    }
+
+    public void setHtgChainId(Integer htgChainId) {
+        this.htgChainId = htgChainId;
+    }
+
+    public boolean isRebuild() {
+        return rebuild;
+    }
+
+    public void setRebuild(boolean rebuild) {
+        this.rebuild = rebuild;
+    }
+
     public int getFeeChainId() {
         return feeChainId;
     }

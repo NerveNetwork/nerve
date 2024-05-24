@@ -273,4 +273,14 @@ public class EthRegister implements IHeterogeneousChainRegister {
         this.ethUpgradeContractSwitchHelper = ethUpgradeContractSwitchHelper;
         EthDocking.getInstance().setEthUpgradeContractSwitchHelper(this.ethUpgradeContractSwitchHelper);
     }
+
+    @Override
+    public void shutdownPending() {
+        throw new RuntimeException("Unsupport Function");
+    }
+
+    @Override
+    public void shutdownConfirm() {
+        throw new RuntimeException("Unsupport Function");
+    }
 }

@@ -20,11 +20,11 @@
     <repositories>
         <repository>
             <id>nuls-release</id>
-            <url>https://nexus.nuls.io/repository/nuls-release/</url>
+            <url>https://nexus.nuls.io/repository/release/</url>
         </repository>
         <repository>
             <id>nuls-snapshot</id>
-            <url>https://nexus.nuls.io/repository/nuls-snapshot/</url>
+            <url>https://nexus.nuls.io/repository/snapshot/</url>
         </repository>
     </repositories>
 
@@ -228,11 +228,29 @@
             <groupId>fc-NERVE</groupId>
             <artifactId>FC-SDK</artifactId>
             <version>1.0.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>freecashj</artifactId>
+                    <groupId>com.github.nobodyoffc</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.github.bitsoex.btcd-cli4j-NERVE</groupId>
             <artifactId>btcd-cli4j-core</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bitcoinj</groupId>
+            <artifactId>bitcoinj-core</artifactId>
+            <version>0.17-alpha3</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.google.guava</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

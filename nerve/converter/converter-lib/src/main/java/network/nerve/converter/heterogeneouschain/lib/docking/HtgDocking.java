@@ -33,6 +33,7 @@ import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
@@ -52,6 +53,7 @@ import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.WalletUtils;
+import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthEstimateGas;
@@ -99,6 +101,8 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     protected HtgPendingTxHelper htgPendingTxHelper;
     private HtgContext htgContext;
     private HeterogeneousChainGasInfo gasInfo;
+    protected boolean closePending = false;
+    protected IHeterogeneousChainRegister register;
 
     private NulsLogger logger() {
         return htgContext.logger();
@@ -332,14 +336,16 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public boolean validateHeterogeneousAssetInfoFromNet(String contractAddress, String symbol, int decimals) throws Exception {
-        List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getSymbolERC20Function());
-        if (symbolResult.isEmpty()) {
-            return false;
-        }
-        String _symbol = symbolResult.get(0).getValue().toString();
-        if (!_symbol.equals(symbol)) {
-            return false;
-        }
+        //if (!htgContext.getConverterCoreApi().isProtocol35()) {
+            List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getSymbolERC20Function());
+            if (symbolResult.isEmpty()) {
+                return false;
+            }
+            String _symbol = symbolResult.get(0).getValue().toString();
+            if (!_symbol.equals(symbol)) {
+                return false;
+            }
+        //}
         List<Type> decimalsResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getDecimalsERC20Function());
         if (decimalsResult.isEmpty()) {
             return false;
@@ -368,10 +374,10 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     @Override
-    public void txConfirmedCompleted(String htTxHash, Long blockHeight, String nerveTxHash) throws Exception {
-        logger().info("NerveNetwork confirmation{}transaction Nerver hash: {}", htgContext.getConfig().getSymbol(), nerveTxHash);
+    public void txConfirmedCompleted(String htTxHash, Long blockHeight, String nerveTxHash, byte[] confirmTxRemark) throws Exception {
+        logger().info("NerveNetwork confirmation {} transaction Nerver hash: {}", htgContext.getConfig().getSymbol(), nerveTxHash);
         if (StringUtils.isBlank(htTxHash)) {
-            logger().warn("Empty htTxHash warning");
+            logger().warn("Empty htgTxHash warning");
             return;
         }
         // updatedbinpoChange the status of todeleteConfirm in the queue task`ROLLBACK_NUMER`Remove after each block to facilitate state rollback
@@ -382,7 +388,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         }
         txPo.setDelete(true);
         txPo.setDeletedHeight(blockHeight + HtgConstant.ROLLBACK_NUMER);
-        logger().info("NerveNetwork impact[{}]{}transaction[{}]Confirm completion, nerveheight: {}, nerver hash: {}", txPo.getTxType(), htgContext.getConfig().getSymbol(), txPo.getTxHash(), blockHeight, txPo.getNerveTxHash());
+        logger().info("NerveNetwork impact [{}] {} transaction [{}] Confirm completion, nerve height: {}, nerver hash: {}", txPo.getTxType(), htgContext.getConfig().getSymbol(), txPo.getTxHash(), blockHeight, txPo.getNerveTxHash());
         boolean delete = txPo.isDelete();
         Long deletedHeight = txPo.getDeletedHeight();
         htgUnconfirmedTxStorageService.update(txPo, update -> {
@@ -391,7 +397,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         });
         // Persisted state successfullynerveTx
         if (StringUtils.isNotBlank(nerveTxHash)) {
-            logger().debug("Persisted state successfullynerveTxHash: {}", nerveTxHash);
+            logger().debug("Persisted state successfully nerveTxHash: {}", nerveTxHash);
             htgInvokeTxHelper.saveSuccessfulNerve(nerveTxHash);
         }
     }
@@ -564,12 +570,12 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public boolean validateManagerChangesTxII(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
-        logger().info("validate{}Online virtual banking change transactions,nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+        logger().info("validate {} Online virtual banking change transactions,nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
         try {
             // towardsHTGNetwork request verification
             boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
             if (isCompleted) {
-                logger().info("[{}][{}]transaction[{}]Completed", htgContext.getConfig().getSymbol(), HeterogeneousChainTxType.CHANGE, nerveTxHash);
+                logger().info("[{}] [{}] transaction [{}] Completed", htgContext.getConfig().getSymbol(), HeterogeneousChainTxType.CHANGE, nerveTxHash);
                 return true;
             }
             // Business validation
@@ -661,7 +667,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public String forceRecovery(String nerveTxHash, String[] seedManagers, String[] allManagers) throws NulsException {
-        try {
+        /*try {
             HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
             po.setTxType(HeterogeneousChainTxType.RECOVERY);
             po.setNerveTxHash(nerveTxHash);
@@ -680,7 +686,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 throw (NulsException) e;
             }
             throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
-        }
+        }*/
         return EMPTY_STRING;
     }
 
@@ -1077,6 +1083,26 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         return htgContext.getEthGasPrice();
     }
 
+    @Override
+    public void setRegister(IHeterogeneousChainRegister register) {
+        this.register = register;
+    }
+
+    @Override
+    public void closeChainPending() {
+        this.closePending = true;
+    }
+
+    @Override
+    public void closeChainConfirm() {
+        if (!this.closePending) {
+            throw new RuntimeException("Error steps to close the chain.");
+        }
+        // close thread pool of task
+        this.register.shutdownPending();
+        this.register.shutdownConfirm();
+    }
+
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         if (htgContext.getConverterCoreApi().isProtocol22()) {
             // protocol22: Support cross chain assets with different accuracies
@@ -1153,7 +1179,8 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                             null, //ethTx blockHeight,
                             null, //ethTx tx time,
                             htgContext.MULTY_SIGN_ADDRESS(),
-                            null  //ethTx signers
+                            null,  //ethTx signers
+                            null
                     );
                 } catch (Exception e) {
                     if (e instanceof NulsException) {
@@ -1235,7 +1262,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         for (String remove : removeAddresses) {
             currentVirtualBanks.remove(remove);
         }
-        List<Map.Entry<String, Integer>> list = new ArrayList(currentVirtualBanks.entrySet());
+        List<Map.Entry<String, Integer>> list = new ArrayList<>(currentVirtualBanks.entrySet());
         list.sort(ConverterUtil.CHANGE_SORT);
         int i = 1;
         for (Map.Entry<String, Integer> entry : list) {
@@ -1251,12 +1278,13 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     private HtgAccount createTxStart(String nerveTxHash, HeterogeneousChainTxType txType, HtgWaitingTxPo po) throws Exception {
-        Map<String, Integer> currentVirtualBanks = htgContext.getConverterCoreApi().currentVirtualBanks(htgContext.getConfig().getChainId());
+        Map<String, Integer> currentVirtualBanks = htgContext.getConverterCoreApi().currentVirtualBanksBalanceOrder(htgContext.getConfig().getChainId());
         po.setCurrentVirtualBanks(currentVirtualBanks);
-        String realNerveTxHash = nerveTxHash;
+        int bankSize = htgContext.getConverterCoreApi().getVirtualBankSize();
+        /*String realNerveTxHash = nerveTxHash;
         // according tonervetransactionhashCalculate the sequential seed for the first two digits
         int seed = new BigInteger(realNerveTxHash.substring(0, 1), 16).intValue() + 1;
-        int bankSize = htgContext.getConverterCoreApi().getVirtualBankSize();
+
         if (bankSize > 16) {
             seed += new BigInteger(realNerveTxHash.substring(1, 2), 16).intValue() + 1;
         }
@@ -1277,11 +1305,12 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         for (Map.Entry<String, Integer> entry : list) {
             currentVirtualBanks.put(entry.getKey(), i++);
         }
-        logger().debug("After processing, Current Bank Order: {}", currentVirtualBanks);
+        logger().debug("After processing, Current Bank Order: {}", currentVirtualBanks);*/
+
         // Wait for a fixed time in sequence before sending outHTGtransaction
         int bankOrder = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
         if (logger().isDebugEnabled()) {
-            logger().debug("Sequential calculation parameters bankSize: {}, seed: {}, mod: {}, orginBankOrder: {}, bankOrder: {}", bankSize, seed, mod, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
+            logger().debug("Sequential calculation parameters bankSize: {}, orginBankOrder: {}, bankOrder: {}", bankSize, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
         }
         // towardsHTGNetwork request verification
         boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
@@ -1293,7 +1322,6 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         account.setOrder(bankOrder);
-        account.setMod(mod);
         account.setBankSize(bankSize);
         return account;
     }
@@ -1310,7 +1338,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         // towardsHTGNetwork request verification
         boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
         if (isCompleted) {
-            logger().info("[{}]transaction[{}]Completed", txType, nerveTxHash);
+            logger().info("[{}] transaction [{}] Completed", txType, nerveTxHash);
             return HtgAccount.newEmptyAccount(bankOrder);
         }
         // Obtain administrator account
@@ -1388,17 +1416,17 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
         // Monitor the packaging status of this transaction
         htgListener.addListeningTx(htTxHash);
-        logger().info("NerveNetwork oriented{}Network transmission[{}]transaction, nerveTxHash: {}, details: {}", htgContext.getConfig().getSymbol(), txType, nerveTxHash, po.toString());
+        logger().info("NerveNetwork oriented {} Network transmission [{}] transaction, nerveTxHash: {}, details: {}", htgContext.getConfig().getSymbol(), txType, nerveTxHash, po.toString());
         return htTxHash;
     }
 
     private String _createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
             if (!htgContext.isAvailableRPC()) {
-                logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
+                logger().error("[{}] network RPC Unavailable, pause this task", htgContext.getConfig().getSymbol());
                 throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
             }
-            logger().info("Preparing to send withdrawal{}Transactions,nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+            logger().info("Preparing to send withdrawal {} Transactions, nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
             // Transaction preparation
             HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
             HtgAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
@@ -1431,7 +1459,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the withdrawal will be abnormal
             if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                logger().warn("[{}]Illegal{}Online withdrawal transactions, ERC20[{}]BoundNERVEAssets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                logger().warn("[{}] Illegal {} Online withdrawal transactions, ERC20 [{}] Bound NERVE Assets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                 throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
             }
             // Convert the address to lowercase
@@ -1474,10 +1502,10 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     private String createOrSignWithdrawTxIIProtocol15(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
             if (!htgContext.isAvailableRPC()) {
-                logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
+                logger().error("[{}]network RPC Unavailable, pause this task", htgContext.getConfig().getSymbol());
                 throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
             }
-            logger().info("Preparing to send withdrawal{}Transactions,nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+            logger().info("Preparing to send withdrawal {} Transactions, nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
             // Transaction preparation
             HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
             HtgAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
@@ -1510,7 +1538,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the withdrawal will be abnormal
             if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                logger().warn("[{}]Illegal{}Online withdrawal transactions, ERC20[{}]BoundNERVEAssets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                logger().warn("[{}] Illegal {} Online withdrawal transactions, ERC20 [{}] Bound NERVE Assets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                 throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
             }
             // Convert the address to lowercase
@@ -1558,10 +1586,10 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     private String createOrSignWithdrawTxIIProtocol22(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
             if (!htgContext.isAvailableRPC()) {
-                logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
+                logger().error("[{}]network RPC Unavailable, pause this task", htgContext.getConfig().getSymbol());
                 throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
             }
-            logger().info("Preparing to send withdrawal{}Transactions,nerveTxHash: {}, toAddress: {}, value: {}, assetId: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, toAddress, value, assetId, signatureData);
+            logger().info("Preparing to send withdrawal {} Transactions, nerveTxHash: {}, toAddress: {}, value: {}, assetId: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, toAddress, value, assetId, signatureData);
             // Transaction preparation
             HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
             HtgAccount account = this.createTxStartForWithdraw(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
@@ -1595,7 +1623,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the withdrawal will be abnormal
             if (coreApi.isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                logger().warn("[{}]Illegal{}Online withdrawal transactions, ERC20[{}]BoundNERVEAssets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                logger().warn("[{}] Illegal {} Online withdrawal transactions, ERC20 [{}] Bound NERVE Assets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                 throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
             }
             // Convert the address to lowercase

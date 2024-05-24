@@ -31,8 +31,11 @@ import io.nuls.core.model.StringUtils;
 import keyTools.KeyTools;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.interfaces.IBitCoinApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.enums.AssetName;
+import network.nerve.converter.heterogeneouschain.fch.core.FchBitCoinApi;
 import network.nerve.converter.heterogeneouschain.fch.context.FchContext;
 import network.nerve.converter.heterogeneouschain.fch.core.FchWalletApi;
 import network.nerve.converter.heterogeneouschain.fch.helper.FchAnalysisTxHelper;
@@ -64,6 +67,7 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     private HeterogeneousAssetInfo mainAsset;
     private FchContext context;
+    private FchBitCoinApi bitCoinApi;
     private FchWalletApi walletApi;
     protected ConverterConfig converterConfig;
     protected HtgListener listener;
@@ -76,6 +80,8 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
     protected FchAnalysisTxHelper htgAnalysisTxHelper;
     private HeterogeneousChainGasInfo gasInfo;
     private HtgAccount account;
+    protected boolean closePending = false;
+    protected IHeterogeneousChainRegister register;
 
     private NulsLogger logger() {
         return context.logger();
@@ -209,8 +215,8 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     @Override
-    public void txConfirmedCompleted(String htgTxHash, Long blockHeight, String nerveTxHash) throws Exception {
-        logger().info("NerveNetwork confirmation{}transaction Nerver hash: {}", context.getConfig().getSymbol(), nerveTxHash);
+    public void txConfirmedCompleted(String htgTxHash, Long blockHeight, String nerveTxHash, byte[] confirmTxRemark) throws Exception {
+        logger().info("Nerve Network confirmation {} transaction Nerver hash: {}", context.getConfig().getSymbol(), nerveTxHash);
         if (StringUtils.isBlank(htgTxHash)) {
             logger().warn("Empty htgTxHash warning");
             return;
@@ -223,7 +229,7 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
         }
         txPo.setDelete(true);
         txPo.setDeletedHeight(blockHeight + HtgConstant.ROLLBACK_NUMER);
-        logger().info("NerveNetwork impact[{}]{}transaction[{}]Confirm completion, nerveheight: {}, nerver hash: {}", txPo.getTxType(), context.getConfig().getSymbol(), txPo.getTxHash(), blockHeight, txPo.getNerveTxHash());
+        logger().info("Nerve Network impact [{}] {} transaction [{}] Confirm completion, nerve height: {}, nerver hash: {}", txPo.getTxType(), context.getConfig().getSymbol(), txPo.getTxHash(), blockHeight, txPo.getNerveTxHash());
         boolean delete = txPo.isDelete();
         Long deletedHeight = txPo.getDeletedHeight();
         htgUnconfirmedTxStorageService.update(txPo, update -> {
@@ -232,7 +238,7 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
         });
         // Persisted state successfullynerveTx
         if (StringUtils.isNotBlank(nerveTxHash)) {
-            logger().debug("Persisted state successfullynerveTxHash: {}", nerveTxHash);
+            logger().debug("Persisted state successfully nerveTxHash: {}", nerveTxHash);
             htgInvokeTxHelper.saveSuccessfulNerve(nerveTxHash);
         }
     }
@@ -343,13 +349,13 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
     @Override
     public Boolean reAnalysisDepositTx(String htgTxHash) throws Exception {
         if (htgCommonHelper.constainHash(htgTxHash)) {
-            logger().info("Repeated collection of recharge transactionshash: {}No more repeated parsing[0]", htgTxHash);
+            logger().info("Repeated collection of recharge transactions hash: {} No more repeated parsing[0]", htgTxHash);
             return true;
         }
         reAnalysisLock.lock();
         try {
             if (htgCommonHelper.constainHash(htgTxHash)) {
-                logger().info("Repeated collection of recharge transactionshash: {}No more repeated parsing[1]", htgTxHash);
+                logger().info("Repeated collection of recharge transactions hash: {} No more repeated parsing[1]", htgTxHash);
                 return true;
             }
             logger().info("Re analyze recharge transactions: {}", htgTxHash);
@@ -368,13 +374,13 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
     @Override
     public Boolean reAnalysisTx(String htgTxHash) throws Exception {
         if (htgCommonHelper.constainHash(htgTxHash)) {
-            logger().info("Repeated collection of transactionshash: {}No more repeated parsing[0]", htgTxHash);
+            logger().info("Repeated collection of transactions hash: {} No more repeated parsing[0]", htgTxHash);
             return true;
         }
         reAnalysisLock.lock();
         try {
             if (htgCommonHelper.constainHash(htgTxHash)) {
-                logger().info("Repeated collection of transactionshash: {}No more repeated parsing[1]", htgTxHash);
+                logger().info("Repeated collection of transactions hash: {} No more repeated parsing[1]", htgTxHash);
                 return true;
             }
             logger().info("Re analyze transactions: {}", htgTxHash);
@@ -398,54 +404,47 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public String createOrSignWithdrawTxII(String txHash, String toAddress, BigInteger value, Integer assetId, String signatureData) throws NulsException {
-        //TODO pierre WithdrawTx
-        return null;
+        throw new RuntimeException("Unsupport Function");
     }
 
     @Override
     public boolean validateManagerChangesTxII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
-        //TODO pierre validate ChangesTx
-        return false;
+        return this.getBitCoinApi().validateManagerChangesTx(txHash, addAddresses, removeAddresses, orginTxCount, signatureData);
     }
 
     @Override
     public String createOrSignManagerChangesTxII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
-        //TODO pierre ChangesTx
-        return null;
+        return this.getBitCoinApi().createOrSignManagerChangesTx(txHash, addAddresses, removeAddresses, orginTxCount, signatureData, false);
     }
 
     @Override
     public String createOrSignUpgradeTxII(String txHash, String upgradeContract, String signatureData) throws NulsException {
-        return EMPTY_STRING;
+        return txHash;
     }
 
     @Override
     public String signWithdrawII(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
-        //TODO pierre auto-generated method stub
-        return null;
+        throw new RuntimeException("Unsupport Function");
     }
 
     @Override
     public String signManagerChangesII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount) throws NulsException {
-        //TODO pierre auto-generated method stub
-        return null;
+        return this.getBitCoinApi().signManagerChanges(txHash, addAddresses, removeAddresses, orginTxCount);
     }
 
     @Override
     public String signUpgradeII(String txHash, String upgradeContract) throws NulsException {
-        return EMPTY_STRING;
+        return txHash;
     }
 
     @Override
     public Boolean verifySignWithdrawII(String signAddress, String txHash, String toAddress, BigInteger value, Integer assetId, String signed) throws NulsException {
-        //TODO pierre auto-generated method stub
-        return false;
+        throw new RuntimeException("Unsupport Function");
     }
 
     @Override
     public Boolean verifySignManagerChangesII(String signAddress, String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signed) throws NulsException {
-        //TODO pierre auto-generated method stub
-        return false;
+        return this.getBitCoinApi().verifySignManagerChanges(signAddress, txHash, addAddresses, removeAddresses, orginTxCount, signed);
     }
 
     @Override
@@ -460,14 +459,12 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
-        //TODO pierre auto-generated method stub
-        return false;
+        throw new RuntimeException("Unsupport Function");
     }
 
     @Override
     public boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId) {
-        //TODO pierre auto-generated method stub
-        return false;
+        throw new RuntimeException("Unsupport Function");
     }
 
     @Override
@@ -530,4 +527,30 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
     public BigInteger currentGasPrice() {
         return context.getEthGasPrice();
     }
+
+    @Override
+    public IBitCoinApi getBitCoinApi() {
+        return bitCoinApi;
+    }
+
+    @Override
+    public void setRegister(IHeterogeneousChainRegister register) {
+        this.register = register;
+    }
+
+    @Override
+    public void closeChainPending() {
+        this.closePending = true;
+    }
+
+    @Override
+    public void closeChainConfirm() {
+        if (!this.closePending) {
+            throw new RuntimeException("Error steps to close the chain.");
+        }
+        // close thread pool of task
+        this.register.shutdownPending();
+        this.register.shutdownConfirm();
+    }
+
 }

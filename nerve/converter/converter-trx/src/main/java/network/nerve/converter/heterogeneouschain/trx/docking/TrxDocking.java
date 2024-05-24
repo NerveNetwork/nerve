@@ -33,6 +33,7 @@ import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
@@ -349,14 +350,16 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public boolean validateHeterogeneousAssetInfoFromNet(String contractAddress, String symbol, int decimals) throws Exception {
-        List<Type> symbolResult = trxWalletApi.callViewFunction(contractAddress, TrxUtil.getSymbolERC20Function());
-        if (symbolResult.isEmpty()) {
-            return false;
-        }
-        String _symbol = symbolResult.get(0).getValue().toString();
-        if (!_symbol.equals(symbol)) {
-            return false;
-        }
+        //if (!htgContext.getConverterCoreApi().isProtocol35()) {
+            List<Type> symbolResult = trxWalletApi.callViewFunction(contractAddress, TrxUtil.getSymbolERC20Function());
+            if (symbolResult.isEmpty()) {
+                return false;
+            }
+            String _symbol = symbolResult.get(0).getValue().toString();
+            if (!_symbol.equals(symbol)) {
+                return false;
+            }
+        //}
         List<Type> decimalsResult = trxWalletApi.callViewFunction(contractAddress, TrxUtil.getDecimalsERC20Function());
         if (decimalsResult.isEmpty()) {
             return false;
@@ -385,7 +388,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     @Override
-    public void txConfirmedCompleted(String htTxHash, Long blockHeight, String nerveTxHash) throws Exception {
+    public void txConfirmedCompleted(String htTxHash, Long blockHeight, String nerveTxHash, byte[] confirmTxRemark) throws Exception {
         logger().info("NerveNetwork confirmation{}transaction Nerver hash: {}", htgContext.getConfig().getSymbol(), nerveTxHash);
         if (StringUtils.isBlank(htTxHash)) {
             logger().warn("Empty htTxHash warning");
@@ -455,6 +458,9 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         if (txInfo.getTxTime() == null) {
             Response.TransactionInfo txReceipt = trxWalletApi.getTransactionReceipt(txHash);
             txInfo.setTxTime(txReceipt.getBlockTimeStamp());
+        }
+        if (txInfo.getTxTime() != null && txInfo.getTxTime().longValue() > 1000000000000l && htgContext.getConverterCoreApi().isProtocol21()) {
+            txInfo.setTxTime(txInfo.getTxTime() / 1000);
         }
         return txInfo;
     }
@@ -617,7 +623,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public String forceRecovery(String nerveTxHash, String[] seedManagers, String[] allManagers) throws NulsException {
-        try {
+        /*try {
             HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
             po.setTxType(HeterogeneousChainTxType.RECOVERY);
             po.setNerveTxHash(nerveTxHash);
@@ -636,7 +642,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 throw (NulsException) e;
             }
             throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
-        }
+        }*/
         return EMPTY_STRING;
     }
 
@@ -1187,7 +1193,8 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                             null, //ethTx blockHeight,
                             null, //ethTx tx time,
                             htgContext.MULTY_SIGN_ADDRESS(),
-                            null  //ethTx signers
+                            null,  //ethTx signers
+                            null
                     );
                 } catch (Exception e) {
                     if (e instanceof NulsException) {
@@ -1269,7 +1276,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         for (String remove : removeAddresses) {
             currentVirtualBanks.remove(remove);
         }
-        List<Map.Entry<String, Integer>> list = new ArrayList(currentVirtualBanks.entrySet());
+        List<Map.Entry<String, Integer>> list = new ArrayList<>(currentVirtualBanks.entrySet());
         list.sort(ConverterUtil.CHANGE_SORT);
         int i = 1;
         for (Map.Entry<String, Integer> entry : list) {
@@ -1285,12 +1292,13 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     private TrxAccount createTxStart(String nerveTxHash, HeterogeneousChainTxType txType, HtgWaitingTxPo po) throws Exception {
-        Map<String, Integer> currentVirtualBanks = htgContext.getConverterCoreApi().currentVirtualBanks(htgContext.getConfig().getChainId());
+        Map<String, Integer> currentVirtualBanks = htgContext.getConverterCoreApi().currentVirtualBanksBalanceOrder(htgContext.getConfig().getChainId());
         po.setCurrentVirtualBanks(currentVirtualBanks);
-        String realNerveTxHash = nerveTxHash;
+        int bankSize = htgContext.getConverterCoreApi().getVirtualBankSize();
+
+        /*String realNerveTxHash = nerveTxHash;
         // according tonervetransactionhashCalculate the sequential seed for the first two digits
         int seed = new BigInteger(realNerveTxHash.substring(0, 1), 16).intValue() + 1;
-        int bankSize = htgContext.getConverterCoreApi().getVirtualBankSize();
         if (bankSize > 16) {
             seed += new BigInteger(realNerveTxHash.substring(1, 2), 16).intValue() + 1;
         }
@@ -1311,11 +1319,12 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         for (Map.Entry<String, Integer> entry : list) {
             currentVirtualBanks.put(entry.getKey(), i++);
         }
-        logger().debug("After processing, Current Bank Order: {}", currentVirtualBanks);
+        logger().debug("After processing, Current Bank Order: {}", currentVirtualBanks);*/
+
         // Wait for a fixed time in sequence before sending outHTGtransaction
         int bankOrder = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
         if (logger().isDebugEnabled()) {
-            logger().debug("Sequential calculation parameters bankSize: {}, seed: {}, mod: {}, orginBankOrder: {}, bankOrder: {}", bankSize, seed, mod, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
+            logger().debug("Sequential calculation parameters bankSize: {}, orginBankOrder: {}, bankOrder: {}", bankSize, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
         }
         // towardsHTGNetwork request verification
         boolean isCompleted = trxParseTxHelper.isCompletedTransaction(nerveTxHash);
@@ -1327,7 +1336,6 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         account.setOrder(bankOrder);
-        account.setMod(mod);
         account.setBankSize(bankSize);
         return account;
     }

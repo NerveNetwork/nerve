@@ -101,11 +101,11 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         try {
             String symbol = htgContext.getConfig().getSymbol();
             if (!htgContext.getConverterCoreApi().isRunning()) {
-                LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", symbol);
+                LoggerUtil.LOG.debug("[{}] Ignoring synchronous block mode", symbol);
                 return;
             }
             if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
-                htgContext.logger().info("Test network[{}]Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
+                htgContext.logger().info("Test network [{}] Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
@@ -113,20 +113,20 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 return;
             }
             if (!htgContext.isAvailableRPC()) {
-                htgContext.logger().error("[{}]networkRPCUnavailable, pause this task", symbol);
+                htgContext.logger().error("[{}] network RPC Unavailable, pause this task", symbol);
                 return;
             }
             try {
                 htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
                 BigInteger currentGasPrice = htgWalletApi.getCurrentGasPrice();
                 if (currentGasPrice != null) {
-                    htgContext.logger().debug("current{}Network basedPrice: {} Gwei.", symbol, new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+                    htgContext.logger().debug("current {} Network based Price: {} Gwei.", symbol, new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
                     htgContext.setEthGasPrice(currentGasPrice);
                 }
             } catch (Exception e) {
-                htgContext.logger().error(String.format("synchronization%scurrentPricefail", symbol), e);
+                htgContext.logger().error(String.format("synchronization %s current Price fail", symbol), e);
             }
-            LoggerUtil.LOG.debug("[{}Transaction confirmation task] - every other{}Execute once per second.", symbol, htgContext.getConfig().getConfirmTxQueuePeriod());
+            LoggerUtil.LOG.debug("[{} Transaction confirmation task] - every other {} Execute once per second.", symbol, htgContext.getConfig().getConfirmTxQueuePeriod());
             // Persistent unconfirmed transactions loaded while waiting for application restart
             htgContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH().await();
             long ethNewestHeight = htgWalletApi.getBlockHeight();
@@ -134,7 +134,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             for (int i = 0; i < size; i++) {
                 po = htgContext.UNCONFIRMED_TX_QUEUE().poll();
                 if (po == null) {
-                    logger().info("Remove null valuesPO");
+                    logger().info("Remove null values PO");
                     continue;
                 }
                 // Clean up useless change tasks
@@ -157,7 +157,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     }
                 }
                 if (po.getBlockHeight() == null) {
-                    // Block height is empty, check10Next time, queryethThe exchange is at a height, if the nodes are synchronizedethIf the height is greater than the exchange's height, it indicates that the transaction has already been processed by other nodes and should be removed
+                    // Block height is empty, check 10 Next time, query eth The exchange is at a height, if the nodes are synchronized eth If the height is greater than the exchange's height, it indicates that the transaction has already been processed by other nodes and should be removed
                     boolean needRemovePo = checkBlockHeightTimes(po);
                     if(needRemovePo) {
                         logger().info("[{}]Block height is empty, this transaction has been processed. Remove this transaction, details: {}", symbol, po.toString());
@@ -184,7 +184,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                         }
                     }
                     if(logger().isDebugEnabled()) {
-                        logger().debug("[{}]Block height is empty, put back in queue for next processing, details: {}", symbol, po.toString());
+                        logger().debug("[{}] Block height is empty, put back in queue for next processing, details: {}", symbol, po.toString());
                     }
                     queue.offer(po);
                     continue;
@@ -195,7 +195,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     po.setSkipTimes(po.getSkipTimes() - 1);
                     queue.offer(po);
                     if(logger().isDebugEnabled()) {
-                        logger().debug("[{}]Transaction triggered revalidation, remaining number of rounds waiting for revalidation: {}", symbol, po.getSkipTimes());
+                        logger().debug("[{}] Transaction triggered revalidation, remaining number of rounds waiting for revalidation: {}", symbol, po.getSkipTimes());
                     }
                     continue;
                 }
@@ -206,7 +206,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 }
                 if (ethNewestHeight - po.getBlockHeight() < confirmation) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("[{}]transaction[{}]Confirm altitude waiting: {}", symbol, po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
+                        logger().debug("[{}] transaction [{}] Confirm altitude waiting: {}", symbol, po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
                     }
                     queue.offer(po);
                     continue;
@@ -215,7 +215,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     case DEPOSIT:
                         if (dealDeposit(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
-                                logger().debug("[{}]Recharge transactions are placed back in the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
+                                logger().debug("[{}] Recharge transactions are placed back in the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
                             }
                             queue.offer(po);
                         }
@@ -225,7 +225,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     case UPGRADE:
                         if (dealBroadcastTx(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
-                                logger().debug("[{}]Broadcast transactions are put back into the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
+                                logger().debug("[{}] Broadcast transactions are put back into the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
                             }
                             queue.offer(po);
                         }
@@ -296,6 +296,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         }
         if (txPo == null) {
             logger().warn("[{}][Recharge task exception] DBNot obtained inPOIn the queuePO: {}", symbol, po.toString());
+            this.clearDB(htgTxHash);
             return !isReOfferQueue;
         }
         // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBRemove from queue
@@ -396,6 +397,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     (TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
                 logger().info("NerveTransaction already exists, remove pending confirmation from queue{}transaction[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
+                this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             }
             po.increaseDepositErrorTime();
@@ -498,6 +500,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         }
         if (txPo == null) {
             logger().warn("[{}][{}Task exception] DBNot obtained inPOIn the queuePO: {}", symbol, po.getTxType(), po.toString());
+            this.clearDB(htgTxHash);
             return !isReOfferQueue;
         }
         String nerveTxHash = po.getNerveTxHash();
@@ -541,6 +544,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 }
                 if (waitingTxPo == null) {
                     logger().info("[{}]Check three rounds without any issueswaitingTxPoRemove thisFAILEDtask, htgTxHash: {}", symbol, htgTxHash);
+                    this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (this.checkIfSendByOwn(waitingTxPo, txPo.getFrom())) {
@@ -577,7 +581,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 }
                 try {
                     String realNerveTxHash = nerveTxHash;
-                    logger().info("[{}]Signed{}transaction[{}]callNerveconfirm[{}]", po.getTxType(), symbol, htgTxHash, realNerveTxHash);
+                    logger().info("[{}] Signed {} transaction [{}] call Nerve confirm [{}]", po.getTxType(), symbol, htgTxHash, realNerveTxHash);
                     Transaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
                     Long height = htgParseTxHelper.getTxHeight(logger(), htgTx).longValue();
                     EthBlock.Block header = htgWalletApi.getBlockHeaderByHeight(height);
@@ -589,11 +593,13 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                             height,
                             header.getTimestamp().longValue(),
                             htgContext.MULTY_SIGN_ADDRESS(),
-                            txPo.getSigners());
+                            txPo.getSigners(),
+                            null);
                 } catch (NulsException e) {
                     // Transaction already exists, waiting for confirmation to remove
                     if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode()) || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {
-                        logger().info("Nervetransaction[{}]Exists, remove pending confirmation from queue{}transaction[{}]", txPo.getNerveTxHash(), symbol, htgTxHash);
+                        logger().info("Nerve transaction [{}] Exists, remove pending confirmation from queue {} transaction [{}]", txPo.getNerveTxHash(), symbol, htgTxHash);
+                        this.clearDB(htgTxHash);
                         return !isReOfferQueue;
                     }
                     throw e;

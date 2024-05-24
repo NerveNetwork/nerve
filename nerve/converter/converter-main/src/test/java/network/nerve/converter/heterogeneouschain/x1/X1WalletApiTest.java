@@ -38,9 +38,9 @@ import java.util.concurrent.TimeUnit;
 
 public class X1WalletApiTest extends Base {
 
-    String testEthRpcAddress = "https://testrpc.xlayer.tech";
+    String testEthRpcAddress = "https://testrpc.xlayer.tech";//https://xlayertestrpc.okx.com/
     int testChainId = 195;
-    String mainEthRpcAddress = "https://rpc.xlayer.tech";
+    String mainEthRpcAddress = "https://rpc.xlayer.tech";//https://xlayerrpc.okx.com
     int mainChainId = 196;
     @Override
     protected String testEthRpcAddress() {
@@ -541,8 +541,8 @@ public class X1WalletApiTest extends Base {
 
     @Test
     public void allContractManagerSet() throws Exception {
-        setMainData();
-        //setLocalTest();
+        //setMainData();
+        setLocalNewTest();
         boolean queryBalance = false;
         System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(multySignContractAddress);
@@ -589,26 +589,14 @@ public class X1WalletApiTest extends Base {
      */
     @Test
     public void managerAdd10By4Managers() throws Exception {
-        setLocalTest();
+        setLocalNewTest();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // 49261765750000000
         // 84688410000000000
         String txKey = "aaa0000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{
-                "0x847772e7773061c93d0967c56f2e4b83145c8cb2",
-                "0x4273e90fbfe5fca32704c02987d938714947a937",
-                "0x9f14432b86db285c76589d995aab7e7f88b709df",
-                "0x42868061f6659e84414e0c52fb7c32c084ce2051",
-                "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af",
-                "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565",
-                "0x6392c7ed994f7458d60528ed49c2f525dab69c9a",
-                "0xfa27c84ec062b2ff89eb297c24aaed366079c684",
-                "0xc11d9943805e56b630a401d4bd9a29550353efa1",
-                "0x3091e329908da52496cc72f5d5bbfba985bccb1f",
-                "0x49467643f1b6459caf316866ecef9213edc4fdf2",
-                "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"
         };
-        String[] removes = new String[]{};
+        String[] removes = new String[]{"0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65"};
         int txCount = 1;
         int signCount = 3;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
@@ -1022,7 +1010,7 @@ public class X1WalletApiTest extends Base {
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        //setMain();
+        setMain();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());

@@ -32,6 +32,7 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterContext;
@@ -162,8 +163,19 @@ public class ProposalVerifier {
                 validBankVoteRange(chain, rangeType);
                 validTxWhitelist(chain, txData.getContent());
                 break;
+            case CLOSE_HTG_CHAIN:
+                validBankVoteRange(chain, rangeType);
+                validCloseHtgChain(chain, txData.getHeterogeneousChainId());
+                break;
             default:
                 break;
+        }
+    }
+
+    private void validCloseHtgChain(Chain chain, int heterogeneousChainId) {
+        HeterogeneousChainInfo chainInfo = heterogeneousChainManager.getHeterogeneousChainByChainId(heterogeneousChainId);
+        if (chainInfo == null) {
+            throw new NulsRuntimeException(ConverterErrorCode.DATA_ERROR, "Empty chain");
         }
     }
 

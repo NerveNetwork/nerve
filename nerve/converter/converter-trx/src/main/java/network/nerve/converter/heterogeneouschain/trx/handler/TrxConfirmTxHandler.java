@@ -94,33 +94,33 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         try {
             if (!htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) return;
             if (!htgContext.getConverterCoreApi().isRunning()) {
-                LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
+                LoggerUtil.LOG.debug("[{}] Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
                 return;
             }
             try {
                 BigInteger energyFee = htgWalletApi.getCurrentGasPrice();
-                htgContext.logger().debug("current{}Network basedEnergyFee: {}.", htgContext.getConfig().getSymbol(), energyFee);
+                htgContext.logger().info("current {} Network based Energy Fee: {}.", htgContext.getConfig().getSymbol(), energyFee);
                 TrxContext trxContext = (TrxContext) htgContext;
                 if (energyFee != null && trxContext.SUN_PER_ENERGY.intValue() != energyFee.intValue()) {
                     trxContext.FEE_LIMIT_OF_WITHDRAW = TrxConstant.FEE_LIMIT_OF_WITHDRAW_BASE.multiply(energyFee).divide(SUN_PER_ENERGY_BASE);
                     trxContext.FEE_LIMIT_OF_CHANGE = TrxConstant.FEE_LIMIT_OF_CHANGE_BASE.multiply(energyFee).divide(SUN_PER_ENERGY_BASE);
                     trxContext.SUN_PER_ENERGY = energyFee;
                     trxContext.gasInfo = null;
-                    htgContext.logger().info("Update current{}Network basedEnergyFee: {}, FEE_LIMIT_OF_WITHDRAW: {}, FEE_LIMIT_OF_CHANGE: {}.", htgContext.getConfig().getSymbol(), energyFee, trxContext.FEE_LIMIT_OF_WITHDRAW, trxContext.FEE_LIMIT_OF_CHANGE);
+                    htgContext.logger().info("Update current {} Network based Energy Fee: {}, FEE_LIMIT_OF_WITHDRAW: {}, FEE_LIMIT_OF_CHANGE: {}.", htgContext.getConfig().getSymbol(), energyFee, trxContext.FEE_LIMIT_OF_WITHDRAW, trxContext.FEE_LIMIT_OF_CHANGE);
                 }
             } catch (Exception e) {
-                htgContext.logger().error(String.format("synchronization%scurrentEnergyFeefail", htgContext.getConfig().getSymbol()), e);
+                htgContext.logger().error(String.format("synchronization %s current Energy Fee fail", htgContext.getConfig().getSymbol()), e);
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
-                LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
+                LoggerUtil.LOG.debug("[{}] Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
                 return;
             }
             if (!htgContext.isAvailableRPC()) {
-                htgContext.logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("[{}] network RPC Unavailable, pause this task", htgContext.getConfig().getSymbol());
                 return;
             }
             htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
-            LoggerUtil.LOG.debug("[{}Transaction confirmation task] - every other{}Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getConfirmTxQueuePeriod());
+            LoggerUtil.LOG.debug("[{} Transaction confirmation task] - every other {} Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getConfirmTxQueuePeriod());
             // Persistent unconfirmed transactions loaded while waiting for application restart
             htgContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH().await();
             long ethNewestHeight = htgWalletApi.getBlockHeight();
@@ -182,7 +182,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 }
                 if (ethNewestHeight - po.getBlockHeight() < confirmation) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("transaction[{}]Confirm altitude waiting: {}", po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
+                        logger().debug("transaction [{}] Confirm altitude waiting: {}", po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
                     }
                     queue.offer(po);
                     continue;
@@ -271,6 +271,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         }
         if (txPo == null) {
             logger().warn("[Recharge task exception] DBNot obtained inPOIn the queuePO: {}", po.toString());
+            this.clearDB(htgTxHash);
             return !isReOfferQueue;
         }
         // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBRemove from queue
@@ -369,6 +370,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                     (TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
                 logger().info("NerveTransaction already exists, remove pending confirmation from queue{}transaction[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
+                this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             }
             po.increaseDepositErrorTime();
@@ -469,7 +471,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             txPo = htgUnconfirmedTxStorageService.findByTxHash(htgTxHash);
         }
         if (txPo == null) {
-            logger().warn("[{}Task exception] DBNot obtained inPOIn the queuePO: {}", po.getTxType(), po.toString());
+            logger().warn("[{} Task exception] DB Not obtained in PO In the queuePO: {}", po.getTxType(), po.toString());
             return !isReOfferQueue;
         }
         String nerveTxHash = po.getNerveTxHash();
@@ -480,7 +482,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 this.clearDB(htgTxHash);
                 isReOfferQueue = false;
                 htgResendHelper.clear(nerveTxHash);
-                logger().info("[{}]transaction[{}]Confirmed exceeding{}Height, Remove queue, nerveheight: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+                logger().info("[{}] transaction [{}] Confirmed exceeding {} Height, Remove queue, nerveheight: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
             // supplementpoMemory data,poPrint logs for easy viewing of data
             po.setDelete(txPo.isDelete());
@@ -493,12 +495,12 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 break;
             case FAILED:
                 if (!htgResendHelper.canResend(nerveTxHash)) {
-                    logger().warn("Nervetransaction[{}]Resend over{}Second, discard transaction", nerveTxHash, RESEND_TIME);
+                    logger().warn("Nerve transaction [{}] Resend over {} Second, discard transaction", nerveTxHash, RESEND_TIME);
                     htgResendHelper.clear(htgTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
-                logger().info("Failed{}transaction[{}]Check if the current node can send transactions", htgContext.getConfig().getSymbol(), htgTxHash);
+                logger().info("Failed {} transaction [{}] Check if the current node can send transactions", htgContext.getConfig().getSymbol(), htgTxHash);
                 // Check if your order is eligible for trading
                 HtgWaitingTxPo waitingTxPo = htgInvokeTxHelper.findEthWaitingTxPo(nerveTxHash);
                 // Check if there are any three roundswaitingTxPoOtherwise, remove thisFAILEDtask
@@ -507,12 +509,13 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 }
                 // querynerveCorresponding to the transactionethWhether the transaction was successful
                 if (htgInvokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
-                    logger().info("Nerve tx stayNERVENetwork confirmed, Successfully removed queue, nerveHash: {}", nerveTxHash);
+                    logger().info("Nerve tx stay NERVE Network confirmed, Successfully removed queue, nerveHash: {}", nerveTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (waitingTxPo == null) {
-                    logger().info("Check three rounds without any issueswaitingTxPoRemove thisFAILEDtask, htgTxHash: {}", htgTxHash);
+                    logger().info("Check three rounds without any issues waiting TxPo Remove this FAILED task, htgTxHash: {}", htgTxHash);
+                    this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (this.checkIfSendByOwn(waitingTxPo, txPo.getFrom())) {
@@ -520,7 +523,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                     return !isReOfferQueue;
                 }
                 // Failed transactions, not handled by the current node, from the queue andDBRemove from middle
-                logger().info("Failed{}transaction[{}]The current node is not in the next order and will not be processed by the current node. Remove the queue", htgContext.getConfig().getSymbol(), htgTxHash);
+                logger().info("Failed {} transaction [{}] The current node is not in the next order and will not be processed by the current node. Remove the queue", htgContext.getConfig().getSymbol(), htgTxHash);
                 this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             case COMPLETED:
@@ -558,11 +561,13 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                             txPo.getBlockHeight(),
                             txPo.getTxTime(),
                             htgContext.MULTY_SIGN_ADDRESS(),
-                            txPo.getSigners());
+                            txPo.getSigners(),
+                            null);
                 } catch (NulsException e) {
                     // Transaction already exists, waiting for confirmation to remove
                     if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode()) || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {
                         logger().info("Nervetransaction[{}]Exists, remove pending confirmation from queue{}transaction[{}]", txPo.getNerveTxHash(), htgContext.getConfig().getSymbol(), htgTxHash);
+                        this.clearDB(htgTxHash);
                         return !isReOfferQueue;
                     }
                     throw e;

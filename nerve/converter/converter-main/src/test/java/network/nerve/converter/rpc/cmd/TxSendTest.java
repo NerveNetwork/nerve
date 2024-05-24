@@ -45,6 +45,7 @@ import network.nerve.converter.heterogeneouschain.kava.context.KavaContext;
 import network.nerve.converter.heterogeneouschain.kcs.context.KcsContext;
 import network.nerve.converter.heterogeneouschain.klay.context.KlayContext;
 import network.nerve.converter.heterogeneouschain.linea.context.LineaContext;
+import network.nerve.converter.heterogeneouschain.mint.context.MintContext;
 import network.nerve.converter.heterogeneouschain.pulse.context.PulseContext;
 import network.nerve.converter.heterogeneouschain.scroll.context.ScrollContext;
 import network.nerve.converter.heterogeneouschain.matic.context.MaticContext;
@@ -162,6 +163,11 @@ public class TxSendTest {
     String packageAddressPrivateKey8 = "CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2";
 
     Map<String, Object> pMap;
+
+    /** Mint testnet */
+    static String USDT_MINT = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
+    static String USD18_MINT = "0x21615a84D8D834ca598a59D8E5C810128403DfaE";
+    static String NVT_MINT_MINTER = "0xE6b360C49A316fcc71d55B3074160ee043a7BD8B";
 
     /** Pulse testnet */
     static String USDT_PULSE = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
@@ -449,6 +455,7 @@ public class TxSendTest {
     BlastContext blastContext = new BlastContext();
     MerlinContext merlinContext = new MerlinContext();
     PulseContext pulseContext = new PulseContext();
+    MintContext mintContext = new MintContext();
 
     static int ethChainId = 101;
     static int bnbChainId = 102;
@@ -597,7 +604,7 @@ public class TxSendTest {
 
     @Test
     public void getBalance() throws Exception {
-        getBalanceByAddress("QA-User address", "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA");
+        //getBalanceByAddress("QA-User address", "TNVTdTSPSShZokMfXRo82TP2Kq6Fc2nhMNmF7");
         getBalanceByAddress("address31-User address", address31);
         //getBalanceByAddress("packageAddressZP-User address", packageAddressZP);
         //getBalanceByAddress("address32-User address", address32);
@@ -611,22 +618,25 @@ public class TxSendTest {
         //this.balanceInfoPrint("asset USDTN", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("asset NVT_USDTN_LP", new NerveAssetInfo(5, 4), address, 18);
         //this.balanceInfoPrint("asset BNB", new NerveAssetInfo(5, 2), address, 18);
-        this.balanceInfoPrint("asset OKB", new NerveAssetInfo(5, 2), address, 18);
-        this.balanceInfoPrint("asset PLS", new NerveAssetInfo(5, 3), address, 18);
+        //this.balanceInfoPrint("asset OKB", new NerveAssetInfo(5, 2), address, 18);
+        //this.balanceInfoPrint("asset PLS", new NerveAssetInfo(5, 3), address, 18);
+        this.balanceInfoPrint("asset Mint-ETH", new NerveAssetInfo(5, 2), address, 18);
+        this.balanceInfoPrint("asset FCH", new NerveAssetInfo(5, 3), address, 8);
+        this.balanceInfoPrint("asset BTC", new NerveAssetInfo(5, 4), address, 8);
         //this.balanceInfoPrint("asset Mode-ETH", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("asset Blast-ETH", new NerveAssetInfo(5, 4), address, 18);
         //this.balanceInfoPrint("asset Merlin-BTC", new NerveAssetInfo(5, 5), address, 18);
         //this.balanceInfoPrint("asset BTC", new NerveAssetInfo(5, 4), address, 8);
         //this.balanceInfoPrint("asset FCH", new NerveAssetInfo(5, 3), address, 8);
         //this.balanceInfoPrint("asset MANTA-ETH", new NerveAssetInfo(5, 2), address, 18);
-        this.balanceInfoPrint("asset USDT(x1)", new NerveAssetInfo(5, 4), address, 6);
-        this.balanceInfoPrint("asset USD18(x1)", new NerveAssetInfo(5, 5), address, 18);
-        this.balanceInfoPrint("asset USDT(pls)", new NerveAssetInfo(5, 6), address, 6);
-        this.balanceInfoPrint("asset USD18(pls)", new NerveAssetInfo(5, 7), address, 18);
-        this.balanceInfoPrint("asset U1D", new NerveAssetInfo(5, 8), address, 18);
-        this.balanceInfoPrint("asset U2D", new NerveAssetInfo(5, 9), address, 18);
-        this.balanceInfoPrint("asset U3D", new NerveAssetInfo(5, 10), address, 18);
-        this.balanceInfoPrint("asset U4D", new NerveAssetInfo(5, 11), address, 18);
+        this.balanceInfoPrint("asset USDT(mint)", new NerveAssetInfo(5, 5), address, 6);
+        this.balanceInfoPrint("asset USD18(mint)", new NerveAssetInfo(5, 6), address, 18);
+        //this.balanceInfoPrint("asset USDT(pls)", new NerveAssetInfo(5, 6), address, 6);
+        //this.balanceInfoPrint("asset USD18(pls)", new NerveAssetInfo(5, 7), address, 18);
+        //this.balanceInfoPrint("asset U1D", new NerveAssetInfo(5, 8), address, 18);
+        //this.balanceInfoPrint("asset U2D", new NerveAssetInfo(5, 9), address, 18);
+        //this.balanceInfoPrint("asset U3D", new NerveAssetInfo(5, 10), address, 18);
+        //this.balanceInfoPrint("asset U4D", new NerveAssetInfo(5, 11), address, 18);
         //this.balanceInfoPrint("asset USDT(mode)", new NerveAssetInfo(5, 6), address, 6);
         //this.balanceInfoPrint("asset USD18(mode)", new NerveAssetInfo(5, 7), address, 18);
         //this.balanceInfoPrint("asset USDT(blast)", new NerveAssetInfo(5, 10), address, 6);
@@ -798,6 +808,18 @@ public class TxSendTest {
     }
 
     @Test
+    public void withdrawalMintETH() throws Exception {
+        int htgChainId = mintContext.HTG_CHAIN_ID();
+        String from = address31;
+        String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
+        // Main assets quantity
+        BigInteger value = new BigDecimal("0.00002").movePointRight(18).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(20_0000_0000L).toString());
+        NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
     public void withdrawalPLS() throws Exception {
         int htgChainId = pulseContext.HTG_CHAIN_ID();
         String from = address31;
@@ -865,6 +887,18 @@ public class TxSendTest {
         // Main assets quantity
         BigInteger value = new BigDecimal("0.00002").movePointRight(18).toBigInteger();
         BigInteger fee = new BigInteger(Long.valueOf(60_0000_0000L).toString());
+        NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
+    public void withdrawalBTC() throws Exception {
+        int htgChainId = btcContext.HTG_CHAIN_ID();
+        String from = address31;
+        String to = "mmLahgkWGHQSKszCDcZXPooWoRuYhQPpCF";
+        // Main assets quantity
+        BigInteger value = new BigDecimal("0.00001129").movePointRight(8).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(29_1000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
@@ -1340,8 +1374,8 @@ public class TxSendTest {
 
     @Test
     public void withdrawalUSDT() throws Exception {
-        int htgChainId = pulseContext.HTG_CHAIN_ID();
-        String contract = USDT_PULSE;
+        int htgChainId = mintContext.HTG_CHAIN_ID();
+        String contract = USDT_MINT;
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
@@ -1354,14 +1388,14 @@ public class TxSendTest {
 
     @Test
     public void withdrawalUSD18() throws Exception {
-        int htgChainId = pulseContext.HTG_CHAIN_ID();
-        String contract = USD18_PULSE;
+        int htgChainId = mintContext.HTG_CHAIN_ID();
+        String contract = USD18_MINT;
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         // USD18quantity
-        //BigInteger value = new BigDecimal("1230.123456789123456789").scaleByPowerOfTen(18).toBigInteger();
-        BigInteger value = new BigDecimal("13").scaleByPowerOfTen(18).toBigInteger();
+        BigInteger value = new BigDecimal("1230.123456789123456789").scaleByPowerOfTen(18).toBigInteger();
+        //BigInteger value = new BigDecimal("13").scaleByPowerOfTen(18).toBigInteger();
         BigInteger fee = new BigInteger(Long.valueOf(20_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
@@ -1411,8 +1445,8 @@ public class TxSendTest {
     @Test
     public void withdrawalNVT() throws Exception {
         int feeChainId = chainId;
-        int htgChainId = pulseContext.HTG_CHAIN_ID();
-        String contract = NVT_PULSE_MINTER;
+        int htgChainId = mintContext.HTG_CHAIN_ID();
+        String contract = "0x67Ce1821eFa30478e459ABFC5966d4Bc82Dbc17f";
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
@@ -1466,6 +1500,7 @@ public class TxSendTest {
         params.put("feeChainId", feeChainId);
         params.put("remark", "Withdrawal");
         params.put("address", from);
+        password = "nuls123456";
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_withdrawal", params);
         if (cmdResp.isSuccess()) {
@@ -1487,15 +1522,18 @@ public class TxSendTest {
 
         Integer feeChainId = chainId;
         // Additional handling fees
-        String amount = "2000";
+        String amount = "1245";
         BigDecimal am = new BigDecimal(amount).movePointRight(8);
         amount = am.toPlainString();
+        //params.put("rebuild", true);
+        //params.put("htgChainId", 201);
 
-        params.put("txHash", "344d5dc39bf8b0c6f500b254867791ddafb36742a82b30de3633ae76db1cff19");
+        params.put("txHash", "d4fb8db455aaf782fe2a9f09a6d926245ed920d7ed2f8e71988a9db07d9b5a49");
         params.put("amount", amount);
         params.put("feeChainId", feeChainId);
         params.put("remark", "Additional handling fees");
         params.put("address", address31);
+        password = "nuls123456";
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_withdrawal_additional_fee", params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
@@ -1510,10 +1548,12 @@ public class TxSendTest {
         //regERC20(kromaContext.HTG_CHAIN_ID(), "USD18", USD18_KROMA, 18);
         //regERC20(zetaContext.HTG_CHAIN_ID(), "USDT", USDT_ZETA, 6);
         //regERC20(zetaContext.HTG_CHAIN_ID(), "USD18", USD18_ZETA, 18);
-        regERC20(x1Context.HTG_CHAIN_ID(), "USDT", USDT_X1, 6);
-        regERC20(x1Context.HTG_CHAIN_ID(), "USD18", USD18_X1, 18);
-        regERC20(pulseContext.HTG_CHAIN_ID(), "USDT", USDT_PULSE, 6);
-        regERC20(pulseContext.HTG_CHAIN_ID(), "USD18", USD18_PULSE, 18);
+        //regERC20(x1Context.HTG_CHAIN_ID(), "USDT", USDT_X1, 6);
+        //regERC20(x1Context.HTG_CHAIN_ID(), "USD18", USD18_X1, 18);
+        //regERC20(pulseContext.HTG_CHAIN_ID(), "USDT", USDT_PULSE, 6);
+        //regERC20(pulseContext.HTG_CHAIN_ID(), "USD18", USD18_PULSE, 18);
+        regERC20(mintContext.HTG_CHAIN_ID(), "USDT", USDT_MINT, 6);
+        regERC20(mintContext.HTG_CHAIN_ID(), "USD18", USD18_MINT, 18);
         //regERC20(mantaContext.HTG_CHAIN_ID(), "USDT", USDT_MANTA, 6);
         //regERC20(mantaContext.HTG_CHAIN_ID(), "USD18", USD18_MANTA, 18);
         //regERC20(bnbChainId, "USDX", USDX_BNB, 6);
@@ -1540,8 +1580,6 @@ public class TxSendTest {
         //regERC20(kcsChainId, "USDT", USDT_KCS, 6);
 
         //regERC20(trxChainId, "DX", DX_TRX_6, 6);
-
-
         //regERC20(croContext.HTG_CHAIN_ID, "USDT", USDT_CRO, 6);
         //regERC20(croContext.HTG_CHAIN_ID, "USD18", USD18_CRO, 18);
         //regERC20(avaxContext.HTG_CHAIN_ID, "USDT", USDT_AVAX, 6);
@@ -1640,14 +1678,14 @@ public class TxSendTest {
 
     @Test
     public void mainAssetReg() throws Exception {
-
-
+        //password = "25eb1cb9-d19c-43d4-8899-32bef8b9b006";
         //regHeterogeneousMainAsset(kromaContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(zetaContext.HTG_CHAIN_ID());
-        regHeterogeneousMainAsset(x1Context.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(x1Context.HTG_CHAIN_ID());
         regHeterogeneousMainAsset(pulseContext.HTG_CHAIN_ID());
+        regHeterogeneousMainAsset(mintContext.HTG_CHAIN_ID());
         // BNB
-        //regHeterogeneousMainAsset(bnbContext.HTG_CHAIN_ID);
+        regHeterogeneousMainAsset(bnbContext.HTG_CHAIN_ID);
         // HT
         //regHeterogeneousMainAsset(htContext.HTG_CHAIN_ID);
         // OKT
@@ -1707,12 +1745,12 @@ public class TxSendTest {
         // MANTA
         //regHeterogeneousMainAsset(mantaContext.HTG_CHAIN_ID());
         // FCH
-        //regHeterogeneousMainAsset(fchContext.HTG_CHAIN_ID());
+        regHeterogeneousMainAsset(fchContext.HTG_CHAIN_ID());
         // BTC
-        //regHeterogeneousMainAsset(btcContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(modeContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(blastContext.HTG_CHAIN_ID());
-        //regHeterogeneousMainAsset(merlinContext.HTG_CHAIN_ID());
+        regHeterogeneousMainAsset(merlinContext.HTG_CHAIN_ID());
+        regHeterogeneousMainAsset(btcContext.HTG_CHAIN_ID());
     }
 
     @Test
@@ -1720,8 +1758,10 @@ public class TxSendTest {
 
         //bindERC20(kromaContext.HTG_CHAIN_ID(), "NVT", NVT_KROMA_MINTER, 8, 5, 1);
         //bindERC20(zetaContext.HTG_CHAIN_ID(), "NVT", NVT_ZETA_MINTER, 8, 5, 1);
-        bindERC20(x1Context.HTG_CHAIN_ID(), "NVT", NVT_X1_MINTER, 8, 5, 1);
-        bindERC20(pulseContext.HTG_CHAIN_ID(), "NVT", NVT_PULSE_MINTER, 8, 5, 1);
+        //bindERC20(x1Context.HTG_CHAIN_ID(), "NVT", NVT_X1_MINTER, 8, 5, 1);
+        //bindERC20(pulseContext.HTG_CHAIN_ID(), "NVT", NVT_PULSE_MINTER, 8, 5, 1);
+        bindERC20(mintContext.HTG_CHAIN_ID(), "NVTTest", "0x67Ce1821eFa30478e459ABFC5966d4Bc82Dbc17f", 8, 5, 1);
+        //bindERC20(mintContext.HTG_CHAIN_ID(), "NVT", NVT_MINT_MINTER, 8, 5, 1);
         //bindERC20(mantaContext.HTG_CHAIN_ID(), "NVT", NVT_MANTA_MINTER, 8, 5, 1);
         //bindERC20(bnbChainId, "NVT", NVT_BNB_MINTER, 8, 5, 1);
         //bindERC20(oktChainId, "NVT", NVT_OKT_MINTER, 8, 5, 1);
@@ -1730,7 +1770,6 @@ public class TxSendTest {
         //bindERC20(trxChainId, "NVT", NVT_TRX_MINTER, 8, 5, 1);
         //bindERC20(bnbChainId, "TRX", TRX_BNB_MINTER, 6, 5, 7);
         //bindERC20(bnbChainId, "USDT", USDT_BNB_MINTER, 6, 5, 8);
-
         //bindERC20(ethChainId, "NVT", NVT_ETH_MINTER, 8, 5, 1);
         //bindERC20(bnbChainId, "NVT", NVT_BNB_MINTER, 8, 5, 1);
         //bindERC20(htChainId, "NVT", NVT_HT_MINTER, 8, 5, 1);
@@ -2124,7 +2163,7 @@ public class TxSendTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put("chainId", 5);
         params.put("heterogeneousChainId", 201);
-        params.put("heterogeneousTxHash", "159805e8cb4db158f9de944c186465721933db3529ac5d50ba9ad3f1f41ada3d");
+        params.put("heterogeneousTxHash", "ef942ebc15f875b280d24282be2b6c7a5ec84eec6e2eb0551a787be5e808fa27");
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, ConverterCmdConstant.CHECK_RETRY_HTG_TX, params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
     }
@@ -2293,6 +2332,7 @@ public class TxSendTest {
         params.put(Constants.CHAIN_ID, chainId);
         params.put("deposit", "21000000000000"); // 21W
         params.put("packingAddress", packageAddress);
+        password = "nuls123456";
         params.put("password", password);
         params.put("rewardAddress", agentAddress);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_createAgent", params);
@@ -2306,6 +2346,7 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.CHAIN_ID, chainId);
         params.put("address", agentAddress);
+        password = "nuls123456";
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_stopAgent", params);
         System.out.println(cmdResp.getResponseData());
@@ -2736,12 +2777,34 @@ public class TxSendTest {
     }
 
     @Test
+    public void proposalCloseHtgChain() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        params.put("type", ProposalTypeEnum.CLOSE_HTG_CHAIN.value());
+        params.put("content", "close htg chain");
+        params.put("heterogeneousChainId", 140);
+        params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
+        params.put("remark", "proposal");
+        params.put("address", agentAddress);
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_proposal");
+        String hash = (String) result.get("value");
+        String txHex = (String) result.get("hex");
+        Log.debug("hash:{}", hash);
+        Log.debug("txHex:{}", txHex);
+    }
+
+    @Test
     public void voteProposal() throws Exception {
         //Overwrite if account already exists If the account exists, it covers.
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "b3c44b2f708f9f161cdf2d3068c041ab33a78a0d35c4a645f50d7eba73e4b903");
+        params.put("proposalTxHash", "88ee5e5272772203cb3a6223b3a2e4f14ea48b722e821efa798732a3276b9a32");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "voteremark");
         params.put("address", agentAddress);
@@ -2786,7 +2849,7 @@ public class TxSendTest {
      */
     @Test
     public void removeAccountTest() throws Exception {
-        removeAccount(packageAddress, password);
+        removeAccount("TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg", password);
     }
 
     protected void removeAccount(String address, String password) throws Exception {

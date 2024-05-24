@@ -89,16 +89,16 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                     flag = currentFlag;
                     break;
                 }
-                chain.getLogger().info("[Basic information query of heterogeneous chains]Not meeting the execution conditions, latestHeight: {}, currentFlag: {}, flag: {}", latestHeight, currentFlag, flag);
+                chain.getLogger().info("[Basic information query of heterogeneous chains] Not meeting the execution conditions, latestHeight: {}, currentFlag: {}, flag: {}", latestHeight, currentFlag, flag);
                 return;
             } while (false);
             try {
                 do {
                     if (!converterCoreApi.isVirtualBankByCurrentNode()) {
-                        chain.getLogger().info("Non virtual bank members, skipping heterogeneous chainsRPCThe task of inspection");
+                        chain.getLogger().info("Non virtual bank members, skipping heterogeneous chains RPC The task of inspection");
                         break;
                     }
-                    chain.getLogger().info("Update heterogeneous chains by heightRPCViewing Information, every other150Count each block once, Current network height: {}", latestHeight);
+                    chain.getLogger().info("Update heterogeneous chains by height RPC Viewing Information, every other 150 Count each block once, Current network height: {}", latestHeight);
                     String result = HttpClientUtil.get(String.format("https://assets.nabox.io/api/chainapi"));
                     if (StringUtils.isNotBlank(result)) {
                         List<Map> list = JSONUtils.json2list(result, Map.class);
@@ -116,7 +116,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                         chain.getLogger().info("Non virtual bank members, skip the task of heterogeneous chain balance caching");
                         break;
                     }
-                    chain.getLogger().info("Update cached virtual bank heterogeneous chain network balances by height, every other150Count each block once, Current network height: {}", latestHeight);
+                    chain.getLogger().info("Update cached virtual bank heterogeneous chain network balances by height, every other 150 Count each block once, Current network height: {}", latestHeight);
                     Map<String, VirtualBankDirector> mapVirtualBank = chain.getMapVirtualBank();
                     List<VirtualBankDirectorDTO> list = new ArrayList<>();
                     for (VirtualBankDirector director : mapVirtualBank.values()) {
@@ -194,7 +194,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
             }
 
             try {
-                chain.getLogger().info("Update the registration chain of cached assets by height, every other150Count each block once, Current network height: {}", latestHeight);
+                chain.getLogger().info("Update the registration chain of cached assets by height, every other 150 Count each block once, Current network height: {}", latestHeight);
                 // Calculate asset registration chain
                 List<Map> assetList = LedgerCall.ledgerAssetQueryAll(chain.getChainId());
                 chain.getLogger().info("Number of assets to be queried: {}", assetList == null ? 0 : assetList.size());

@@ -315,12 +315,12 @@ public class VirtualBankUtil {
                             BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
                             addr.setBalance(balance.toPlainString());
                             if (this.logPrint % 10 == 0) {
-                                logger.info("[{}]Successfully queried[{}]balance: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                                logger.info("[{}] Successfully queried [{}] balance: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
                             } else {
-                                logger.debug("[{}]Successfully queried[{}]balance: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                                logger.debug("[{}] Successfully queried [{}] balance: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
                             }
                         } catch (Exception e) {
-                            logger.error(String.format("[%s]query[%s]Abnormal balance", addr.getAddress(), docking.getChainSymbol()), e);
+                            logger.error(String.format("[%s] query [%s] Abnormal balance", addr.getAddress(), docking.getChainSymbol()), e);
                         }
                     }
                 }

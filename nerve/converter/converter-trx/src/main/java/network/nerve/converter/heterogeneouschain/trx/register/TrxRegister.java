@@ -27,14 +27,15 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
-import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgRpcAvailableHandler;
 import network.nerve.converter.heterogeneouschain.lib.helper.*;
@@ -60,6 +61,8 @@ import network.nerve.converter.heterogeneouschain.trx.helper.TrxParseTxHelper;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
+import org.tron.trident.core.ApiWrapper;
+import org.web3j.protocol.Web3j;
 
 import java.util.Collection;
 import java.util.List;
@@ -94,6 +97,7 @@ public class TrxRegister implements IHeterogeneousChainRegister {
     private boolean isInitial = false;
     private boolean newProcessActivated = false;
     private BeanMap beanMap = new BeanMap();
+    private boolean shutdownPending = false;
 
     @Override
     public int order() {
@@ -214,6 +218,7 @@ public class TrxRegister implements IHeterogeneousChainRegister {
             initWaitingTxQueue();
             // Start a new process's work task pool
             initScheduled();
+            getDockingImpl().setRegister(this);
             // Set new process switching flag
             this.newProcessActivated = true;
         }
@@ -305,6 +310,60 @@ public class TrxRegister implements IHeterogeneousChainRegister {
             });
         }
         trxContext.INIT_WAITING_TX_QUEUE_LATCH.countDown();
+    }
+
+
+    @Override
+    public void shutdownPending() {
+        this.shutdownPending = true;
+    }
+
+    @Override
+    public void shutdownConfirm() {
+        if (!this.shutdownPending) {
+            throw new RuntimeException("Error steps to close the chain.");
+        }
+        blockSyncExecutor.shutdown();
+
+        TrxWalletApi trxWalletApi = (TrxWalletApi) beanMap.get(TrxWalletApi.class);
+        ApiWrapper wrapper = trxWalletApi.getWrapper();
+        if (wrapper != null) {
+            wrapper.close();
+        }
+
+        IConverterCoreApi coreApi = trxContext.getConverterCoreApi();
+        List<Runnable> confirmTxHandlers = coreApi.getHtgConfirmTxHandlers();
+        List<Runnable> availableHandlers = coreApi.getHtgRpcAvailableHandlers();
+        List<Runnable> waitingTxInvokeDataHandlers = coreApi.getHtgWaitingTxInvokeDataHandlers();
+        boolean has1 = false, has2 = false, has3 = false;
+        int index1 = 0, index2 = 0, index3 = 0;
+        for (Runnable runnable : confirmTxHandlers) {
+            if (runnable.equals((Runnable) beanMap.get(TrxConfirmTxHandler.class))) {
+                has1 = true;
+                break;
+            }
+            index1++;
+        }
+        if (has1) confirmTxHandlers.remove(index1);
+
+        for (Runnable runnable : availableHandlers) {
+            if (runnable.equals((Runnable) beanMap.get(HtgRpcAvailableHandler.class))) {
+                has2 = true;
+                break;
+            }
+            index2++;
+        }
+        if (has2) availableHandlers.remove(index2);
+
+        for (Runnable runnable : waitingTxInvokeDataHandlers) {
+            if (runnable.equals((Runnable) beanMap.get(TrxWaitingTxInvokeDataHandler.class))) {
+                has3 = true;
+                break;
+            }
+            index3++;
+        }
+        if (has3) waitingTxInvokeDataHandlers.remove(index3);
+
     }
 
 }

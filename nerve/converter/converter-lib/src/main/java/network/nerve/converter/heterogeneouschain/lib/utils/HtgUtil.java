@@ -109,13 +109,13 @@ public class HtgUtil {
     public static HtgAccount createAccount(String prikey) {
         Credentials credentials = Credentials.create(prikey);
         ECKeyPair ecKeyPair = credentials.getEcKeyPair();
-        byte[] pubKey = ecKeyPair.getPublicKey().toByteArray();
+        ECKey ecKey = ECKey.fromPrivate(Numeric.hexStringToByteArray(prikey));
+        byte[] pubKey = ecKey.getPubKeyPoint().getEncoded(false);
         HtgAccount account = new HtgAccount();
         account.setAddress(credentials.getAddress());
         account.setPubKey(pubKey);
         account.setPriKey(ecKeyPair.getPrivateKey().toByteArray());
         account.setEncryptedPriKey(new byte[0]);
-        ECKey ecKey = ECKey.fromPrivate(Numeric.hexStringToByteArray(prikey));
         account.setCompressedPublicKey(Numeric.toHexStringNoPrefix(ecKey.getPubKeyPoint().getEncoded(true)));
         return account;
     }

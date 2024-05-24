@@ -98,6 +98,7 @@ public class SwapContext {
     public static long PROTOCOL_1_28_0 = 0L;
     public static long PROTOCOL_1_29_0 = 0L;
     public static long PROTOCOL_1_31_0 = 0L;
+    public static long PROTOCOL_1_35_0 = 0L;
 
     public static StableCoinGroup stableCoinGroup = new StableCoinGroup();
 }

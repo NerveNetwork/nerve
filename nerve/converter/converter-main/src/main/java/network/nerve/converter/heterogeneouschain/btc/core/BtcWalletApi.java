@@ -30,26 +30,35 @@ import com.neemre.btcdcli4j.core.client.BtcdClient;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
 import com.neemre.btcdcli4j.core.domain.*;
 import com.neemre.btcdcli4j.core.domain.enums.ScriptTypes;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.heterogeneouschain.btc.context.BtcContext;
-import network.nerve.converter.heterogeneouschain.eth.utils.RandomUtil;
+import network.nerve.converter.heterogeneouschain.btc.utils.BtcUtil;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
+import network.nerve.converter.btc.txdata.UTXOData;
 import network.nerve.converter.utils.ConverterUtil;
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.message.BasicHeader;
+import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.VerificationException;
+import org.bitcoinj.script.ScriptException;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EMPTY_STRING;
+import static org.bitcoinj.base.BitcoinNetwork.TESTNET;
 
 /**
  * @author: PierreLuo
@@ -60,7 +69,7 @@ public class BtcWalletApi implements BeanInitial {
     private BtcContext htgContext;
 
     private String protocol = "http";
-    private String host = "192.168.50.40";
+    private String host = "192.168.5.140";
     private String port = "18332";
     private String user = "user";
     private String password = "password";
@@ -81,9 +90,21 @@ public class BtcWalletApi implements BeanInitial {
         return htgContext.logger();
     }
 
-    public void init(String rpcAddress) throws NulsException {
+    public void init(String rpcAddress) {
         takeRpcInfo(rpcAddress);
-        client = new BtcdClientImpl(makeCurrentProperties());
+        if (client != null) {
+            client.close();
+            client = null;
+        }
+        client = BtcUtil.newInstanceBtcdClient(makeCurrentProperties());
+    }
+
+    private synchronized void restartClient() {
+        if (client != null) {
+            client.close();
+            client = null;
+        }
+        client = BtcUtil.newInstanceBtcdClient(makeCurrentProperties());
     }
 
     Properties makeCurrentProperties() {
@@ -230,12 +251,17 @@ public class BtcWalletApi implements BeanInitial {
 
     BigDecimal requestBalance(String address, int index) throws Exception {
         switch (index) {
-            case 0 : return takeBalanceFromMempool(address, true);
-            case 1 : return takeBalanceFromBlockchainInfo(address);
-            case 2 : return takeBalanceFromBlockcypher(address);
-            default:return null;
+            case 0:
+                return takeBalanceFromMempool(address, true);
+            case 1:
+                return takeBalanceFromBlockchainInfo(address);
+            case 2:
+                return takeBalanceFromBlockcypher(address);
+            default:
+                return null;
         }
     }
+
     BigDecimal takeBalanceFromOKX(String address) throws Exception {
         String url = "https://www.oklink.com/api/v5/explorer/address/address-summary?chainShortName=btc&address=%s";
         List<BasicHeader> headers = new ArrayList<>();
@@ -301,6 +327,7 @@ public class BtcWalletApi implements BeanInitial {
             getLog().error(e);
             return null;
         } catch (CommunicationException e) {
+            restartClient();
             getLog().error(e);
             return null;
         }
@@ -332,6 +359,7 @@ public class BtcWalletApi implements BeanInitial {
         } catch (BitcoindException e) {
             throw new RuntimeException(e);
         } catch (CommunicationException e) {
+            restartClient();
             throw new RuntimeException(e);
         }
     }
@@ -342,6 +370,7 @@ public class BtcWalletApi implements BeanInitial {
         } catch (BitcoindException e) {
             throw new RuntimeException(e);
         } catch (CommunicationException e) {
+            restartClient();
             throw new RuntimeException(e);
         }
     }
@@ -352,6 +381,7 @@ public class BtcWalletApi implements BeanInitial {
         } catch (BitcoindException e) {
             throw new RuntimeException(e);
         } catch (CommunicationException e) {
+            restartClient();
             throw new RuntimeException(e);
         }
     }
@@ -362,6 +392,7 @@ public class BtcWalletApi implements BeanInitial {
         } catch (BitcoindException e) {
             throw new RuntimeException(e);
         } catch (CommunicationException e) {
+            restartClient();
             throw new RuntimeException(e);
         }
     }
@@ -372,6 +403,7 @@ public class BtcWalletApi implements BeanInitial {
         } catch (BitcoindException e) {
             throw new RuntimeException(e);
         } catch (CommunicationException e) {
+            restartClient();
             throw new RuntimeException(e);
         }
     }
@@ -382,17 +414,143 @@ public class BtcWalletApi implements BeanInitial {
         } catch (BitcoindException e) {
             throw new RuntimeException(e);
         } catch (CommunicationException e) {
+            restartClient();
             throw new RuntimeException(e);
         }
+    }
+
+    public long getFeeRate() {
+        //if (1 == 1) {
+        //    return 47;//TODO pierre test code
+        //}
+        String url;
+        if (htgContext.getConverterCoreApi().isNerveMainnet()) {
+            url = "https://mempool.space/api/v1/fees/recommended";
+        } else {
+            url = "https://mempool.space/testnet/api/v1/fees/recommended";
+        }
+        try {
+            String data = HttpClientUtil.get(String.format(url));
+            htgContext.logger().info("BTC Fees recommended: {}", data);
+            Map<String, Object> map = JSONUtils.json2map(data);
+            Object object = map.get("fastestFee");
+            if (object == null) {
+                return htgContext.getEthGasPrice().longValue();
+            }
+            return Long.parseLong(object.toString());
+        } catch (Exception e) {
+            return htgContext.getEthGasPrice().longValue();
+        }
+
+        //if (!htgContext.getConverterCoreApi().isNerveMainnet()) {
+        //    return 1;
+        //}
+        //try {
+        //    BigDecimal smartFee = client.estimateSmartFee(1, EstimateFee.Mode.ECONOMICAL);
+        //    return smartFee.movePointRight(5).longValue();
+        //} catch (BitcoindException e) {
+        //    throw new RuntimeException(e);
+        //} catch (CommunicationException e) {
+        //    restartClient();
+        //    throw new RuntimeException(e);
+        //}
     }
 
     public List<RawTransaction> getTxInfoList(BlockInfo blockInfo) {
         return blockInfo.getTx();
     }
 
-    public List<Output> getAccountUTXOs(String address) {
-        //TODO pierre third party api
-        return Collections.EMPTY_LIST;
+    public List<UTXOData> getAccountUTXOs(String address) {
+        if (htgContext.getConverterCoreApi().isNerveMainnet()) {
+            String url = "http://api.v2.nabox.io/nabox-api/btc/utxo";
+            Map<String, Object> param = new HashMap<>();
+            param.put("language", "CHS");
+            param.put("chainId", 0);
+            param.put("address", address);
+            param.put("coinAmount", 0);
+            param.put("serviceCharge", 0);
+            param.put("utxoType", 1);
+            try {
+                String data = HttpClientUtil.post(url, param);
+                Map<String, Object> map = JSONUtils.json2map(data);
+                Object code = map.get("code");
+                if (code == null) {
+                    getLog().error("get utxo error: empty code");
+                    return Collections.EMPTY_LIST;
+                }
+                int codeValue = Integer.parseInt(code.toString());
+                if (codeValue != 1000) {
+                    getLog().error("get utxo error: " + map.get("msg"));
+                    return Collections.EMPTY_LIST;
+                }
+                Map dataMap = (Map) map.get("data");
+                List<Map> utxoList = (List<Map>) dataMap.get("utxo");
+                if (utxoList == null || utxoList.isEmpty()) {
+                    return Collections.EMPTY_LIST;
+                }
+                List<UTXOData> resultList = new ArrayList<>();
+                for (Map utxo : utxoList) {
+                    boolean isSpent = (boolean) utxo.get("isSpent");
+                    if (isSpent) {
+                        continue;
+                    }
+                    resultList.add(new UTXOData(
+                            utxo.get("txid").toString(),
+                            Integer.parseInt(utxo.get("vout").toString()),
+                            new BigInteger(utxo.get("satoshi").toString())
+                    ));
+                }
+                return resultList;
+            } catch (Exception e) {
+                getLog().error("get utxo error: " + e.getMessage());
+                return Collections.EMPTY_LIST;
+            }
+        } else {
+            String url = "https://mempool.space/testnet/api/address/%s/utxo";
+            try {
+                String data = HttpClientUtil.get(String.format(url, address));
+                List<Map> list = JSONUtils.json2list(data, Map.class);
+                if (list.isEmpty()) {
+                    return Collections.EMPTY_LIST;
+                }
+                List<UTXOData> resultList = new ArrayList<>();
+                for (Map utxo : list) {
+                    Map statusInfo = (Map) utxo.get("status");
+                    boolean confirmed = (boolean) statusInfo.get("confirmed");
+                    if (!confirmed) {
+                        continue;
+                    }
+                    resultList.add(new UTXOData(
+                            utxo.get("txid").toString(),
+                            Integer.parseInt(utxo.get("vout").toString()),
+                            new BigInteger(utxo.get("value").toString())
+                    ));
+                }
+                return resultList;
+            } catch (Exception e) {
+                getLog().error("get utxo error: " + e.getMessage());
+                return Collections.EMPTY_LIST;
+            }
+        }
     }
 
+    public String broadcast(org.bitcoinj.core.Transaction _tx) {
+        try {
+            String hash = client.sendRawTransaction(HexUtil.encode(_tx.serialize()));
+            return hash;
+        } catch (ScriptException ex) {
+            throw new RuntimeException(ex);
+        } catch (VerificationException ex) {
+            throw new RuntimeException(ex);
+        } catch (CommunicationException e) {
+            restartClient();
+            throw new RuntimeException(e);
+        } catch (BitcoindException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BtcdClient getClient() {
+        return client;
+    }
 }

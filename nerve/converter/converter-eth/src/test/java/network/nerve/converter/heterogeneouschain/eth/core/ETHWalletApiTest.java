@@ -1425,13 +1425,13 @@ public class ETHWalletApiTest extends Base {
         //System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
         //System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
         // ethofusdtprice
-        ethUsdt = new BigDecimal("39.29728669");
+        ethUsdt = new BigDecimal("69.29728669");
         // gas Gwei
-        price = "650";
+        price = "0.0001";
         System.out.println(String.format("\nEthereum currentGas Price: %s Gwei, ETH currentUSDTprice: %s USDT.\n", price, ethUsdt));
         //gasCost(280000);
         //gasCost(2310000);
-        gasCost(300000);
+        gasCost(5000000);
         //gasCost(9000000);
         //gasCost(400000);
         //gasCost(380000);

@@ -177,10 +177,13 @@ public class WithdrawalAddFeeByCrossChainProcessor implements TransactionProcess
                 BigInteger fee = coinData.getTo().get(0).getAmount();
                 po.getMapAdditionalFee().put(tx.getHash().toHex(), fee);
                 txStorageService.saveWithdrawalAdditionalFee(chain, po);
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
+                if (docking != null) {
+                    docking.txConfirmedCheck(heterogeneousHash, blockHeader.getHeight(), hash.toHex(), tx.getRemark());
+                }
                 // Under normal operation of the node, Only execute the heterogeneous chain transaction confirmation function
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
-                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-                    docking.txConfirmedCompleted(heterogeneousHash, blockHeader.getHeight(), hash.toHex());
+                    docking.txConfirmedCompleted(heterogeneousHash, blockHeader.getHeight(), hash.toHex(), tx.getRemark());
                 }
                 chain.getLogger().info("[commit] [Cross chain addition]Withdrawal transaction fee transaction hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), basicTxHash);
             }

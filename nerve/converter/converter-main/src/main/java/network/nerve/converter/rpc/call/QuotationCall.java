@@ -106,9 +106,9 @@ public class QuotationCall {
         } else if ("FCH_PRICE".equals(oracleKey)){
             return new BigDecimal("0.01");
         } else if ("BTC_PRICE".equals(oracleKey)){
-            return new BigDecimal("62249.56");
+            return new BigDecimal("66249.56");
         } else if ("OKB_PRICE".equals(oracleKey)){
-            return new BigDecimal("54.6444");
+            return new BigDecimal("64.6444");
         } else if ("FCH_PRICE".equals(oracleKey)){
             return new BigDecimal("0.00307");
         } else if ("ZETA_PRICE".equals(oracleKey)){

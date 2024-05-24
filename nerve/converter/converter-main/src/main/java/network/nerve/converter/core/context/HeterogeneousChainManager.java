@@ -105,8 +105,8 @@ public class HeterogeneousChainManager {
         return chainId;
     }
 
-    public Map<Integer, HeterogeneousChainInfo> getHeterogeneousChainMap() {
-        return heterogeneousChainMap;
+    public void removeHeterogeneousChain(int htgChainId) {
+        heterogeneousChainMap.remove(htgChainId);
     }
 
     /**
@@ -138,10 +138,22 @@ public class HeterogeneousChainManager {
             isInited = true;
             List<HeterogeneousChainInfo> storageList = heterogeneousChainInfoStorageService.getAllHeterogeneousChainInfoList();
             if (storageList != null && !storageList.isEmpty()) {
-                storageList.stream().forEach(info -> {
-                    if (info.getChainId() != 108 || !"T".equals(info.getMultySignAddress())) {
+                storageList.stream().filter(
+                        // Bitcoin chain’s multi-signature address, hard upgrade
+                        info -> !(info.getChainId() == 201
+                        && (info.getMultySignAddress().equals("39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV")
+                                || info.getMultySignAddress().equals("2NDu3vcpjyiMgvRjDpQfbyh9uF2McfDJ3NF")))
+                ).filter(
+                        // FCH chain’s multi-signature address, hard upgrade
+                        info -> !(info.getChainId() == 202
+                                && info.getMultySignAddress().equals("39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV"))
+                ).filter(
+                        // chain disabled
+                        info -> !heterogeneousChainInfoStorageService.hadClosed(info.getChainId())
+                ).filter(
+                        info -> info.getChainId() != 108 || !"T".equals(info.getMultySignAddress())
+                ).forEach(info -> {
                         heterogeneousChainMap.put(info.getChainId(), info);
-                    }
                 });
             }
 
@@ -171,6 +183,10 @@ public class HeterogeneousChainManager {
                 HeterogeneousCfg heterogeneousCfg = chain.getHeterogeneousCfg(chainId, 1);
                 if (heterogeneousCfg == null)
                     continue;
+                // chain disabled
+                if (heterogeneousChainInfoStorageService.hadClosed(chainId)) {
+                    continue;
+                }
                 // Execute initialization functions for heterogeneous chains
                 String dbName = register.init(heterogeneousCfg, chain.getLogger());
                 // add by pierre at 2023/9/5 Database merge
@@ -178,14 +194,14 @@ public class HeterogeneousChainManager {
                     //Check this chainDBHas it been merged
                     boolean hadDBMerged = heterogeneousChainInfoStorageService.hadDBMerged(chainId);
                     if (hadDBMerged) {
-                        logger().info("[{}]chainDB[{}]Merged to[{}]", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
+                        logger().info("[{}] chainDB [{}] Merged to [{}]", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
                         converterCoreApi.setDbMergedStatus(chainId);
                         break;
                     }
                     //Check if this chain exists in the table listDBIf it does not exist, use a merged table, this chainDBMark as merged
                     RocksDB table = RocksDBManager.getTable(dbName);
                     if (table == null) {
-                        logger().info("[{}]chainDBUsing Merge Tables[{}]", AssetName.getEnum(chainId).name(), ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
+                        logger().info("[{}] chainDB Using Merge Tables [{}]", AssetName.getEnum(chainId).name(), ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
                         heterogeneousChainInfoStorageService.markMergedChainDB(chainId);
                         converterCoreApi.setDbMergedStatus(chainId);
                         break;
@@ -199,7 +215,7 @@ public class HeterogeneousChainManager {
                         count++;
                     }
                     //This chainDBMark as merged
-                    logger().info("[{}]chainDB[{}]Merged to[{}]Number: {}", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, count);
+                    logger().info("[{}] chainDB [{}] Merged to [{}] Number: {}", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, count);
                     heterogeneousChainInfoStorageService.markMergedChainDB(chainId);
                     converterCoreApi.setDbMergedStatus(chainId);
                     RocksDBManager.destroyTable(dbName);
@@ -208,7 +224,7 @@ public class HeterogeneousChainManager {
                 } while (false);
                 // end code by pierre
                 HeterogeneousChainInfo chainInfo = register.getChainInfo();
-                // Save heterogeneous chainssymbolandchainIdThe relationship between
+                // Save heterogeneous chains symbol and chainId The relationship between
                 heterogeneousChainIdRuleMap.put(chainInfo.getChainName(), chainId);
                 String multySignAddress = chainInfo.getMultySignAddress();
                 // Basic information of persistent storage heterogeneous chains
@@ -221,6 +237,7 @@ public class HeterogeneousChainManager {
                     heterogeneousChainMap.put(chainId, chainInfo);
                 }
                 if (chainId == 202) {
+                    // Fixed the bug of upper and lower case letters in the address
                     HeterogeneousChainInfo chainInfoDB = heterogeneousChainMap.get(chainId);
                     if (!chainInfoDB.getMultySignAddress().equals(chainInfo.getMultySignAddress())
                             && chainInfoDB.getMultySignAddress().equalsIgnoreCase(chainInfo.getMultySignAddress())) {
@@ -255,6 +272,50 @@ public class HeterogeneousChainManager {
                     throw new RuntimeException("Empty protocolHeight!");
                 }
                 heterogeneousDockingManager.addProtocol(chainId, protocolHeight, heterogeneousCfg.getSymbol());
+                /**
+                 Due to the hard upgrade of the multi-signature address from p2sh to p2wsh,
+                 the platform handling fee needs to record the transaction fee for full asset transfer from p2sh to p2wsh.
+                 */
+                if (chainId == 201) {
+                    String hardUpgradeHtgTxHash;
+                    long blockHeight;
+                    String blockHash;
+                    long fee;
+                    if (chain.getChainId() == 5) {
+                        // testnet
+                        hardUpgradeHtgTxHash = "dc8cbffaaaa1417547ec66006c48590eb554a2ec6fe9430239ab850a8b8794eb";
+                        blockHeight = 2697588;
+                        blockHash = "0000000000004f5a59ac2e44e37f3913aaf9492ddbb38ee027be8ad234e0b3a4";
+                        fee = 10596;
+                    } else if (chain.getChainId() == 9) {
+                        // mainnet
+                        hardUpgradeHtgTxHash = "4aeaad853c5ab2c17321c1ed2ca31bd7c55d649d26e72dfdbe81372e223eccce";
+                        blockHeight = 843231;
+                        blockHash = "000000000000000000030566aa3a07755fe2effcf8d8e170a7f7a92added6b53";
+                        fee = 233532;
+                    } else {
+                        throw new RuntimeException("unsupport chain");
+                    }
+                    boolean hasRecordFeePayment = docking.getBitCoinApi().hasRecordFeePayment(hardUpgradeHtgTxHash);
+                    if (!hasRecordFeePayment) {
+                        docking.getBitCoinApi().recordFeePayment(blockHeight, blockHash, hardUpgradeHtgTxHash, fee, false);
+                    }
+                }
+                if (chainId == 202 && chain.getChainId() == 9) {
+                    String hardUpgradeHtgTxHash;
+                    long blockHeight;
+                    String blockHash;
+                    long fee;
+                    // mainnet
+                    hardUpgradeHtgTxHash = "c04b71608630d79131196f43701651f2e30540eb3d43e6b19d51f01a2b192a22";
+                    blockHeight = 2248197;
+                    blockHash = "00000000000000fed94c741c04a45d045ac126d828597d16dd07c58f6139c8ba";
+                    fee = 2486;
+                    boolean hasRecordFeePayment = docking.getBitCoinApi().hasRecordFeePayment(hardUpgradeHtgTxHash);
+                    if (!hasRecordFeePayment) {
+                        docking.getBitCoinApi().recordFeePayment(blockHeight, blockHash, hardUpgradeHtgTxHash, fee, false);
+                    }
+                }
             }
             //Perform database merge operation
             //Traverse the registered chainDBname

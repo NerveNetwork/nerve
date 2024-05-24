@@ -24,14 +24,14 @@ import io.nuls.v2.model.dto.TransferDto;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @Author: zhoulijun
@@ -48,6 +48,20 @@ public class BlockSignTest {
             .connectTimeout(Duration.ofMillis(5000))
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
+    static InetSocketAddress addr = new InetSocketAddress("localhost", 1087);
+    static HttpClient proxyClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofMillis(5000))
+            .proxy(ProxySelector.of(addr))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
+    static boolean proxy = false;
+    static HttpClient client() {
+        if (proxy) {
+            return proxyClient;
+        } else {
+            return client;
+        }
+    }
 
     public BlockSignTest(String dexApiUrl, String priKey) {
         Objects.requireNonNull(dexApiUrl, "dexApiUrl can't be null");
@@ -78,6 +92,7 @@ public class BlockSignTest {
         BlockSignTest dexUtils = new BlockSignTest(dexApiUrl, null);
         return dexUtils;
     }
+
     public String signTx(String txHex) {
         if (ecKey == null) {
             throw new IllegalArgumentException("need private key for getInstance");
@@ -107,9 +122,9 @@ public class BlockSignTest {
             throw new IllegalArgumentException("need private key for getInstance");
         }
         txHex = signTx(txHex);
-        return post(dexApiUrl,Map.of("jsonrpc","2.0",
-                "method" ,"broadcastTx",
-                "id",1000,
+        return post(dexApiUrl, Map.of("jsonrpc", "2.0",
+                "method", "broadcastTx",
+                "id", 1000,
                 "params",
                 List.of(1,
                         txHex)));
@@ -126,7 +141,8 @@ public class BlockSignTest {
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                     .timeout(Duration.ofMillis(5000))
                     .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            HttpResponse<String> response = client().send(request, HttpResponse.BodyHandlers.ofString());
             String body = response.body();
             //Log.debug("result : {} ", body);
             Map res = JSONUtils.json2pojo(body, Map.class);
@@ -141,12 +157,15 @@ public class BlockSignTest {
     }
 
     public static void blockSignerPubTest() throws NulsException {
+        //        HttpHost proxy = new HttpHost("127.0.0.1", 1080);
+        //        RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(TIMEOUT_MILLIS).setProxy(proxy)
+        //                .setSocketTimeout(TIMEOUT_MILLIS).setConnectTimeout(TIMEOUT_MILLIS).build();
         String url = "https://api.nerve.network/jsonrpc";
         //long start = 55029898;
         //long end = 55029915;
-        long start = 56735460;
-        long end = 56735478;
-        for (long i=start;i<=end;i++) {
+        long start = 59047530;
+        long end = 59047548;
+        for (long i = start; i <= end; i++) {
             String post = (String) post(url + "",
                     Map.of("jsonrpc", "2.0",
                             "method", "getBlockSerializationByHeight",
@@ -177,6 +196,7 @@ public class BlockSignTest {
     }
 
     public static void main(String[] args) throws Exception {
+        proxy = true;
         blockSignerPubTest();
     }
 }

@@ -44,6 +44,7 @@ import io.nuls.base.signture.SignatureUtil;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.common.ConfigBean;
 import io.nuls.common.NerveCoreResponseMessageProcessor;
+import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
@@ -55,11 +56,26 @@ import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.v2.model.dto.RpcResult;
+import io.nuls.v2.model.dto.RpcResultError;
+import io.nuls.v2.util.HttpClientUtil;
 import io.nuls.v2.util.JsonRpcUtil;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -186,6 +202,67 @@ public class Transfer implements Runnable {
         rpcAddress = "https://api.nerve.network/jsonrpc";
     }
 
+    private static final String ID = "id";
+    private static final String JSONRPC = "jsonrpc";
+    private static final String METHOD = "method";
+    private static final String PARAMS = "params";
+    private static final String DEFAULT_ID = "1";
+    private static final String JSONRPC_VERSION = "2.0";
+    static final int TIMEOUT_MILLIS = 5000;
+
+    protected static RpcResult request(String requestURL, String method, List<Object> params) {
+        RpcResult rpcResult;
+        try {
+            Map<String, Object> map = new HashMap<>(8);
+            map.put(ID, DEFAULT_ID);
+            map.put(JSONRPC, JSONRPC_VERSION);
+            map.put(METHOD, method);
+            map.put(PARAMS, params);
+            String resultStr = post(requestURL, map);
+            rpcResult = JSONUtils.json2pojo(resultStr, RpcResult.class);
+        } catch (Exception e) {
+            Log.error(e);
+            rpcResult = RpcResult.failed(new RpcResultError(CommonCodeConstanst.DATA_ERROR.getCode(), e.getMessage(), null));
+        }
+        return rpcResult;
+    }
+
+    private static void setPostParams(HttpPost httpPost, Map<String, Object> params) throws Exception {
+        //设置请求参数
+        String json = JSONUtils.obj2json(params);
+        StringEntity entity = new StringEntity(json, "UTF-8");
+        entity.setContentEncoding("UTF-8");
+        entity.setContentType("application/json");//发送json需要设置contentType
+        httpPost.setEntity(entity);
+    }
+
+    private static String post(String url, Map<String, Object> params) throws Exception {
+        CloseableHttpResponse response = null;
+        try {
+            HttpPost httppost = new HttpPost(url);
+            HttpHost proxy = new HttpHost("127.0.0.1", 1087);
+            RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(TIMEOUT_MILLIS).setProxy(proxy)
+                    .setSocketTimeout(TIMEOUT_MILLIS).setConnectTimeout(TIMEOUT_MILLIS).build();
+            httppost.setConfig(requestConfig);
+            setPostParams(httppost, params);
+            CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+            response = httpClient.execute(httppost,
+                    HttpClientContext.create());
+            HttpEntity entity = response.getEntity();
+
+            String result = EntityUtils.toString(entity, "utf-8");
+            EntityUtils.consume(entity);
+            return result;
+        } finally {
+            try {
+                if (response != null)
+                    response.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     @Test
     public void accountBlockMultiSignTest() throws Exception {
         setMain();
@@ -202,7 +279,7 @@ public class Transfer implements Runnable {
         byte[] from = AddressTool.getAddress(fromStr);
 
         byte[] nonce;
-        RpcResult request = JsonRpcUtil.request(rpcAddress, "getAccountBalance", List.of(chainId, assetChainId, assetId, fromStr));
+        RpcResult request = request(rpcAddress, "getAccountBalance", List.of(chainId, assetChainId, assetId, fromStr));
         Map result = (Map) request.getResult();
         String nonceStr = (String) result.get("nonce");
         if(null == nonceStr){
@@ -222,7 +299,7 @@ public class Transfer implements Runnable {
         //data.setAddresses(set.toArray(new String[set.size()]));
         data.setAddresses(new String[]{
                 //"NERVEepb6DAjxbCKZZ4sEoytDbRNhvz4ZEk98s"
-                "NERVEepb6B8nSaJ3Kg5V3gc62L5wY9Zjd4LPpy"
+                "NERVEepb6xT575oWK38pVy2xVV4dxrHP53aaLV"
         });
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);
@@ -349,7 +426,7 @@ public class Transfer implements Runnable {
         tx.setCoinData(coinData.serialize());
         AccountBlockData data = new AccountBlockData();
         data.setAddresses(new String[]{
-                "NERVEepb6AMdiWY25K6UtKL5vb5br3ncYTdVvW"
+                "NERVEepb6BCfps7sCDBQejzU73YGxTpJhKpa9L"
         });
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);

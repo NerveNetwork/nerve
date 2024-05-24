@@ -133,7 +133,7 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
             Long localBlockHeight = localMax.getHeight();
             long difference = blockHeightFromEth - localBlockHeight;
             // When starting a node, the latest local altitude matchesHTGWhen the height of a network block differs by two or more blocks, it will be removed from theHTGNetwork height begins to synchronize
-            if (firstSync && Math.abs(difference) >= 2) {
+            if (firstSync && Math.abs(difference) >= 20) {
                 Response.BlockExtention block = trxWalletApi.getBlockByHeight(blockHeightFromEth);
                 if(block == null) {
                     htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());

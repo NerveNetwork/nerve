@@ -182,6 +182,9 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             coinDataInstance.getFrom().addAll(coinData1.getFrom());
             coinDataInstance.getTo().addAll(coinData1.getTo());
             sysDealTx.setCoinData(SwapUtils.nulsData2HexBytes(coinDataInstance));
+            if (swapHelper.isSupportProtocol35()) {
+                sysDealTx.setHash(null);
+            }
 
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));

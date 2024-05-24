@@ -106,6 +106,15 @@ public class TxSubsequentProcessPO implements Serializable {
     private transient int withdrawErrorTimes;
     private transient int withdrawErrorTotalTimes;
     private transient int feeChangeVersion;
+    private transient long timeForMakeUTXO;
+
+    public long getTimeForMakeUTXO() {
+        return timeForMakeUTXO;
+    }
+
+    public void setTimeForMakeUTXO(long timeForMakeUTXO) {
+        this.timeForMakeUTXO = timeForMakeUTXO;
+    }
 
     public boolean isRetryVirtualBankInit() {
         return retryVirtualBankInit;

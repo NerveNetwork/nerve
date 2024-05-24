@@ -59,7 +59,9 @@ public enum ProposalTypeEnum {
 
     REMOVECOIN((byte) 12),
 
-    TRANSACTION_WHITELIST((byte) 13);
+    TRANSACTION_WHITELIST((byte) 13),
+
+    CLOSE_HTG_CHAIN((byte) 14);
 
     private byte value;
     private static Map<Byte, ProposalTypeEnum> map;

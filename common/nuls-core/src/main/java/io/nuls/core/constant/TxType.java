@@ -393,5 +393,7 @@ public class TxType {
      * Heterogeneous Chain Master Asset BindingNERVEAsset trading
      */
     public static final int HETEROGENEOUS_MAIN_ASSET_BIND = 84;
+    public static final int WITHDRAWAL_UTXO = 85;
+    public static final int WITHDRAWAL_UTXO_FEE_PAYMENT = 86;
 
 }

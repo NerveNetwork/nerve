@@ -15,7 +15,16 @@
     <properties>
         <nuls.v2.version>1.0.0-SNAPSHOT</nuls.v2.version>
     </properties>
-
+    <repositories>
+        <repository>
+            <id>nuls-release</id>
+            <url>https://nexus.nuls.io/repository/release/</url>
+        </repository>
+        <repository>
+            <id>nuls-snapshot</id>
+            <url>https://nexus.nuls.io/repository/snapshot/</url>
+        </repository>
+    </repositories>
     <dependencies>
 
         <dependency>
@@ -38,13 +47,21 @@
         </dependency>
 
         <dependency>
-            <groupId>org.bitcoinj</groupId>
-            <artifactId>bitcoinj-core</artifactId>
-            <version>0.17-alpha3</version>
+            <groupId>fc-NERVE</groupId>
+            <artifactId>FC-SDK</artifactId>
+            <version>1.0.1</version>
             <exclusions>
                 <exclusion>
                     <artifactId>guava</artifactId>
                     <groupId>com.google.guava</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-classic</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-core</artifactId>
+                    <groupId>ch.qos.logback</groupId>
                 </exclusion>
             </exclusions>
         </dependency>

@@ -60,12 +60,12 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
         try {
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 if (LoggerUtil.LOG.isDebugEnabled()) {
-                    LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
+                    LoggerUtil.LOG.debug("[{}] Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
                 }
                 return;
             }
             if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
-                htgContext.logger().info("Test network[{}]Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
+                htgContext.logger().info("Test network [{}] Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
@@ -78,13 +78,13 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
                     htgContext.logger().error(e);
                 }
                 if (LoggerUtil.LOG.isDebugEnabled()) {
-                    LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
+                    LoggerUtil.LOG.debug("[{}] Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
                 }
                 return;
             }
             clearDB = false;
             if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("[{}Block parsing task] - every other{}Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
+                LoggerUtil.LOG.debug("[{} Block parsing task] - every other {} Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
             }
             try {
                 htgCommonHelper.clearHash();
@@ -121,7 +121,7 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
             Long localBlockHeight = localMax.getHeight();
             long difference = blockHeightFromNet - localBlockHeight;
             // When starting a node, the latest local altitude matchesHTGWhen the height of a network block differs by two or more blocks, it will be removed from theHTGNetwork height begins to synchronize
-            if (firstSync && Math.abs(difference) >= 2) {
+            if (firstSync && Math.abs(difference) >= 20) {
                 BlockInfo block = walletApi.getBlockByHeight(blockHeightFromNet);
                 if(block == null) {
                     htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
@@ -153,7 +153,7 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
                 try {
                     BlockInfo block = walletApi.getBlockByHeight(localBlockHeight);
                     if(block == null) {
-                        htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
+                        htgContext.logger().info("Unable to obtain {} Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                         break;
                     }
                     htgBlockAnalysisHelper.analysisEthBlock(block, btcAnalysisTxHelper);
@@ -163,7 +163,7 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
                 }
             }
         } catch (Throwable e) {
-            htgContext.logger().error(String.format("synchronization%sBlock failure", htgContext.getConfig().getSymbol()), e);
+            htgContext.logger().error(String.format("synchronization %s Block failure", htgContext.getConfig().getSymbol()), e);
         }
     }
 

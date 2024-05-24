@@ -23,9 +23,17 @@
  */
 package network.nerve.converter.heterogeneouschain.fch.utils;
 
+import fchClass.P2SH;
 import io.nuls.core.crypto.HexUtil;
 import keyTools.KeyTools;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
+import org.bitcoinj.crypto.ECKey;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptBuilder;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.ZERO_BYTES;
 
@@ -36,7 +44,7 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
 public class FchUtil {
 
     public static HtgAccount createAccount(String prikey) {
-        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPrivate(HexUtil.decode(prikey), true);
+        ECKey ecKey = ECKey.fromPrivate(HexUtil.decode(prikey), true);
         String address = KeyTools.pubKeyToFchAddr(ecKey.getPubKey());
         byte[] pubKey = ecKey.getPubKey();
         HtgAccount account = new HtgAccount();
@@ -49,7 +57,7 @@ public class FchUtil {
     }
 
     public static HtgAccount createAccountByPubkey(String pubkeyStr) {
-        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pubkeyStr));
+        ECKey ecKey = ECKey.fromPublicOnly(HexUtil.decode(pubkeyStr));
         byte[] pubKey = ecKey.getPubKeyPoint().getEncoded(true);
         HtgAccount account = new HtgAccount();
         account.setAddress(KeyTools.pubKeyToFchAddr(HexUtil.encode(pubKey)));
@@ -58,5 +66,28 @@ public class FchUtil {
         account.setEncryptedPriKey(ZERO_BYTES);
         account.setCompressedPublicKey(HexUtil.encode(pubKey));
         return account;
+    }
+
+    public static P2SH genMultiP2sh(List<byte[]> pubKeyList, int m) {
+        List<ECKey> keys = new ArrayList();
+        Iterator var3 = pubKeyList.iterator();
+
+        byte[] redeemScriptBytes;
+        while(var3.hasNext()) {
+            redeemScriptBytes = (byte[])var3.next();
+            ECKey ecKey = ECKey.fromPublicOnly(redeemScriptBytes);
+            keys.add(ecKey);
+        }
+
+        Script multiSigScript = ScriptBuilder.createMultiSigOutputScript(m, keys);
+        redeemScriptBytes = multiSigScript.getProgram();
+
+        try {
+            P2SH p2sh = P2SH.parseP2shRedeemScript(javaTools.HexUtil.encode(redeemScriptBytes));
+            return p2sh;
+        } catch (Exception var7) {
+            var7.printStackTrace();
+            return null;
+        }
     }
 }

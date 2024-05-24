@@ -64,4 +64,8 @@ public interface IHeterogeneousChainRegister {
      * CORE The order of executing heterogeneous chain registration
      */
     int order();
+
+    void shutdownPending();
+
+    void shutdownConfirm();
 }

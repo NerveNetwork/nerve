@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.lib.model;
 
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.model.bo.HeterogeneousAccount;
+import org.ethereum.crypto.ECKey;
 import org.web3j.crypto.Credentials;
 import org.web3j.utils.Numeric;
 
@@ -57,8 +58,8 @@ public class HtgAccount extends HeterogeneousAccount implements Serializable {
 
     @Override
     protected boolean validatePubKey(byte[] newPriKey, byte[] orginPubKey) {
-        Credentials credentials = Credentials.create(Numeric.toHexStringNoPrefix(newPriKey));
-        byte[] pubKey = credentials.getEcKeyPair().getPublicKey().toByteArray();
+        ECKey ecKey = ECKey.fromPrivate(newPriKey);
+        byte[] pubKey = ecKey.getPubKeyPoint().getEncoded(false);
         return Arrays.equals(pubKey, orginPubKey);
     }
 

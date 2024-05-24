@@ -122,7 +122,7 @@ public class FchBlockHandler implements Runnable, BeanInitial {
             Long localBlockHeight = localMax.getHeight();
             long difference = blockHeightFromNet - localBlockHeight;
             // When starting a node, the latest local altitude matchesHTGWhen the height of a network block differs by two or more blocks, it will be removed from theHTGNetwork height begins to synchronize
-            if (firstSync && Math.abs(difference) >= 2) {
+            if (firstSync && Math.abs(difference) >= 20) {
                 BlockInfo block = bestBlock;
                 htgLocalBlockHelper.deleteAllLocalBlockHeader();
                 htgBlockAnalysisHelper.analysisEthBlock(block, fchAnalysisTxHelper);

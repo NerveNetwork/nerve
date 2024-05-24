@@ -25,12 +25,16 @@ package network.nerve.converter.core.heterogeneous.docking.interfaces;
 
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.btc.txdata.UTXOData;
+import network.nerve.converter.core.api.interfaces.IBitCoinApi;
+import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
@@ -108,7 +112,10 @@ public interface IHeterogeneousChainDocking {
     /**
      * Confirm the transaction status of heterogeneous chains
      */
-    void txConfirmedCompleted(String ethTxHash, Long blockHeight, String nerveTxHash) throws Exception;
+    void txConfirmedCompleted(String ethTxHash, Long blockHeight, String nerveTxHash, byte[] confirmTxRemark) throws Exception;
+    default void txConfirmedCheck(String ethTxHash, Long blockHeight, String nerveTxHash, byte[] confirmTxRemark) throws Exception {
+
+    }
 
     /**
      * RollBACK`Confirm the transaction status of heterogeneous chains`
@@ -349,4 +356,13 @@ public interface IHeterogeneousChainDocking {
     default HeterogeneousTransactionInfo getUnverifiedDepositTransaction(String txHash) throws Exception {
         return getDepositTransaction(txHash);
     }
+
+    default IBitCoinApi getBitCoinApi() {
+        return null;
+    }
+
+    void setRegister(IHeterogeneousChainRegister register);
+
+    void closeChainPending();
+    void closeChainConfirm();
 }

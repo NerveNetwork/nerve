@@ -47,6 +47,6 @@ public class BtcContext extends HtgContextNew implements Serializable {
 
     @Override
     public BigInteger initialGas() {
-        return GWEI_1;
+        return BigInteger.TWO;
     }
 }

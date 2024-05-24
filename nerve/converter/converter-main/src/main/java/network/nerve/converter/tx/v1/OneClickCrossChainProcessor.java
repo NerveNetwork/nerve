@@ -150,10 +150,14 @@ public class OneClickCrossChainProcessor implements TransactionProcessor {
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
 
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(htgChainId);
+                if (docking != null) {
+                    docking.txConfirmedCheck(originalTxHash, blockHeader.getHeight(), hash.toHex(), tx.getRemark());
+                }
+
                 // When the block is in normal operation state（Non block synchronization mode）Only then will it be executed
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
-                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
-                    docking.txConfirmedCompleted(originalTxHash, blockHeader.getHeight(), hash.toHex());
+                    docking.txConfirmedCompleted(originalTxHash, blockHeader.getHeight(), hash.toHex(), tx.getRemark());
                     // Placing a queue like processing mechanism Prepare to notify heterogeneous chain components to execute withdrawals
                     TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                     pendingPO.setTx(tx);

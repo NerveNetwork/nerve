@@ -38,13 +38,19 @@ import fchClass.OpReturn;
 import fchClass.P2SH;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.crypto.Sha256Hash;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.parse.JSONUtils;
+import io.nuls.core.parse.SerializeUtils;
+import io.nuls.v2.model.Account;
+import io.nuls.v2.util.AccountTool;
 import javaTools.JsonTools;
 import keyTools.KeyTools;
 import network.nerve.converter.btc.txdata.RechargeData;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.VarInt;
+import network.nerve.converter.heterogeneouschain.fch.utils.FchUtil;
+import org.bitcoinj.base.VarInt;
+import org.bitcoinj.core.Base58;
+import org.bitcoinj.crypto.ECKey;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.junit.Before;
@@ -57,6 +63,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static txTools.FchTool.*;
@@ -89,7 +96,8 @@ public class FchTransferTest {
     String packageAddressPrivateKeyHF;
     String fromPriKey;
     String multisigAddress;
-    byte[] sessionKey = HexUtil.decode("17fd649617d838b514ba8338caf050c4753a51d1a471c11e1ee743329828dd8a");
+    //byte[] sessionKey = HexUtil.decode("17fd649617d838b514ba8338caf050c4753a51d1a471c11e1ee743329828dd8a");
+    byte[] sessionKey = HexUtil.decode("47a75483f8800d0c36f6e11c7502b7b6f7522713d800790d665b89736f776cbc");
 
     @Before
     public void before() {
@@ -120,7 +128,7 @@ public class FchTransferTest {
             pubs.add(ecKey.getPubKey());
         }
 
-        p2sh = FchTool.genMultiP2sh(pubs, 2);
+        p2sh = FchUtil.genMultiP2sh(pubs, 2);
         multisigAddress = p2sh.getFid();
 
         priKeyBytesA = HexUtil.decode(pris.get(0));
@@ -147,10 +155,34 @@ public class FchTransferTest {
         System.out.println(String.format("multisigAddress: %s", multisigAddress));
     }
 
+    @Test
+    public void addrTest() throws Exception {
+        Account account = AccountTool.createAccount(1);
+        byte[] priKey = account.getPriKey();
+        byte[] pubKey = account.getPubKey();
+        System.out.println(String.format("pri: %s, addr: %s", HexUtil.encode(priKey), KeyTools.pubKeyToFchAddr(HexUtil.encode(pubKey))));
+        System.out.println(String.format("addr: %s", pubKeyToFchAddr(HexUtil.encode(pubKey))));
+        System.out.println(String.format("addr: %s", pubKeyToFchAddr("0327bf08c066cf6fe0d081d66376f4b8fafeb8fad6b85b97e1642117192228a746\n")));
+    }
 
     @Test
     public void validAddr() {
         System.out.println(KeyTools.isValidFchAddr("2cg5hKp41bh7ePqfvpZePzHoRwkxSVfWZGw1WEfE"));
+    }
+
+    public String pubKeyToFchAddr(String pub) {
+        byte[] h = SerializeUtils.sha256hash160(HexUtil.decode(pub));
+        byte[] prefixForFch = new byte[]{35};
+        byte[] hash160WithPrefix = new byte[21];
+        System.arraycopy(prefixForFch, 0, hash160WithPrefix, 0, 1);
+        System.arraycopy(h, 0, hash160WithPrefix, 1, 20);
+        byte[] hashWithPrefix = Sha256Hash.hashTwice(hash160WithPrefix);
+        byte[] checkHash = new byte[4];
+        System.arraycopy(hashWithPrefix, 0, checkHash, 0, 4);
+        byte[] addrRaw = new byte[hash160WithPrefix.length + checkHash.length];
+        System.arraycopy(hash160WithPrefix, 0, addrRaw, 0, hash160WithPrefix.length);
+        System.arraycopy(checkHash, 0, addrRaw, hash160WithPrefix.length, checkHash.length);
+        return Base58.encode(addrRaw);
     }
 
     /**
@@ -187,6 +219,7 @@ public class FchTransferTest {
      */
     @Test
     public void payForApiRequest() throws IOException {
+        // FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD
         String pri = fromPriKey;
         byte[] priBytes = HexUtil.decode(pri);
         ECKey ecKey = ECKey.fromPrivate(priBytes, true);
@@ -234,18 +267,17 @@ public class FchTransferTest {
         List<Cash> cashList = ApipDataGetter.getCashList(apipClient.getResponseBody().getData());
         Double amount = Double.valueOf("0.5");
         Double fee = Double.valueOf("0.00000500");
-        String to = "FUmo2eez6VK2sfGWjek9i9aK5y1mdHSnqv";
+        String to = "338uHAHG2Gs3aufiFz89R4wsvPYH6yYTHv";
 
-        /*String feeTo = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
-        Double fee = Double.valueOf("0.00002");
+        String feeTo = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        Double nerveFee = Double.valueOf("0.00002");
         RechargeData rechargeData = new RechargeData();
         rechargeData.setTo(AddressTool.getAddress("TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad"));
         rechargeData.setValue(new BigDecimal(amount.toString()).movePointRight(8).toBigInteger().longValue());
-        if (fee.doubleValue() > 0) {
+        if (nerveFee.doubleValue() > 0) {
             rechargeData.setFeeTo(AddressTool.getAddress(feeTo));
         }
-        String opReturn = HexUtil.encode(rechargeData.serialize());*/
-        String opReturn = "test fch js";
+        String opReturn = HexUtil.encode(rechargeData.serialize());
 
         List<SendTo> outputs = new ArrayList<>();
         SendTo sendTo = new SendTo();
@@ -256,8 +288,8 @@ public class FchTransferTest {
 
         String signedTx = FchTool.createTransactionSign(cashList, priBytes, outputs, opReturn);
         System.out.println(signedTx);
-        //ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
-        //System.out.println(client.getResponseBodyStr());
+        ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
+        System.out.println(client.getResponseBodyStr());
     }
 
     @Test
@@ -286,7 +318,7 @@ public class FchTransferTest {
         pubList.add(HexUtil.decode("0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260"));
         pubList.add(HexUtil.decode("03e2029ddf8c0150d8a689465223cdca94a0c84cdb581e39ac13ca41d279c24ff5"));
         pubList.add(HexUtil.decode("02b42a0023aa38e088ffc0884d78ea638b9438362f15c610865dfbed9708347750"));
-        P2SH p2sh = FchTool.genMultiP2sh(pubList, 2);
+        P2SH p2sh = FchUtil.genMultiP2sh(pubList, 2);
         // 3BXpnXkAG7SYNxyKyDimcxjkyYQcaaJs5X
         System.out.println(String.format("makeMultiAddr (%s of %s) for testnet: %s", 2, pubList.size(), p2sh.getFid()));
 
@@ -506,7 +538,7 @@ public class FchTransferTest {
         Fcdsl fcdsl = new Fcdsl();
         //fcdsl.addNewQuery().addNewEquals().addNewFields("height").addNewValues("2045554");
 
-        byte[] sessionKey = HexUtil.decode("11f2fbcc6f04e9bf40d55603a21ffff4ec156ed948809a492dc43c33d67ebc32");
+        //byte[] sessionKey = HexUtil.decode("11f2fbcc6f04e9bf40d55603a21ffff4ec156ed948809a492dc43c33d67ebc32");
         ApipClient apipClient = BlockchainAPIs.blockSearchPost(urlHead, fcdsl, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);
         System.out.println("apipClient:\n" + apipClient.getResponseBodyStr());
     }
@@ -526,7 +558,6 @@ public class FchTransferTest {
 
     @Test
     public void UTXOInfoTest() {
-        byte[] sessionKey = HexUtil.decode("11f2fbcc6f04e9bf40d55603a21ffff4ec156ed948809a492dc43c33d67ebc32");
         String cashIdSpent = "b7893dc7e90a64e6372433f50fdba3f878eeab9fccac14fcae32e1068577b4dd";
         String cashIdOpReturn = "d94a05e8e7133e2311a9ca326c00895f6067fd04140dc4eaa056e81e752d4009";
         String cashIdUnspent = "a29115a84dfea4c6845998a5913b924878569fb9c41f755f6626a73cbbd47df5";
@@ -536,12 +567,14 @@ public class FchTransferTest {
 
     @Test
     public void opReturnInfoTest() {
-        byte[] sessionKey = HexUtil.decode("11f2fbcc6f04e9bf40d55603a21ffff4ec156ed948809a492dc43c33d67ebc32");
-        String cashIdOpReturn = "08c71a038b51f0832f0edadc21e22652fedc30128ac5e3232fc659c31b91a58b";
+        String cashIdOpReturn = "3829067ab1b932aa903d1ab95f88d4e2564e159a8507574f4694dd3e30afc88e";
         ApipClient client = BlockchainAPIs.opReturnByIdsPost(urlHead, new String[]{cashIdOpReturn}, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);
         System.out.println("opReturn info:\n" + client.getResponseBodyStr());
         Map<String, OpReturn> opReturnMap = ApipDataGetter.getOpReturnMap(client.getResponseBody().getData());
+        OpReturn opReturn = opReturnMap.get(cashIdOpReturn);
+        System.out.println(HexUtil.encode(opReturn.getOpReturn().getBytes(StandardCharsets.UTF_8)));
         System.out.println(opReturnMap.size());
+        //0500017ab79bd5c00354e7d4f346749ad7d2c1f8bae031fd102700000000000000
     }
 
     //fee = txSize * (feeRate/1000)*100000000

@@ -172,10 +172,13 @@ public class RechargeProcessor implements TransactionProcessor {
                     proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
                 }
 
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(txData.getHeterogeneousChainId());
+                if (docking != null) {
+                    docking.txConfirmedCheck(txData.getOriginalTxHash(), blockHeader.getHeight(), hash.toHex(), tx.getRemark());
+                }
                 // Under normal operation of the node And it is not a recharge transaction executed by the proposal, only the heterogeneous chain transaction confirmation function is executed
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector && null == proposalPO) {
-                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
-                    docking.txConfirmedCompleted(txData.getOriginalTxHash(), blockHeader.getHeight(), hash.toHex());
+                    docking.txConfirmedCompleted(txData.getOriginalTxHash(), blockHeader.getHeight(), hash.toHex(), tx.getRemark());
                 }
                 if (null != proposalPO && syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     // If it is to execute the proposal Need to publish a proposal to confirm the transaction

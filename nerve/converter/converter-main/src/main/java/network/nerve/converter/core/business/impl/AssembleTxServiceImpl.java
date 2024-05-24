@@ -28,6 +28,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.TransactionFeeCalculator;
 import io.nuls.base.data.*;
 import io.nuls.base.signture.P2PHKSignature;
+import io.nuls.core.basic.VarInt;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
@@ -36,6 +37,8 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
+import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
+import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
@@ -78,6 +81,7 @@ import java.util.*;
 import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
 import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT;
 import static network.nerve.converter.enums.ProposalTypeEnum.REFUND;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EMPTY_STRING;
 import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
 
 /**
@@ -124,6 +128,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     private ProposalExeStorageService proposalExeStorageService;
     @Autowired
     private ConverterCoreApi converterCoreApi;
+    @Autowired
+    private BitcoinVerifier bitcoinVerifier;
 
     @Override
     public Transaction createChangeVirtualBankTx(Chain chain, List<byte[]> inAgentList, List<byte[]> outAgentList, long outHeight, long txTime) throws NulsException {
@@ -651,7 +657,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction withdrawalAdditionalFeeTx(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
-        if (converterCoreApi.isProtocol21()) {
+        if (converterCoreApi.isProtocol35()) {
+            return withdrawalAdditionalFeeTxV35(chain, withdrawalAdditionalFeeTxDTO);
+        } else if (converterCoreApi.isProtocol21()) {
             return withdrawalAdditionalFeeTxV21(chain, withdrawalAdditionalFeeTxDTO);
         } else if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
             return withdrawalAdditionalFeeTxV15(chain, withdrawalAdditionalFeeTxDTO);
@@ -678,8 +686,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     @Override
-    public Transaction createConfirmWithdrawalTx(Chain chain, ConfirmWithdrawalTxData confirmWithdrawalTxData, long txTime) throws NulsException {
-        Transaction tx = this.createConfirmWithdrawalTxWithoutSign(chain, confirmWithdrawalTxData, txTime);
+    public Transaction createConfirmWithdrawalTx(Chain chain, ConfirmWithdrawalTxData confirmWithdrawalTxData, long txTime, byte[] remark) throws NulsException {
+        Transaction tx = this.createConfirmWithdrawalTxWithoutSign(chain, confirmWithdrawalTxData, txTime, remark);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
         confirmWithdrawalVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
@@ -694,7 +702,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     @Override
-    public Transaction createConfirmWithdrawalTxWithoutSign(Chain chain, ConfirmWithdrawalTxData confirmWithdrawalTxData, long txTime) throws NulsException {
+    public Transaction createConfirmWithdrawalTxWithoutSign(Chain chain, ConfirmWithdrawalTxData confirmWithdrawalTxData, long txTime, byte[] remark) throws NulsException {
         byte[] txDataBytes = null;
         try {
             txDataBytes = confirmWithdrawalTxData.serialize();
@@ -702,6 +710,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.CONFIRM_WITHDRAWAL, txDataBytes, txTime);
+        tx.setRemark(remark);
         return tx;
     }
 
@@ -1646,6 +1655,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                         throw new NulsException(ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST);
                     }
                     info.setHtgMainAssetName(htgMainAssetName);
+                } else {
+                    info.setHtgMainAssetName(AssetName.NVT);
                 }
                 // Subsidies for assembly and handling feescoinTo
                 feeTo = coinTo.getAmount();
@@ -1986,11 +1997,111 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         return tx;
     }
 
+    private Transaction withdrawalAdditionalFeeTxV35(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
+        // Verify parameters
+        String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
+        if (StringUtils.isBlank(txHash)) {
+            throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
+        }
+        Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
+        if (null == basicTx) {
+            chain.getLogger().error("[Additional heterogeneous chain handling fees]The original transaction does not exist -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL && basicTx.getType() != TxType.ONE_CLICK_CROSS_CHAIN && basicTx.getType() != TxType.CHANGE_VIRTUAL_BANK) {
+            // Not a withdrawal transaction
+            chain.getLogger().error("This transaction is not a withdrawal/Proposal transaction -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        int feeAssetChainId = chain.getConfig().getChainId();
+        int feeAssetId = chain.getConfig().getAssetId();
+        byte[] extend = null;
+        byte[] feePub = ConverterContext.FEE_PUBKEY;
+        if (basicTx.getType() == TxType.WITHDRAWAL || basicTx.getType() == TxType.ONE_CLICK_CROSS_CHAIN) {
+            // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
+            ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
+            if (null != po) {
+                chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}", basicTx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
+            }
+            // Check that the additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
+            CoinData coinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
+            byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
+            Coin feeCoin = null;
+            for (CoinTo coinTo : coinData.getTo()) {
+                if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
+                    feeCoin = coinTo;
+                    break;
+                }
+            }
+            // The current additional transaction fee asset chainID
+            int feeChainId = withdrawalAdditionalFeeTxDTO.getFeeChainId();
+            boolean isAddNvtFeeCoin = feeChainId == chain.getChainId();
+            if (!isAddNvtFeeCoin) {
+                NerveAssetInfo htgMainAsset = converterCoreApi.getHtgMainAsset(feeChainId);
+                if (htgMainAsset.isEmpty()) {
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
+                }
+                feeAssetChainId = htgMainAsset.getAssetChainId();
+                feeAssetId = htgMainAsset.getAssetId();
+            }
+            // The additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
+            if (feeAssetChainId != feeCoin.getAssetsChainId() || feeAssetId != feeCoin.getAssetsId()) {
+                throw new NulsException(ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR);
+            }
+            if (basicTx.getType() == TxType.WITHDRAWAL) {
+                extend = HexUtil.decode(ConverterConstant.BTC_ADDING_FEE_WITHDRAW_REBUILD_MARK);
+            }
+
+        } else if(basicTx.getType() == TxType.PROPOSAL){
+            String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
+            if (StringUtils.isNotBlank(confirmProposalHash)) {
+                chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}", basicTx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
+            }
+        } else if (basicTx.getType() == TxType.CHANGE_VIRTUAL_BANK) {
+            int htgChainId = withdrawalAdditionalFeeTxDTO.getHtgChainId();
+            VarInt varInt = new VarInt(htgChainId);
+            extend = HexUtil.decode(ConverterConstant.BTC_ADDING_FEE_CHANGE_REBUILD_MARK + HexUtil.encode(varInt.encode()));
+            feePub = HexUtil.decode(converterCoreApi.getBtcFeeReceiverPub());
+        }
+        WithdrawalAdditionalFeeTxData txData = new WithdrawalAdditionalFeeTxData(txHash);
+        byte[] txDataBytes;
+        try {
+            if (withdrawalAdditionalFeeTxDTO.isRebuild()) {
+                txData.setExtend(extend);
+            }
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
+        if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
+            chain.getLogger().error("Additional amount error -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
+        byte[] coinData = assembleFeeCoinDataForWithdrawalAdditional(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee, feeAssetChainId, feeAssetId, feePub);
+        tx.setCoinData(coinData);
+        //autograph
+        ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
+        chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
+        //broadcast
+        TransactionCall.newTx(chain, tx);
+        return tx;
+    }
+
     /**
      * Assembly additional transaction feesCoinData
      *
      */
     private byte[] assembleFeeCoinDataForWithdrawalAdditional(Chain chain, SignAccountDTO signAccountDTO, BigInteger extraFee, int assetChainId, int assetId) throws NulsException {
+        return assembleFeeCoinDataForWithdrawalAdditional(chain, signAccountDTO, extraFee, assetChainId, assetId, ConverterContext.FEE_PUBKEY);
+    }
+
+    private byte[] assembleFeeCoinDataForWithdrawalAdditional(Chain chain, SignAccountDTO signAccountDTO, BigInteger extraFee, int assetChainId, int assetId, byte[] feePub) throws NulsException {
         String address = signAccountDTO.getAddress();
         //The transfer transaction transfer address must be a local chain address
         if (!AddressTool.validAddress(chain.getChainId(), address)) {
@@ -2023,7 +2134,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         List<CoinTo> tos = new ArrayList<>();
         if (greaterTranZero(extraFee)) {
             CoinTo extraFeeCoinTo = new CoinTo(
-                    AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId()),
+                    AddressTool.getAddress(feePub, chain.getChainId()),
                     assetChainId,
                     assetId,
                     extraFee);
@@ -2119,6 +2230,73 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             HeterogeneousAssetInfo asset = docking.getMainAsset();
             tx.setRemark(String.format("Chain: %s-%s, from: %s, originalTxHash: %s", asset.getChainId(), asset.getSymbol(), dto.getHtgFrom(), dto.getHtgTxHash()).getBytes(StandardCharsets.UTF_8));
         }
+        return tx;
+    }
+
+    @Override
+    public Transaction createWithdrawUTXOTx(Chain chain, WithdrawalUTXOTxData txData, long txTime) throws NulsException {
+        Transaction tx = createWithdrawUTXOTxWithoutSign(chain, txData, txTime);
+        P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
+        // Verifier verification
+        bitcoinVerifier.validateWithdrawlUTXO(chain, tx);
+        saveWaitingProcess(chain, tx);
+
+        List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
+        heterogeneousHashList.add(new HeterogeneousHash(txData.getHtgChainId(), EMPTY_STRING));
+        BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, txData.getNerveTxHash(), heterogeneousHashList);
+        NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
+        // complete
+        chain.getLogger().debug(tx.format(WithdrawalUTXOTxData.class));
+        return tx;
+    }
+
+    @Override
+    public Transaction createWithdrawUTXOTxWithoutSign(Chain chain, WithdrawalUTXOTxData txData, long txTime) throws NulsException {
+        CoinData coinData = new CoinData();
+        byte[] coinDataBytes;
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+            coinDataBytes = coinData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_UTXO, txDataBytes, txTime);
+        tx.setCoinData(coinDataBytes);
+        return tx;
+    }
+
+    @Override
+    public Transaction createWithdrawlFeeLogTx(Chain chain, WithdrawalFeeLog txData, long txTime, byte[] remark) throws NulsException {
+        Transaction tx = createWithdrawlFeeLogTxWithoutSign(chain, txData, txTime, remark);
+        P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
+        // Verifier verification
+        bitcoinVerifier.validateWithdrawFee(chain, tx);
+        saveWaitingProcess(chain, tx);
+
+        List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
+        heterogeneousHashList.add(new HeterogeneousHash(txData.getHtgChainId(), txData.getHtgTxHash()));
+        BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
+        NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
+        // complete
+        chain.getLogger().debug(tx.format(WithdrawalFeeLog.class));
+        return tx;
+    }
+
+    @Override
+    public Transaction createWithdrawlFeeLogTxWithoutSign(Chain chain, WithdrawalFeeLog txData, long txTime, byte[] remark) throws NulsException {
+        CoinData coinData = new CoinData();
+        byte[] coinDataBytes;
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+            coinDataBytes = coinData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_UTXO_FEE_PAYMENT, txDataBytes, txTime);
+        tx.setCoinData(coinDataBytes);
+        tx.setRemark(remark);
         return tx;
     }
 }

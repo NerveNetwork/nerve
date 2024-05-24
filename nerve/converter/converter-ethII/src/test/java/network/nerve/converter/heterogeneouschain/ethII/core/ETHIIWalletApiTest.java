@@ -742,6 +742,41 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     @Test
+    public void erc20TransferEstimateGasTest() throws Exception {
+        setMain();
+        String contractAddress = "0x6081d7F04a8c31e929f25152d4ad37c83638C62b";
+        BigInteger convertAmount = new BigDecimal("5000").movePointRight(18).toBigInteger();
+        String from = "0x5a78059280E7B4E5494d18B44fbaef5228BA8598";
+        String to = "0xE141D5E7DdFdD148CDb3B0057f956871Ab2ec248";
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                from,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
     public void getWithdrawDecoderTest() throws Exception {
         setMain();
         List<String> errorList = new ArrayList<>();

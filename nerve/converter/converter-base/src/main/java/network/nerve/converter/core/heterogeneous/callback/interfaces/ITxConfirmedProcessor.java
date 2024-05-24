@@ -45,7 +45,10 @@ public interface ITxConfirmedProcessor {
      * @param signers          Transaction signature address list
      */
     void txConfirmed(HeterogeneousChainTxType txType, String nerveTxHash,
-                     String txHash, Long blockHeight, Long txTime, String multiSignAddress, List<HeterogeneousAddress> signers) throws Exception;
+                     String txHash, Long blockHeight, Long txTime, String multiSignAddress, List<HeterogeneousAddress> signers, byte[] remark) throws Exception;
+
+    void txRecordWithdrawFee(HeterogeneousChainTxType txType, String txHash,
+                     String blockHash, Long blockHeight, Long txTime, long fee, byte[] remark) throws Exception;
 
     /**
      * @param nerveTxHash         This chain transactionhash

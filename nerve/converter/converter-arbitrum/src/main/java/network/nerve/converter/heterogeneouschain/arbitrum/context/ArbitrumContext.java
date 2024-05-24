@@ -89,8 +89,8 @@ public class ArbitrumContext extends HtgContext implements Serializable {
     public IConverterCoreApi converterCoreApi;
     // RPCCheck markings
     private volatile boolean availableRPC = true;
-    private final BigInteger GAS_LIMIT_OF_WITHDRAW = BigInteger.valueOf(400_0000L);
-    private final BigInteger GAS_LIMIT_OF_CHANGE = BigInteger.valueOf(500_0000L);
+    private final BigInteger GAS_LIMIT_OF_WITHDRAW = BigInteger.valueOf(900_0000L);
+    private final BigInteger GAS_LIMIT_OF_CHANGE = BigInteger.valueOf(1200_0000L);
     private final BigInteger GAS_LIMIT_OF_MAIN_ASSET = BigInteger.valueOf(80_0000L);
     private final BigInteger GAS_LIMIT_OF_ERC20 = BigInteger.valueOf(100_0000L);
     private final BigInteger HTG_ESTIMATE_GAS = BigInteger.valueOf(1000_0000L);

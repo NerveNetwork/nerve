@@ -30,6 +30,7 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.btc.txdata.UTXOData;
 import network.nerve.converter.constant.ConverterErrorCode;
 
 import java.math.BigDecimal;
@@ -46,6 +47,8 @@ import static network.nerve.converter.utils.LoggerUtil.LOG;
  */
 public class ConverterUtil {
 
+    public static final long FEE_RATE_REBUILD = 100000000;
+    public static final int PUB_LENGTH = 33;
     private static final String HEX_REGEX="^[A-Fa-f0-9]+$";
 
     public static boolean isHexStr(String str) {
@@ -207,4 +210,16 @@ public class ConverterUtil {
             array[j] = temp;
         }
     }
+
+    public static final Comparator<UTXOData> BITCOIN_SYS_COMPARATOR = new Comparator<UTXOData>() {
+        @Override
+        public int compare(UTXOData o1, UTXOData o2) {
+            // order asc
+            int compare = o1.getAmount().compareTo(o2.getAmount());
+            if (compare == 0) {
+                return o1.getTxid().compareTo(o2.getTxid());
+            }
+            return compare;
+        }
+    };
 }

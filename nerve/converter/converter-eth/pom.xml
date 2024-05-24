@@ -263,7 +263,7 @@
             </exclusions>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
             <version>0.17-alpha3</version>
@@ -281,7 +281,7 @@
             <artifactId>btcd-cli4j-core</artifactId>
             <version>1.0.1</version>
             <scope>test</scope>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>io.nuls.v2</groupId>

@@ -250,9 +250,11 @@ public class VirtualBankUtilTest {
 //        String nonce = "75c643fb277e8077";
 //
         List<String[]> proposalTxHashList = new ArrayList<>();
-        proposalTxHashList.add(new String[]{"Multi chain routing usdc remove oktc",     "f25ccbf66e34f8a72d3a2268b628e24f9ed5889f1039a6b9b78171f03f3858da"});
-        proposalTxHashList.add(new String[]{"Multi chain routing usdt remove oktc",     "f307e85c5a35f9125ff3a0dc271bf247c4daaf88e372652e18d15a4d729aeaab"});
-        proposalTxHashList.add(new String[]{"Multi chain routing eth add manta",     "e4b9230d7a0d587067ea2063d87262a5e1422e765cf17073efff10f5f2ab88d3"});
+        proposalTxHashList.add(new String[]{"Multi_chain_routing_eth_add_mode",     "cdf6000991436b7847580f7afa2d0f7632adc7be3cdede94240b344b634ecb43"});
+        proposalTxHashList.add(new String[]{"Whitelist",     "7d98a8f87cc293fcace1ec4685e8b9bb8e772e8ec981e8b710f7f6dac449e392"});
+        //proposalTxHashList.add(new String[]{"Multi chain routing usdc remove oktc",     "f25ccbf66e34f8a72d3a2268b628e24f9ed5889f1039a6b9b78171f03f3858da"});
+        //proposalTxHashList.add(new String[]{"Multi chain routing usdt remove oktc",     "f307e85c5a35f9125ff3a0dc271bf247c4daaf88e372652e18d15a4d729aeaab"});
+        //proposalTxHashList.add(new String[]{"Multi chain routing eth add blast",     "682d1e8a0b5347af6f9ffabbcde52836527f1346ca3c2a131d4ca054a9e15de5"});
 
         List<String[]> list = new ArrayList<>();
         list.add(new String[]{"NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "02376148f0332ca5bafc89f55777308f0d042290222fc0826ab16f40e2d39d17ba,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});

@@ -28,4 +28,22 @@ package network.nerve.converter.btc.model;
  * @date: 2023/12/28
  */
 public class BtcUnconfirmedTxPo extends BtcTxInfo {
+    private String blockHash;
+    private byte[] checkWithdrawalUsedUTXOData;
+
+    public String getBlockHash() {
+        return blockHash;
+    }
+
+    public void setBlockHash(String blockHash) {
+        this.blockHash = blockHash;
+    }
+
+    public byte[] getCheckWithdrawalUsedUTXOData() {
+        return checkWithdrawalUsedUTXOData;
+    }
+
+    public void setCheckWithdrawalUsedUTXOData(byte[] checkWithdrawalUsedUTXOData) {
+        this.checkWithdrawalUsedUTXOData = checkWithdrawalUsedUTXOData;
+    }
 }

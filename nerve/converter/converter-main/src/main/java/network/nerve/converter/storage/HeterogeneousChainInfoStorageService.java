@@ -80,4 +80,26 @@ public interface HeterogeneousChainInfoStorageService {
      */
     void markMergedChainDB(int hChainId) throws Exception;
 
+    void markChainClosed(int hChainId) throws Exception;
+
+    boolean hadClosed(int hChainId);
+
+    // Add an independent account ledger to record the income and expenditure of bitSys'chain fees
+    //void increaseChainWithdrawalFee(int htgChainId, BigInteger value) throws Exception;
+    //void decreaseChainWithdrawalFee(int htgChainId, BigInteger value) throws Exception;
+    //BigInteger getChainWithdrawalFee(int htgChainId);
+
+    /*void saveWithdrawalUTXOs(WithdrawalUTXOTxData txData) throws Exception;
+
+    boolean isLockedUTXO(String txid, int vout);
+
+    String getNerveHashByLockedUTXO(String txid, int vout);
+
+    WithdrawalUTXOTxData checkLockedUTXO(String nerveTxHash, List<UsedUTXOData> usedUTXOs) throws Exception;
+
+    WithdrawalUTXOTxData takeWithdrawalUTXOs(String nerveTxhash);
+
+    void saveWithdrawalUTXORebuildPO(String nerveTxHash, WithdrawalUTXORebuildPO po) throws Exception;
+    WithdrawalUTXORebuildPO getWithdrawalUTXORebuildPO(String nerveTxHash) throws Exception;*/
+
 }

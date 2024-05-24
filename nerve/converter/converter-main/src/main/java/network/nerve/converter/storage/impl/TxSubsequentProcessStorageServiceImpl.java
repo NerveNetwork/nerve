@@ -80,8 +80,29 @@ public class TxSubsequentProcessStorageServiceImpl implements TxSubsequentProces
     }
 
     @Override
+    public boolean saveBackup(Chain chain, TxSubsequentProcessPO po) {
+        if (po == null) {
+            return false;
+        }
+        int chainId = chain.getChainId();
+        try {
+            String txHash = po.getTx().getHash().toHex();
+            return ConverterDBUtil.putModel(DB_PENDING_PREFIX + chainId, stringToBytes("BACKUP_" + txHash), po);
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return false;
+        }
+
+    }
+
+    @Override
     public TxSubsequentProcessPO get(Chain chain, String txHash) {
         return ConverterDBUtil.getModel(DB_PENDING_PREFIX + chain.getChainId(), stringToBytes(txHash), TxSubsequentProcessPO.class);
+    }
+
+    @Override
+    public TxSubsequentProcessPO getBackup(Chain chain, String txHash) {
+        return ConverterDBUtil.getModel(DB_PENDING_PREFIX + chain.getChainId(), stringToBytes("BACKUP_" + txHash), TxSubsequentProcessPO.class);
     }
 
     @Override
@@ -94,6 +115,16 @@ public class TxSubsequentProcessStorageServiceImpl implements TxSubsequentProces
             listPO.getListTxHash().remove(txHash);
 
             ConverterDBUtil.putModel(DB_PENDING_PREFIX + chainId, PENDING_TX_ALL_KEY, listPO);
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+        }
+    }
+
+    @Override
+    public void deleteBackup(Chain chain, String txHash) {
+        try {
+            int chainId = chain.getChainId();
+            RocksDBService.delete(DB_PENDING_PREFIX + chainId, stringToBytes("BACKUP_" + txHash));
         } catch (Exception e) {
             chain.getLogger().error(e);
         }

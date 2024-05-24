@@ -23,13 +23,16 @@
  */
 package network.nerve.converter.heterogeneouschain.btc.register;
 
+import com.neemre.btcdcli4j.core.client.BtcdClient;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.heterogeneouschain.btc.context.BtcContext;
+import network.nerve.converter.heterogeneouschain.btc.core.BitCoinApi;
 import network.nerve.converter.heterogeneouschain.btc.core.BtcWalletApi;
 import network.nerve.converter.heterogeneouschain.btc.docking.BtcDocking;
 import network.nerve.converter.heterogeneouschain.btc.handler.BtcBlockHandler;
@@ -40,10 +43,7 @@ import network.nerve.converter.heterogeneouschain.btc.helper.BtcParseTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManagerNew;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgCommonHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgInvokeTxHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgLocalBlockHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgStorageHelper;
+import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
@@ -51,8 +51,10 @@ import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
 import network.nerve.converter.heterogeneouschain.lib.storage.*;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
+import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -116,6 +118,18 @@ public class BtcRegister extends HtgRegister {
         htgCallBackManager = (HtgCallBackManager) beanMap.get(HtgCallBackManager.class);
     }
 
+    @Override
+    public void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception {
+        super.registerCallBack(registerInfo);
+        String multiSigAddress = registerInfo.getMultiSigAddress();
+        boolean hasPubs = htgMultiSignAddressHistoryStorageService.hasMultiSignAddressPubs(multiSigAddress);
+        if (!hasPubs) {
+            String initialBtcPubKeyList = registerInfo.getConverterCoreApi().getInitialBtcPubKeyList();
+            htgMultiSignAddressHistoryStorageService.saveMultiSignAddressPubs(multiSigAddress, initialBtcPubKeyList.split(","));
+        }
+
+    }
+
     protected void initScheduled() {
         blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory(blockSyncThreadName()));
         blockSyncExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(BtcBlockHandler.class), 60, getHtgContext().getConfig().getBlockQueuePeriod(), TimeUnit.SECONDS);
@@ -143,12 +157,14 @@ public class BtcRegister extends HtgRegister {
                 beanMap.add(HtgCallBackManager.class, htgCallBackManager);
             }
 
+            beanMap.add(BitCoinApi.class);
             beanMap.add(BtcWalletApi.class);
             beanMap.add(BtcBlockHandler.class);
             beanMap.add(BtcConfirmTxHandler.class);
             beanMap.add(BtcAnalysisTxHelper.class);
             beanMap.add(BtcBlockAnalysisHelper.class);
             beanMap.add(BtcParseTxHelper.class);
+            beanMap.add(HtgPendingTxHelper.class);
             beanMap.add(HtgCommonHelper.class);
             beanMap.add(HtgInvokeTxHelper.class);
             beanMap.add(HtgLocalBlockHelper.class);
@@ -173,5 +189,32 @@ public class BtcRegister extends HtgRegister {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void shutdownConfirm() {
+        if (!this.shutdownPending) {
+            throw new RuntimeException("Error steps to close the chain.");
+        }
+        blockSyncExecutor.shutdown();
+
+        BtcWalletApi btcWalletApi = (BtcWalletApi) beanMap.get(BtcWalletApi.class);
+        BtcdClient client = btcWalletApi.getClient();
+        if (client != null) {
+            client.close();
+        }
+
+        IConverterCoreApi coreApi = getHtgContext().getConverterCoreApi();
+        List<Runnable> confirmTxHandlers = coreApi.getHtgConfirmTxHandlers();
+        boolean has1 = false;
+        int index1 = 0;
+        for (Runnable runnable : confirmTxHandlers) {
+            if (runnable.equals((Runnable) beanMap.get(BtcConfirmTxHandler.class))) {
+                has1 = true;
+                break;
+            }
+            index1++;
+        }
+        if (has1) confirmTxHandlers.remove(index1);
     }
 }

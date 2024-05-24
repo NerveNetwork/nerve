@@ -593,6 +593,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                         pendingPO.setCurrentDirector(currentDirector);
                         pendingPO.setCurrenVirtualBankTotal(currenVirtualBankTotal);
                         txSubsequentProcessStorageService.save(chain, pendingPO);
+                        txSubsequentProcessStorageService.saveBackup(chain, pendingPO);
                         chain.getPendingTxQueue().offer(pendingPO);
                     }
                 }
@@ -601,7 +602,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             }
             return true;
 
-        } catch (NulsException e) {
+        } catch (Exception e) {
             chain.getLogger().error(e);
             if (failRollback) {
                 rollback(chainId, txs, blockHeader, false);

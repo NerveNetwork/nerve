@@ -24,6 +24,7 @@
 package network.nerve.converter.heterogeneouschain.fch.handler;
 
 import apipClass.BlockInfo;
+import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
@@ -36,10 +37,8 @@ import network.nerve.converter.heterogeneouschain.fch.core.FchWalletApi;
 import network.nerve.converter.heterogeneouschain.fch.helper.FchParseTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgLocalBlockHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgPendingTxHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgResendHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgStorageHelper;
+import network.nerve.converter.heterogeneouschain.lib.enums.BroadcastTxValidateStatus;
+import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
@@ -73,6 +72,7 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
     private HtgResendHelper htgResendHelper;
     private HtgPendingTxHelper htgPendingTxHelper;
     private FchContext htgContext;
+    private HtgInvokeTxHelper htgInvokeTxHelper;
 
     private NulsLogger logger() {
         return htgContext.logger();
@@ -129,6 +129,9 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                         po.setBlockHeight(poFromDB.getBlockHeight());
                         po.setTxTime(poFromDB.getTxTime());
                     }
+                    if (po.getBlockHeight() == null) {
+                        continue;
+                    }
                 }
 
                 // Wait for transaction triggering revalidation`skipTimes`The round will be verified again
@@ -163,7 +166,12 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                         break;
                     case WITHDRAW:
                     case CHANGE:
-                        //TODO pierre cross out
+                        if (dealBroadcastTx(po, poFromDB)) {
+                            if(logger().isDebugEnabled()) {
+                                logger().debug("[{}] Broadcast transactions are put back into the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
+                            }
+                            queue.offer(po);
+                        }
                         break;
                     default:
                         logger().error("unkown tx: {}", po.toString());
@@ -263,10 +271,97 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                     (TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
                 logger().info("NerveTransaction already exists, remove pending confirmation from queue{}transaction[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
+                this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             }
             po.increaseDepositErrorTime();
             throw e;
+        }
+        return isReOfferQueue;
+    }
+
+    private boolean dealBroadcastTx(HtgUnconfirmedTxPo po, HtgUnconfirmedTxPo poFromDB) throws Exception {
+        //TODO pierre Broadcast Tx Coding
+        if (1==1) return true;
+        String symbol = htgContext.getConfig().getSymbol();
+        boolean isReOfferQueue = true;
+        String htgTxHash = po.getTxHash();
+        HtgUnconfirmedTxPo txPo = poFromDB;
+        if (txPo == null) {
+            txPo = htgUnconfirmedTxStorageService.findByTxHash(htgTxHash);
+        }
+        if (txPo == null) {
+            logger().warn("[{}] [{} Task exception] DB Not obtained in PO In the queue PO: {}", symbol, po.getTxType(), po.toString());
+            this.clearDB(htgTxHash);
+            return !isReOfferQueue;
+        }
+        String nerveTxHash = po.getNerveTxHash();
+        // query nerve Corresponding to the transaction eth Whether the transaction was successful
+        if (htgInvokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
+            logger().info("[{}] Nerve tx stay NERVE Network confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
+            this.clearDB(htgTxHash);
+            return !isReOfferQueue;
+        }
+        // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBDelete in, do not put back in queue
+        if (txPo.isDelete()) {
+            long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
+            if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
+                this.clearDB(htgTxHash);
+                isReOfferQueue = false;
+                htgResendHelper.clear(nerveTxHash);
+                logger().info("[{}] [{}] transaction [{}] Confirmed exceeding {} Height, Remove queue, nerve height: {}, nerver hash: {}", symbol, po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+            }
+            // supplementpoMemory data,poPrint logs for easy viewing of data
+            po.setDelete(txPo.isDelete());
+            po.setDeletedHeight(txPo.getDeletedHeight());
+            return isReOfferQueue;
+        }
+
+        switch (txPo.getStatus()) {
+            case INITIAL:
+                break;
+            case FAILED:
+                // Failed transactions, not handled by the current node, from the queue and DB Remove from middle
+                logger().info("Failed {} transaction [{}] The current node is not in the next order and will not be processed by the current node. Remove the queue", symbol, htgTxHash);
+                this.clearDB(htgTxHash);
+                return !isReOfferQueue;
+            case COMPLETED:
+                if (!po.isValidateTx()) {
+                    //Verify transaction again
+                    BroadcastTxValidateStatus validate = validateBroadcastTxConfirmedInFchNet(po);
+                    switch (validate) {
+                        case RE_VALIDATE:
+                            // Put it back in the queue and verify again
+                            return isReOfferQueue;
+                        case SUCCESS:
+                        default:
+                            break;
+                    }
+                    po.setValidateTx(validate == BroadcastTxValidateStatus.SUCCESS);
+                }
+                try {
+                    String realNerveTxHash = nerveTxHash;
+                    logger().info("[{}] Signed {} transaction [{}] call Nerve confirm [{}]", po.getTxType(), symbol, htgTxHash, realNerveTxHash);
+                    // The signed transaction will trigger a callbackNerve Core
+                    htgCallBackManager.getTxConfirmedProcessor().txConfirmed(
+                            po.getTxType(),
+                            realNerveTxHash,
+                            htgTxHash,
+                            txPo.getBlockHeight(),
+                            txPo.getTxTime(),
+                            htgContext.MULTY_SIGN_ADDRESS(),
+                            txPo.getSigners(),
+                            null);
+                } catch (NulsException e) {
+                    // Transaction already exists, waiting for confirmation to remove
+                    if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode()) || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {
+                        logger().info("Nerve transaction [{}] Exists, remove pending confirmation from queue {} transaction [{}]", txPo.getNerveTxHash(), symbol, htgTxHash);
+                        this.clearDB(htgTxHash);
+                        return !isReOfferQueue;
+                    }
+                    throw e;
+                }
+                break;
         }
         return isReOfferQueue;
     }
@@ -293,6 +388,23 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
         //    validateTx = true;
         //} while (false);
         return validateTx;
+    }
+
+    private BroadcastTxValidateStatus validateBroadcastTxConfirmedInFchNet(HtgUnconfirmedTxPo po) throws Exception {
+        String symbol = htgContext.getConfig().getSymbol();
+        BroadcastTxValidateStatus status;
+        String htgTxHash = po.getTxHash();
+        do {
+            /*RawTransaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
+            if (htgTx.getConfirmations() == null || htgTx.getConfirmations().intValue() == 0) {
+                po.setSkipTimes(3);
+                status = BroadcastTxValidateStatus.RE_VALIDATE;
+                logger().error("[{}] Verify transaction [{}] Failed, tx not confirmed yet", symbol, htgTxHash);
+                break;
+            }*/
+            status = BroadcastTxValidateStatus.SUCCESS;
+        } while (false);
+        return status;
     }
 
 

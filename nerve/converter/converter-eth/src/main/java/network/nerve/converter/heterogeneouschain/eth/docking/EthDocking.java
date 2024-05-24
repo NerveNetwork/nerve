@@ -32,6 +32,7 @@ import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManager;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
@@ -246,7 +247,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
     }
 
     @Override
-    public void txConfirmedCompleted(String ethTxHash, Long blockHeight, String nerveTxHash) throws Exception {
+    public void txConfirmedCompleted(String ethTxHash, Long blockHeight, String nerveTxHash, byte[] confirmTxRemark) throws Exception {
         logger().info("NerveNetwork confirmationETHtransaction Nerver hash: {}", nerveTxHash);
         this.txConfirmedCompleted(ethTxHash, blockHeight);
     }
@@ -566,7 +567,8 @@ public class EthDocking implements IHeterogeneousChainDocking {
                             null, //ethTx blockHeight,
                             null, //ethTx tx time,
                             EthContext.MULTY_SIGN_ADDRESS,
-                            null  //ethTx signers
+                            null,  //ethTx signers
+                            null
                     );
                 } catch (Exception e) {
                     if (e instanceof NulsException) {
@@ -753,6 +755,21 @@ public class EthDocking implements IHeterogeneousChainDocking {
         return EthContext.getConfig().getChainIdOnHtgNetwork();
     }
 
+    @Override
+    public void setRegister(IHeterogeneousChainRegister register) {
+        throw new RuntimeException("Unsupport Function");
+    }
+
+    @Override
+    public void closeChainPending() {
+        throw new RuntimeException("Unsupport Function");
+    }
+
+    @Override
+    public void closeChainConfirm() {
+        throw new RuntimeException("Unsupport Function");
+    }
+
     private String recovery(String nerveTxKey, String[] adds, String[] removes, EthRecoveryDto recoveryDto) throws NulsException {
         try {
             // When the current virtual bank triggers the recovery mechanism, persistently save the call parameters to provide for use in the second step of recovery
@@ -828,7 +845,8 @@ public class EthDocking implements IHeterogeneousChainDocking {
                             null, //txPo.getBlockHeight(),
                             nerveTx.getTime(), //txPo.getTxTime(),
                             EthContext.MULTY_SIGN_ADDRESS,
-                            null  //txPo.getSigners()
+                            null,  //txPo.getSigners()
+                            null
                     );
                 } catch (Exception e) {
                     logger().error(e);

@@ -412,7 +412,7 @@ public class EthConfirmTxScheduled implements Runnable {
                         if (txPo.getNerveTxHash().startsWith(EthConstant.ETH_RECOVERY_I)) {
                             // The first step of restoring is to set it as completed
                             if (!EthContext.getConverterCoreApi().isSeedVirtualBankByCurrentNode()) {
-                                ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
+                                ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash, null);
                             }
                             // After the first step of recovery execution is completed, the seed virtual bank executes the second step
                             if (EthContext.getConverterCoreApi().isSeedVirtualBankByCurrentNode()) {
@@ -420,13 +420,13 @@ public class EthConfirmTxScheduled implements Runnable {
                                 EthRecoveryDto recoveryDto = ethTxStorageService.findRecoveryByNerveTxKey(nerveTxHash);
                                 if (recoveryDto == null) {
                                     logger().info("The second step of resuming transactions has been sent out in advance");
-                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
+                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash, null);
                                     break;
                                 }
                                 String secondHash = ethRegister.getDockingImpl().forceRecovery(EthConstant.ETH_RECOVERY_II + realNerveTxHash, recoveryDto.getSeedManagers(), recoveryDto.getAllManagers());
                                 if (StringUtils.isNotBlank(secondHash)) {
                                     logger().info("The second step of restoring the transaction has been sent out,hash: {}", secondHash);
-                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
+                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash, null);
                                 }
                             }
                             break;
@@ -441,7 +441,8 @@ public class EthConfirmTxScheduled implements Runnable {
                             txPo.getBlockHeight(),
                             txPo.getTxTime(),
                             EthContext.MULTY_SIGN_ADDRESS,
-                            txPo.getSigners());
+                            txPo.getSigners(),
+                            null);
                 } catch (NulsException e) {
                     // Transaction already exists, waiting for confirmation to remove
                     if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode()) || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {

@@ -30,6 +30,8 @@ package network.nerve.converter.enums;
 public enum HeterogeneousChainTxType {
     DEPOSIT,
     WITHDRAW,
+    WITHDRAW_FEE_RECHARGE,
+    WITHDRAW_FEE_USED,
     CHANGE,
     UPGRADE,
     RECOVERY;

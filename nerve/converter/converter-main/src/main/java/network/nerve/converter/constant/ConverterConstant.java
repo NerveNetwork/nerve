@@ -97,4 +97,10 @@ public interface ConverterConstant {
     String OUT = "out";
     int SIG_MODE_LOCAL = 0;
     int SIG_MODE_MACHINE = 1;
+    int PUB_LENGTH = 33;
+
+    long BTC_DUST_AMOUNT = 546;
+    String BTC_WITHDRAW_FEE_TX_HASH_PREFIX = "888888888888888888";
+    String BTC_ADDING_FEE_WITHDRAW_REBUILD_MARK = "020000";
+    String BTC_ADDING_FEE_CHANGE_REBUILD_MARK = "020001";
 }

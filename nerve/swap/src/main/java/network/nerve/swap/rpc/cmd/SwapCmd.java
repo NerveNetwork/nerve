@@ -39,7 +39,6 @@ import network.nerve.swap.model.vo.SwapPairVO;
 import network.nerve.swap.model.vo.TokenAmountVo;
 import network.nerve.swap.service.SwapService;
 import network.nerve.swap.storage.SwapExecuteResultStorageService;
-import network.nerve.swap.utils.BTCUtils;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.math.BigInteger;
@@ -1168,7 +1167,7 @@ public class SwapCmd extends BaseCmd {
             String address = (String) params.get("address");
             logger().debug("mainnet: {}, btc address: {}", mainnet, address);
             Map<String, Object> resultData = new HashMap<>();
-            resultData.put("value", BTCUtils.validateAddress(address, mainnet));
+            resultData.put("value", true);//TODO pierre dev code
             return success(resultData);
         } catch (Exception e) {
             logger().error(e);

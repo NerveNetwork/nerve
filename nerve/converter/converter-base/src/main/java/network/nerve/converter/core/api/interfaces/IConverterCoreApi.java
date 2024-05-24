@@ -31,11 +31,13 @@ import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
 import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
+import network.nerve.converter.model.bo.WithdrawalUTXO;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author: Mimi
@@ -182,6 +184,7 @@ public interface IConverterCoreApi {
     boolean isProtocol31();
     boolean isProtocol33();
     boolean isProtocol34();
+    boolean isProtocol35();
 
 
     /**
@@ -190,6 +193,9 @@ public interface IConverterCoreApi {
     void addHtgConfirmTxHandler(Runnable runnable);
     void addHtgRpcAvailableHandler(Runnable runnable);
     void addHtgWaitingTxInvokeDataHandler(Runnable runnable);
+    List<Runnable> getHtgConfirmTxHandlers();
+    List<Runnable> getHtgRpcAvailableHandlers();
+    List<Runnable> getHtgWaitingTxInvokeDataHandlers();
 
     boolean skippedTransaction(String nerveTxHash);
 
@@ -228,4 +234,34 @@ public interface IConverterCoreApi {
     boolean isNerveMainnet();
 
     void setFchToDogePrice(BigDecimal fchToDogePrice);
+
+    int getByzantineCount(Integer total);
+
+    Integer getSeedPackerOrder(String addr);
+
+    Map<String, Integer> getSeedPacker();
+
+    Set<String> getAllPackers();
+    List<String> getAllPackerPubs();
+
+    String getBtcFeeReceiverPub();
+
+    String getInitialBtcPubKeyList();
+
+    String getInitialFchPubKeyList();
+
+    HeterogeneousAssetInfo getHeterogeneousAssetByNerveAsset(int htgChainId, int nerveAssetChainId, int nerveAssetId);
+
+    String signBtcWithdrawByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData) throws NulsException;
+    String signBtcChangeByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData) throws NulsException;
+
+    void updateMultySignAddress(int heterogeneousChainId, String multySignAddress) throws NulsException;
+
+    boolean checkChangeP35(String nerveTxHash);
+
+    String[] inChangeP35();
+    String[] outChangeP35();
+
+    void closeHtgChain(int htgChainId) throws Exception;
+
 }

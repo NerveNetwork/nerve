@@ -188,22 +188,39 @@ public class SwapTradeStableRemoveLpHandler extends SwapHandlerConstraints {
             result.setSwapTradeBus(swapTradeBus);
             // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
-            // generateswapSystem transactions
-            Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getUserAddress());
-            // Update temporary balance
-            tempBalanceManager.refreshTempBalance(chainId, sysDealTx0, blockTime);
-            // Generate and revoke stablecoin liquidity system transactions
-            Transaction sysDealTx1 = stableRemoveLiquidityHandler.makeSystemDealTx(chain, stableRemoveLiquidityBus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
-            // Update temporary balance
-            tempBalanceManager.refreshTempBalance(chainId, sysDealTx1, blockTime);
+            Transaction sysDealTx;
+            if (swapHelper.isSupportProtocol35()) {
+                // generateswapSystem transactions
+                Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getUserAddress());
+                // Generate and revoke stablecoin liquidity system transactions
+                Transaction sysDealTx1 = stableRemoveLiquidityHandler.makeSystemDealTx(chain, stableRemoveLiquidityBus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
+                // Integrate two generated transactions
+                sysDealTx = sysDealTx0;
+                CoinData coinDataInstance = sysDealTx.getCoinDataInstance();
+                CoinData coinData1 = sysDealTx1.getCoinDataInstance();
+                coinDataInstance.getFrom().addAll(coinData1.getFrom());
+                coinDataInstance.getTo().addAll(coinData1.getTo());
+                sysDealTx.setCoinData(SwapUtils.nulsData2HexBytes(coinDataInstance));
+                sysDealTx.setHash(null);
+                tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
+            } else {
+                // generateswapSystem transactions
+                Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getUserAddress());
+                // Update temporary balance
+                tempBalanceManager.refreshTempBalance(chainId, sysDealTx0, blockTime);
+                // Generate and revoke stablecoin liquidity system transactions
+                Transaction sysDealTx1 = stableRemoveLiquidityHandler.makeSystemDealTx(chain, stableRemoveLiquidityBus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
+                // Update temporary balance
+                tempBalanceManager.refreshTempBalance(chainId, sysDealTx1, blockTime);
 
-            // Integrate two generated transactions
-            Transaction sysDealTx = sysDealTx0;
-            CoinData coinDataInstance = sysDealTx.getCoinDataInstance();
-            CoinData coinData1 = sysDealTx1.getCoinDataInstance();
-            coinDataInstance.getFrom().addAll(coinData1.getFrom());
-            coinDataInstance.getTo().addAll(coinData1.getTo());
-            sysDealTx.setCoinData(SwapUtils.nulsData2HexBytes(coinDataInstance));
+                // Integrate two generated transactions
+                sysDealTx = sysDealTx0;
+                CoinData coinDataInstance = sysDealTx.getCoinDataInstance();
+                CoinData coinData1 = sysDealTx1.getCoinDataInstance();
+                coinDataInstance.getFrom().addAll(coinData1.getFrom());
+                coinDataInstance.getTo().addAll(coinData1.getTo());
+                sysDealTx.setCoinData(SwapUtils.nulsData2HexBytes(coinDataInstance));
+            }
 
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));

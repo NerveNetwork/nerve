@@ -781,7 +781,7 @@
     "standbyRpcAddresses": "https://btctest.nerve.network,Nerve,9o7fSmXPBfPQoQSbnBB",
     "defaultStartHeight": 0,
     "txBlockConfirmations": 1,
-    "txBlockConfirmationsOfWithdraw": 1,
+    "txBlockConfirmationsOfWithdraw": 0,
     "intervalWaittingSendTransaction": 8,
     "initialBalance": 0.1,
     "blockQueuePeriod": 30,
@@ -899,6 +899,28 @@
     "waitingTxQueuePeriod": 10,
     "protocolVersion": 34,
     "priceKey": "PLS_PRICE",
+    "filterAddresses": "0x4F50AB8Ae16d0643C9dad2cc9debbb0E9F714507"
+  },
+  {
+    "chainId": 142,
+    "chainIdOnHtgNetwork": 1687,
+    "type": 1,
+    "symbol": "Mint-ETH",
+    "decimals": 18,
+    "commonRpcAddress": "https://sepolia-testnet-rpc.mintchain.io",
+    "mainRpcAddress": "https://sepolia-testnet-rpc.mintchain.io",
+    "orderRpcAddresses": "https://sepolia-testnet-rpc.mintchain.io",
+    "standbyRpcAddresses": "https://sepolia-testnet-rpc.mintchain.io",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 5,
+    "txBlockConfirmationsOfWithdraw": 2,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "blockQueuePeriod": 5,
+    "confirmTxQueuePeriod": 10,
+    "waitingTxQueuePeriod": 10,
+    "protocolVersion": 35,
+    "priceKey": "ETH_PRICE",
     "filterAddresses": "0x4F50AB8Ae16d0643C9dad2cc9debbb0E9F714507"
   }
 ]

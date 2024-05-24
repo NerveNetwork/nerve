@@ -118,6 +118,9 @@ public class SwapHelper {
     public boolean isSupportProtocol31() {
         return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_31_0;
     }
+    public boolean isSupportProtocol35() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_35_0;
+    }
 
     public boolean updateSwapPairFeeRate(int chainId, String swapPairAddress, int feeRate) throws Exception {
         nerveChain.getLogger().info("[Commit SwapFeeRate] swapPairAddress: {}. feeRate: {}", swapPairAddress, feeRate);

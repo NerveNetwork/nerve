@@ -33,11 +33,15 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.btc.model.BtcTxInfo;
+import network.nerve.converter.btc.model.BtcUnconfirmedTxPo;
+import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
+import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.ProposalTypeEnum;
+import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.model.dto.AddFeeCrossChainTxDTO;
@@ -48,13 +52,16 @@ import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.*;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
+import network.nerve.converter.storage.HeterogeneousChainInfoStorageService;
 import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
+import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -77,7 +84,10 @@ public class ByzantineTransactionHelper {
     private ProposalStorageService proposalStorageService;
     @Autowired
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
-
+    @Autowired
+    private HeterogeneousAssetHelper heterogeneousAssetHelper;
+    @Autowired
+    private HeterogeneousChainInfoStorageService heterogeneousChainInfoStorageService;
     @Autowired
     private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
 
@@ -115,10 +125,45 @@ public class ByzantineTransactionHelper {
                 hash = hashList.get(0);
                 validation = addFeeCrossChain(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash());
                 break;
+            case TxType.WITHDRAWAL_UTXO:
+                hash = hashList.get(0);
+                validation = withdrawUTXO(nerveChain, byzantineTxhash, nerveTxHash, hash.getHeterogeneousChainId());
+                break;
+            case TxType.WITHDRAWAL_UTXO_FEE_PAYMENT:
+                hash = hashList.get(0);
+                validation = withdrawFee(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash());
+                break;
         }
         return validation;
     }
 
+    private boolean withdrawFee(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
+        nerveChain.getLogger().info("establish [BtcSys-RecordWithdrawFee] Byzantine transactions [{}] news, Heterogeneous Chain Trading hash: {}", byzantineTxhash, hTxHash);
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
+        WithdrawalFeeLog feeLog = docking.getBitCoinApi().takeWithdrawalFeeLogFromTxParse(hTxHash);
+        if (feeLog == null) {
+            return false;
+        }
+        Transaction tx = assembleTxService.createWithdrawlFeeLogTxWithoutSign(nerveChain, feeLog, feeLog.getTxTime(), String.format("Record withdraw fee [%s], chainId: %s, amount: %s, hash: %s, blockHeight: %s, blockHash: %s",
+                feeLog.isRecharge() ? "RECHARGE" : "USED",
+                hChainId,
+                feeLog.getFee(),
+                hTxHash,
+                feeLog.getBlockHeight(),
+                feeLog.getBlockHash()).getBytes(StandardCharsets.UTF_8));
+        if(!byzantineTxhash.equals(tx.getHash().toHex())) {
+            nerveChain.getLogger().error("[BtcSys-RecordWithdrawFee] Byzantine transaction verification failed, transaction details: {}", tx.format(WithdrawalFeeLog.class));
+            return false;
+        }
+        assembleTxService.createWithdrawlFeeLogTx(nerveChain, feeLog, feeLog.getTxTime(), String.format("Record withdraw fee [%s], chainId: %s, amount: %s, hash: %s, blockHeight: %s, blockHash: %s",
+                feeLog.isRecharge() ? "RECHARGE" : "USED",
+                hChainId,
+                feeLog.getFee(),
+                hTxHash,
+                feeLog.getBlockHeight(),
+                feeLog.getBlockHash()).getBytes(StandardCharsets.UTF_8));
+        return true;
+    }
 
 
     private boolean proposal(Chain nerveChain, String byzantineTxhash, String nerveTxHash, List<HeterogeneousHash> hashList) throws Exception {
@@ -478,7 +523,7 @@ public class ByzantineTransactionHelper {
     }
 
     private boolean withdraw(Chain nerveChain, String byzantineTxhash, String nerveTxHash, int hChainId, String hTxHash) throws Exception {
-        nerveChain.getLogger().info("establish[Confirm withdrawal]Byzantine transactions[{}]news, nerveTxHash: {}, Heterogeneous Chain Tradinghash: {}", byzantineTxhash, nerveTxHash, hTxHash);
+        nerveChain.getLogger().info("establish [Confirm withdrawal] Byzantine transactions [{}] news, nerveTxHash: {}, Heterogeneous Chain Trading hash: {}", byzantineTxhash, nerveTxHash, hTxHash);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
         HeterogeneousTransactionInfo hTx = docking.getWithdrawTransaction(hTxHash);
         ConfirmWithdrawalTxData txData = new ConfirmWithdrawalTxData();
@@ -487,12 +532,54 @@ public class ByzantineTransactionHelper {
         txData.setHeterogeneousTxHash(hTxHash);
         txData.setWithdrawalTxHash(NulsHash.fromHex(nerveTxHash));
         txData.setListDistributionFee(hTx.getSigners());
-        Transaction tx = assembleTxService.createConfirmWithdrawalTxWithoutSign(nerveChain, txData, hTx.getTxTime());
+        byte[] remark = null;
+        if (hChainId > 200) {
+            BtcUnconfirmedTxPo btcPo = (BtcUnconfirmedTxPo) hTx;
+            remark = btcPo.getCheckWithdrawalUsedUTXOData();
+        }
+        Transaction tx = assembleTxService.createConfirmWithdrawalTxWithoutSign(nerveChain, txData, hTx.getTxTime(), remark);
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
             nerveChain.getLogger().error("[Confirm withdrawal]Byzantine transaction verification failed, transaction details: {}", tx.format(ConfirmWithdrawalTxData.class));
             return false;
         }
-        assembleTxService.createConfirmWithdrawalTx(nerveChain, txData, hTx.getTxTime());
+        assembleTxService.createConfirmWithdrawalTx(nerveChain, txData, hTx.getTxTime(), remark);
+        return true;
+    }
+
+    private boolean withdrawUTXO(Chain nerveChain, String byzantineTxhash, String nerveTxHash, int _htgChainId) throws Exception {
+        nerveChain.getLogger().info("establish [Withdrawal UTXO]Byzantine transactions [{}] news, nerveTxHash: {}", byzantineTxhash, nerveTxHash);
+        Transaction withdrawTx = TransactionCall.getConfirmedTx(nerveChain, nerveTxHash);
+        WithdrawalUTXOTxData txData = null;
+        if (withdrawTx.getType() == TxType.WITHDRAWAL) {
+            WithdrawalTxData txData1 = ConverterUtil.getInstance(withdrawTx.getTxData(), WithdrawalTxData.class);
+            int htgChainId = txData1.getHeterogeneousChainId();
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
+            String currentMultySignAddress = docking.getCurrentMultySignAddress();
+
+            WithdrawalUTXOTxData oldUtxoData = docking.getBitCoinApi().takeWithdrawalUTXOs(nerveTxHash);
+
+            if (oldUtxoData != null && oldUtxoData.getFeeRate() > ConverterUtil.FEE_RATE_REBUILD) {
+                txData = heterogeneousAssetHelper.rebuildWithdrawalUTXOsTxData(nerveChain, withdrawTx, htgChainId);
+            } else {
+                txData = heterogeneousAssetHelper.makeWithdrawalUTXOsTxData(nerveChain, withdrawTx, htgChainId, currentMultySignAddress, nerveChain.getMapVirtualBank());
+            }
+        } else if (withdrawTx.getType() == TxType.CHANGE_VIRTUAL_BANK) {
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(_htgChainId);
+            String currentMultySignAddress = docking.getCurrentMultySignAddress();
+            WithdrawalUTXOTxData oldUtxoData = docking.getBitCoinApi().takeWithdrawalUTXOs(nerveTxHash);
+            if (oldUtxoData != null && oldUtxoData.getFeeRate() > ConverterUtil.FEE_RATE_REBUILD) {
+                txData = heterogeneousAssetHelper.rebuildManagerChangeUTXOTxData(nerveChain, withdrawTx, _htgChainId, currentMultySignAddress, nerveChain.getMapVirtualBank());
+            } else {
+                txData = heterogeneousAssetHelper.makeManagerChangeUTXOTxData(nerveChain, withdrawTx, _htgChainId, currentMultySignAddress, nerveChain.getMapVirtualBank());
+            }
+        }
+
+        Transaction withdrawlUTXOTx = assembleTxService.createWithdrawUTXOTxWithoutSign(nerveChain, txData, withdrawTx.getTime());
+        if(!byzantineTxhash.equals(withdrawlUTXOTx.getHash().toHex())) {
+            nerveChain.getLogger().error("[Withdrawal UTXO]Byzantine transaction verification failed, transaction details: {}", withdrawlUTXOTx.format(WithdrawalUTXOTxData.class));
+            return false;
+        }
+        assembleTxService.createWithdrawUTXOTx(nerveChain, txData, withdrawTx.getTime());
         return true;
     }
 

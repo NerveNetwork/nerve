@@ -23,12 +23,14 @@
  */
 package network.nerve.converter;
 
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.manager.RocksDBManager;
 import io.nuls.core.rockdb.model.Entry;
 import io.nuls.core.rockdb.service.RocksDBService;
+import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.constant.BnbDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
@@ -62,7 +64,19 @@ public class DbTest {
     @BeforeClass
     public static void before() {
         Log.info("init");
-        RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/data-1123981/converter");
+        RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/data/converter");
+    }
+
+    @Test
+    public void getUTXO() {
+        WithdrawalUTXOTxData txData = ConverterDBUtil.getModel(ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, stringToBytes("201_WITHDRAWL_UTXO_PREFIX-885bb63426c75c0e8a25b3342d2d5b5c77b2bdc45f9c9d55d3cae05e3347f5e2"), WithdrawalUTXOTxData.class);
+        System.out.println(txData);
+    }
+
+    @Test
+    public void getLockedUTXO() {
+        byte[] bytes = RocksDBManager.get(ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, stringToBytes("201_WITHDRAWL_UTXO_LOCKED_PREFIX-8b6a4e8a771bd119270e31075f2c3c194aa7f456040f934980977142f97cd929-1"));
+        System.out.println(HexUtil.encode(bytes));
     }
 
     @Test

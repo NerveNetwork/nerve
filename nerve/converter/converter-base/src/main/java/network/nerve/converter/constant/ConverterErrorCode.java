@@ -136,5 +136,8 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode ADD_FEE_CROSS_CHAIN_FEE_ADDRESS_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0108");
     ErrorCode ADD_FEE_CROSS_CHAIN_COIN_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0109");
     ErrorCode WITHDRAWAL_PAUSE = ErrorCode.init(ModuleE.CV.getPrefix() + "_0110");
+    ErrorCode WITHDRAWAL_UTXO_LOCKED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0111");
+    ErrorCode WITHDRAWAL_NOT_ENOUGH_SIGNATURE = ErrorCode.init(ModuleE.CV.getPrefix() + "_0112");
+    ErrorCode CHANGE_WAITING = ErrorCode.init(ModuleE.CV.getPrefix() + "_0113");
 
 }

@@ -27,6 +27,7 @@ package network.nerve.converter.model.txdata;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.BaseNulsData;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
 
@@ -43,6 +44,7 @@ public class WithdrawalAdditionalFeeTxData extends BaseNulsData {
      * Or the proposed transaction of returning the original routehash
      */
     private String txHash;
+    private byte[] extend;
 
     public WithdrawalAdditionalFeeTxData() {
     }
@@ -54,16 +56,26 @@ public class WithdrawalAdditionalFeeTxData extends BaseNulsData {
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
         stream.writeString(this.txHash);
+        if (extend != null) {
+            stream.writeBytesWithLength(extend);
+        }
     }
 
     @Override
     public void parse(NulsByteBuffer byteBuffer) throws NulsException {
         this.txHash = byteBuffer.readString();
+        if (!byteBuffer.isFinished()) {
+            this.extend = byteBuffer.readByLengthByte();
+        }
     }
 
     @Override
     public int size() {
-        return SerializeUtils.sizeOfString(this.txHash);
+        int size = SerializeUtils.sizeOfString(this.txHash);
+        if (this.extend != null) {
+            size += SerializeUtils.sizeOfBytes(this.extend);
+        }
+        return size;
     }
 
     @Override
@@ -71,6 +83,9 @@ public class WithdrawalAdditionalFeeTxData extends BaseNulsData {
         StringBuilder builder = new StringBuilder();
         String lineSeparator = System.lineSeparator();
         builder.append(String.format("\tnerveTxHash: %s", this.txHash)).append(lineSeparator);
+        if (this.extend != null) {
+            builder.append(String.format("\textend: %s", HexUtil.encode(this.extend))).append(lineSeparator);
+        }
         return builder.toString();
     }
 
@@ -81,5 +96,13 @@ public class WithdrawalAdditionalFeeTxData extends BaseNulsData {
 
     public void setTxHash(String txHash) {
         this.txHash = txHash;
+    }
+
+    public byte[] getExtend() {
+        return extend;
+    }
+
+    public void setExtend(byte[] extend) {
+        this.extend = extend;
     }
 }

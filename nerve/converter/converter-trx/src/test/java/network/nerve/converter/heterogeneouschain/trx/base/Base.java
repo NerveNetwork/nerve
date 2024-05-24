@@ -75,6 +75,9 @@ public class Base {
     protected ApiWrapper wrapper;
     protected TrxWalletApi walletApi;
     protected TrxContext context;
+    protected String mainUrl = "tron.nerve.network";
+    protected String mainUrl2 = "tron2.nerve.network";
+    protected String mainURL = mainUrl;
 
     @BeforeClass
     public static void initClass() {
@@ -105,10 +108,10 @@ public class Base {
         if (walletApi.getWrapper() != null) {
             walletApi.getWrapper().close();
         }
-        wrapper = new ApiWrapper("tron.nerve.network:50051", "tron.nerve.network:50061", "3333333333333333333333333333333333333333333333333333333333333333");
+        wrapper = new ApiWrapper(String.format("%s:50051", mainURL), String.format("%s:50061", mainURL), "3333333333333333333333333333333333333333333333333333333333333333");
         //wrapper = ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", "18765dbb-a9a5-47cc-83b3-0403d0625093");
         walletApi.setWrapper(wrapper);
-        walletApi.setRpcAddress("endpoint:tron.nerve.network");
+        walletApi.setRpcAddress(String.format("endpoint:%s", mainURL));
         context.config.setChainIdOnHtgNetwork(100000002);
     }
 

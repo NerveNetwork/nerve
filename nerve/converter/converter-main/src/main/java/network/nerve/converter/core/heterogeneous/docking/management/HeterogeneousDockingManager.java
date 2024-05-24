@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.core.heterogeneous.docking.management;
 
+import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterErrorCode;
@@ -30,6 +31,7 @@ import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogene
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.rpc.call.AccountCall;
+import network.nerve.converter.storage.HeterogeneousChainInfoStorageService;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,6 +48,8 @@ import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGH
 @Component
 public class HeterogeneousDockingManager {
 
+    @Autowired
+    private HeterogeneousChainInfoStorageService heterogeneousChainInfoStorageService;
     /**
      * Manage interface implementation instances for each heterogeneous chain component
      */
@@ -59,11 +63,20 @@ public class HeterogeneousDockingManager {
         return heterogeneousDockingMap.containsKey(heterogeneousChainId);
     }
 
+    public IHeterogeneousChainDocking removeHeterogeneousDocking(int heterogeneousChainId) {
+        return heterogeneousDockingMap.remove(heterogeneousChainId);
+    }
+
     public IHeterogeneousChainDocking getHeterogeneousDocking(int heterogeneousChainId) throws NulsException {
         IHeterogeneousChainDocking docking = heterogeneousDockingMap.get(heterogeneousChainId);
         if (docking == null) {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR, String.format("error heterogeneousChainId: %s", heterogeneousChainId));
         }
+        return docking;
+    }
+
+    public IHeterogeneousChainDocking getHeterogeneousDockingSmoothly(int heterogeneousChainId) throws NulsException {
+        IHeterogeneousChainDocking docking = heterogeneousDockingMap.get(heterogeneousChainId);
         return docking;
     }
 
@@ -78,7 +91,9 @@ public class HeterogeneousDockingManager {
         Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
         result.putAll(heterogeneousDockingMap);
 
-        protocolEffectiveInformation.entrySet().forEach(e -> {
+        protocolEffectiveInformation.entrySet().stream()
+                .filter(e -> !heterogeneousChainInfoStorageService.hadClosed(e.getKey()))
+                .forEach(e -> {
             long crossChainHeight = e.getValue().getEffectiveHeight();
             int htgChainId = e.getKey();
             if (LATEST_BLOCK_HEIGHT < crossChainHeight && heterogeneousDockingMap.containsKey(htgChainId)) {

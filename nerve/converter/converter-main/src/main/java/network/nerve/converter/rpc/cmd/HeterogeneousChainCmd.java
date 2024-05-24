@@ -35,6 +35,7 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
+import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
 import network.nerve.converter.config.AccountConfig;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
@@ -98,7 +99,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
             @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "symbol", description = "assetsymbol"),
             @Key(name = "decimals", valueType = int.class, description = "Decimal places of assets"),
             @Key(name = "contractAddress", description = "Asset corresponding contract address(If there is any)"),
@@ -140,7 +141,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
             @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
             @Key(name = "symbol", description = "assetsymbol"),
             @Key(name = "decimals", valueType = int.class, description = "Decimal places of assets"),
             @Key(name = "contractAddress", description = "Asset corresponding contract address(If there is any)"),
@@ -190,7 +191,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
             @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "chainId", valueType = int.class, description = "Asset ChainID"),
             @Key(name = "assetId", valueType = int.class, description = "assetID"),
             @Key(name = "symbol", description = "assetsymbol"),
@@ -226,7 +227,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
             @Parameter(parameterName = "heterogeneousAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chain assetsID")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "chainId", valueType = int.class, description = "Asset ChainID"),
             @Key(name = "assetId", valueType = int.class, description = "assetID"),
             @Key(name = "symbol", description = "assetsymbol"),
@@ -266,7 +267,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset symbols"),
             @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", valueType = boolean.class, description = "true/false")
     })
     )
@@ -341,7 +342,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -415,7 +416,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
             @Parameter(parameterName = "packingAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Consensus node packaging address")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "heterogeneousAddress", description = "Heterogeneous Chain Address"),
     })
     )
@@ -467,7 +468,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
             @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", valueType = boolean.class, description = "true/false")
     })
     )
@@ -537,7 +538,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -621,7 +622,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -724,7 +725,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -821,7 +822,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -887,7 +888,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -952,7 +953,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
             @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "heterogeneousChainId", valueType = int.class, description = "Heterogeneous chainID"),
             @Key(name = "contractAddress", valueType = String.class, description = "Asset corresponding contract address(If there is any)")
     })
@@ -1017,7 +1018,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
     @Parameters(value = {
             @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "heterogeneousNetworkChainId", valueType = long.class, description = "Within heterogeneous chain networkschainId")
     })
     )
@@ -1050,7 +1051,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -1145,7 +1146,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -1228,7 +1229,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -1311,7 +1312,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -1394,7 +1395,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -1472,7 +1473,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class))
     public Response gasLimitOfHeterogeneousChains(Map params) {
         Chain chain = null;
         try {
@@ -1511,7 +1512,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "transactionhash")
     })
     )
@@ -1582,11 +1583,126 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = ConverterCmdConstant.CHAIN_WITHDRAWAL_FEE, version = 1.0, description = "CHAIN_WITHDRAWAL_FEE")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "WITHDRAWAL_FEE"),
+    }))
+    public Response getChainWithdrawalFee(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            if (heterogeneousChainId < 201) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (docking == null) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            rtMap.put("value", docking.getBitCoinApi().getChainWithdrawalFee());
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.HAS_RECORD_FEE_PAYMENT, version = 1.0, description = "HAS_RECORD_FEE_PAYMENT")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
+            @Parameter(parameterName = "htgTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    }))
+    public Response hasRecordFeePayment(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            if (heterogeneousChainId < 201) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            String htgTxHash = (String) params.get("htgTxHash");
+            if (StringUtils.isBlank(htgTxHash)) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid htgTxHash");
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (docking == null) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            rtMap.put("value", docking.getBitCoinApi().hasRecordFeePayment(htgTxHash));
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL_FEE_LOG, version = 1.0, description = "WITHDRAWAL_FEE_LOG")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
+            @Parameter(parameterName = "htgTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = WithdrawalFeeLog.class))
+    public Response getWithdrawalFeeLogFromDB(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            if (heterogeneousChainId < 201) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            String htgTxHash = (String) params.get("htgTxHash");
+            if (StringUtils.isBlank(htgTxHash)) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid htgTxHash");
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (docking == null) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            return success(docking.getBitCoinApi().getWithdrawalFeeLogFromDB(htgTxHash));
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.MINIMUM_FEE_OF_WITHDRAWAL, version = 1.0, description = "MINIMUM_FEE_OF_WITHDRAWAL")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "heterogeneousChainId"),
+            @Parameter(parameterName = "nerveTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "nerve tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "minimumFee", description = "minimumFee"),
+            @Key(name = "utxoSize", description = "utxoSize"),
+            @Key(name = "feeRate", description = "feeRate")
+    }))
+    public Response getMinimumFeeOfWithdrawal(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            if (heterogeneousChainId < 201) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            String nerveTxHash = (String) params.get("nerveTxHash");
+            if (StringUtils.isBlank(nerveTxHash)) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid txHash");
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (docking == null) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            return success(docking.getBitCoinApi().getMinimumFeeOfWithdrawal(nerveTxHash));
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+
+    }
+
     /*@CmdAnnotation(cmd = "cv_test", version = 1.0, description = "test")
     @Parameters(value = {
             @Parameter(parameterName = "params", requestType = @TypeDescriptor(value = String.class), parameterDes = "Test parameters")
     })
-    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class))
     public Response test(Map params) {
         Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
         try {

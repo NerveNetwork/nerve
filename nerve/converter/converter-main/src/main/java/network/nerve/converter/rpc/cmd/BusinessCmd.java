@@ -187,6 +187,8 @@ public class BusinessCmd extends BaseCmd {
             @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Original transactionhash"),
             @Parameter(parameterName = "feeChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Chain of additional main assetsID(5/9,101,102,103....)"),
             @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Additional handling fee amount"),
+            @Parameter(parameterName = "rebuild", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "rebuild for btc tx"),
+            @Parameter(parameterName = "htgChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "htgChainId for btc'sys chain tx"),
             @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction notes"),
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
@@ -219,6 +221,16 @@ public class BusinessCmd extends BaseCmd {
             if (feeChainId == null) {
                 feeChainId = chain.getChainId();
             }
+            boolean rebuild = false;
+            Object _rebuild = params.get("rebuild");
+            if (_rebuild != null) {
+                rebuild = Boolean.parseBoolean(_rebuild.toString());
+            }
+            Integer htgChainId = null;
+            Object _htgChainId = params.get("htgChainId");
+            if (_htgChainId != null) {
+                htgChainId = Integer.parseInt(_htgChainId.toString());
+            }
             SignAccountDTO signAccountDTO = new SignAccountDTO();
             signAccountDTO.setAddress((String) params.get("address"));
             signAccountDTO.setPassword((String) params.get("password"));
@@ -227,6 +239,8 @@ public class BusinessCmd extends BaseCmd {
             WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO = JSONUtils.map2pojo(params, WithdrawalAdditionalFeeTxDTO.class);
             withdrawalAdditionalFeeTxDTO.setSignAccount(signAccountDTO);
             withdrawalAdditionalFeeTxDTO.setFeeChainId(feeChainId);
+            withdrawalAdditionalFeeTxDTO.setRebuild(rebuild);
+            withdrawalAdditionalFeeTxDTO.setHtgChainId(htgChainId);
 
             Transaction tx = assembleTxService.withdrawalAdditionalFeeTx(chain, withdrawalAdditionalFeeTxDTO);
             Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);

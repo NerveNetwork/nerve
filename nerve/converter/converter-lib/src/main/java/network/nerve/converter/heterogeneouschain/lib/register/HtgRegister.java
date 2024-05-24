@@ -29,6 +29,7 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
@@ -49,6 +50,7 @@ import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
+import org.web3j.protocol.Web3j;
 
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -66,6 +68,7 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
     protected ScheduledThreadPoolExecutor blockSyncExecutor;
     protected boolean isInitial = false;
     protected boolean newProcessActivated = false;
+    protected boolean shutdownPending = false;
     protected BeanMap beanMap = new BeanMap();
 
     public abstract ConverterConfig getConverterConfig();
@@ -152,6 +155,7 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
             initWaitingTxQueue();
             // Start a new process's work task pool
             initScheduled();
+            getDockingImpl().setRegister(this);
             // Set new process switching flag
             this.newProcessActivated = true;
         }
@@ -236,4 +240,55 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
         getHtgContext().INIT_WAITING_TX_QUEUE_LATCH().countDown();
     }
 
+    @Override
+    public void shutdownPending() {
+        this.shutdownPending = true;
+    }
+
+    @Override
+    public void shutdownConfirm() {
+        if (!this.shutdownPending) {
+            throw new RuntimeException("Error steps to close the chain.");
+        }
+        blockSyncExecutor.shutdown();
+
+        HtgWalletApi htgWalletApi = (HtgWalletApi) beanMap.get(HtgWalletApi.class);
+        Web3j web3j = htgWalletApi.getWeb3j();
+        if (web3j != null) {
+            web3j.shutdown();
+        }
+
+        IConverterCoreApi coreApi = getHtgContext().getConverterCoreApi();
+        List<Runnable> confirmTxHandlers = coreApi.getHtgConfirmTxHandlers();
+        List<Runnable> availableHandlers = coreApi.getHtgRpcAvailableHandlers();
+        List<Runnable> waitingTxInvokeDataHandlers = coreApi.getHtgWaitingTxInvokeDataHandlers();
+        boolean has1 = false, has2 = false, has3 = false;
+        int index1 = 0, index2 = 0, index3 = 0;
+        for (Runnable runnable : confirmTxHandlers) {
+            if (runnable.equals((Runnable) beanMap.get(HtgConfirmTxHandler.class))) {
+                has1 = true;
+                break;
+            }
+            index1++;
+        }
+        if (has1) confirmTxHandlers.remove(index1);
+
+        for (Runnable runnable : availableHandlers) {
+            if (runnable.equals((Runnable) beanMap.get(HtgRpcAvailableHandler.class))) {
+                has2 = true;
+                break;
+            }
+            index2++;
+        }
+        if (has2) availableHandlers.remove(index2);
+
+        for (Runnable runnable : waitingTxInvokeDataHandlers) {
+            if (runnable.equals((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class))) {
+                has3 = true;
+                break;
+            }
+            index3++;
+        }
+        if (has3) waitingTxInvokeDataHandlers.remove(index3);
+    }
 }

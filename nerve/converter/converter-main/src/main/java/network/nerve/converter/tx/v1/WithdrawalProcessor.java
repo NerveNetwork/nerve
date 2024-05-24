@@ -124,6 +124,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
                 if (isCurrentDirector) {
                     for (Transaction tx : txs) {
+                        WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
                         //Placing a queue like processing mechanism Prepare to notify heterogeneous chain components to execute withdrawals
                         TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                         pendingPO.setTx(tx);
@@ -132,6 +133,9 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
                         pendingPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
                         txSubsequentProcessStorageService.save(chain, pendingPO);
+                        if (txData.getHeterogeneousChainId() > 200) {
+                            txSubsequentProcessStorageService.saveBackup(chain, pendingPO);
+                        }
                         chain.getPendingTxQueue().offer(pendingPO);
                         chain.getLogger().info("[commit] Withdrawal transaction added to pending queue hash:{}", tx.getHash().toHex());
                     }
@@ -255,7 +259,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 // Destroy the black hole of in chain assets transferred out
                 byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
                 for (CoinTo coinTo : coinData.getTo()) {
-                    // ThistoIt is the main asset of the current chain
+                    // This to It is the main asset of the current chain
                     boolean currentChainAsset = coinTo.getAssetsChainId() == chain.getConfig().getChainId()
                             && coinTo.getAssetsId() == chain.getConfig().getAssetId();
                     if (currentChainAsset && Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
