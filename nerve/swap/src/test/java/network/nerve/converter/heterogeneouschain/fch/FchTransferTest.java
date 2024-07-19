@@ -34,6 +34,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import fchClass.Cash;
+import fchClass.CashMark;
 import fchClass.OpReturn;
 import fchClass.P2SH;
 import io.nuls.base.basic.AddressTool;
@@ -45,6 +46,8 @@ import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.parse.SerializeUtils;
 import javaTools.JsonTools;
 import keyTools.KeyTools;
+import network.nerve.swap.utils.fch.BtcSignData;
+import network.nerve.swap.utils.fch.FchUtil;
 import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.ECKey;
 import org.junit.Before;
@@ -72,6 +75,7 @@ import java.util.stream.Collectors;
 public class FchTransferTest {
     List<String> pris;
     List<byte[]> pubs;
+    List<ECKey> pubECKeys;
     P2SH p2sh;
     byte[] priKeyBytesA;
     byte[] priKeyBytesB;
@@ -85,6 +89,7 @@ public class FchTransferTest {
     String fidA;
     String fidB;
     String fidC;
+    String fid996;
     String urlHead = "https://cid.cash/APIP";
 
     Map<String, Object> pMap;
@@ -93,6 +98,7 @@ public class FchTransferTest {
     String packageAddressPrivateKeyHF;
     String fromPriKey;
     String multisigAddress;
+    String via = "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD";
     //byte[] sessionKey = HexUtil.decode("17fd649617d838b514ba8338caf050c4753a51d1a471c11e1ee743329828dd8a");
     byte[] sessionKey = HexUtil.decode("47a75483f8800d0c36f6e11c7502b7b6f7522713d800790d665b89736f776cbc");
 
@@ -115,13 +121,15 @@ public class FchTransferTest {
             pris.add(packageAddressPrivateKeyNE);
             pris.add(packageAddressPrivateKeyHF);
             pubs = new ArrayList<>();
+            pubECKeys = new ArrayList<>();
             for (String pri : pris) {
                 byte[] priBytes = HexUtil.decode(pri);
                 ECKey ecKey = ECKey.fromPrivate(priBytes, true);
+                pubECKeys.add(ecKey);
                 pubs.add(ecKey.getPubKey());
             }
 
-            p2sh = FchUtil.genMultiP2sh(pubs, 2);
+            p2sh = FchUtil.genMultiP2sh(pubs, 2, true);
             multisigAddress = p2sh.getFid();
 
             priKeyBytesA = HexUtil.decode(pris.get(0));
@@ -139,7 +147,8 @@ public class FchTransferTest {
             fidA = KeyTools.pubKeyToFchAddr(pubkeyA);
             fidB = KeyTools.pubKeyToFchAddr(pubkeyB);
             fidC = KeyTools.pubKeyToFchAddr(pubkeyC);
-            System.out.println(String.format("fid996: %s", KeyTools.pubKeyToFchAddr(ECKey.fromPrivate(HexUtil.decode(fromPriKey)).getPubKey())));
+            fid996 = KeyTools.pubKeyToFchAddr(ECKey.fromPrivate(HexUtil.decode(fromPriKey)).getPubKey());
+            System.out.println(String.format("fid996: %s", fid996));
             System.out.println(String.format("fidA: %s", fidA));
             System.out.println(String.format("fidB: %s", fidB));
             System.out.println(String.format("fidC: %s", fidC));
@@ -148,6 +157,7 @@ public class FchTransferTest {
             System.out.println(String.format("pubkeyC: %s", pubkeyC));
             System.out.println(String.format("multisigAddress: %s", multisigAddress));
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println("empty dev pris");
         }
 
@@ -188,28 +198,35 @@ public class FchTransferTest {
      */
     @Test
     public void createTransferTransaction() {
+        long feeRate = 1;
         String pri = fromPriKey;
         byte[] priBytes = HexUtil.decode(pri);
         ECKey ecKey = ECKey.fromPrivate(priBytes, true);
         String owner = KeyTools.pubKeyToFchAddr(ecKey.getPubKey());
-        String to = "338uHAHG2Gs3aufiFz89R4wsvPYH6yYTHv";
-        Double amount = 0.001d;
+        String to = owner;
+        //long amount = new BigDecimal("0.001").movePointRight(8).longValue();
+        long amount = 545;
+
         List<SendTo> outputs = new ArrayList<>();
         SendTo sendTo = new SendTo();
         sendTo.setFid(to);
-        sendTo.setAmount(amount);
+        sendTo.setAmount(new BigDecimal(amount).movePointLeft(8).doubleValue());
         outputs.add(sendTo);
 
         System.out.println(owner);
-        List<Cash> inputs = new ArrayList<>();
-        Cash cash = new Cash();
-        cash.setOwner(owner);
-        cash.setValue(8999999781L);
-        cash.setBirthIndex(1);
-        cash.setBirthTxId("5cda8e77bdbc65d90f18f5ce4d81d0966eaeef13a33ab79f664a27a48f9b06d6");
-        inputs.add(cash);
-        String sign = FchTool.createTransactionSign(inputs, priBytes, outputs, "");
-        System.out.println(sign);
+        ApipClient apipClient = FreeGetAPIs.getCashes(urlHead, owner, 0);
+        List<Cash> cashList = ApipDataGetter.getCashList(apipClient.getResponseBody().getData());
+
+        Object[] datas = FchUtil.calcFeeAndUTXO(cashList, amount, feeRate, 0);
+        long fee = (long) datas[0];
+        List<Cash> spendingCashes = (List<Cash>) datas[1];
+
+        String signedTx = FchTool.createTransactionSign(spendingCashes, priBytes, outputs, null);
+        System.out.println(signedTx);
+        ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
+        Object data = client.getResponseBody().getData();
+        System.out.println(data);
+        System.out.println(client.getResponseBodyStr());
     }
 
     /**
@@ -317,7 +334,7 @@ public class FchTransferTest {
         pubList.add(HexUtil.decode("03e2029ddf8c0150d8a689465223cdca94a0c84cdb581e39ac13ca41d279c24ff5"));
         pubList.add(HexUtil.decode("02b42a0023aa38e088ffc0884d78ea638b9438362f15c610865dfbed9708347750"));
         // 3BXpnXkAG7SYNxyKyDimcxjkyYQcaaJs5X
-        P2SH p2sh = FchUtil.genMultiP2sh(pubList, 2);
+        P2SH p2sh = FchUtil.genMultiP2shForTest(pubList, 2);
         System.out.println(String.format("makeMultiAddr (%s of %s) for testnet: %s", 2, pubList.size(), p2sh.getFid()));
         p2sh = FchUtil.genMultiP2sh(pubList, 2, true);
         System.out.println(String.format("Order makeMultiAddr (%s of %s) for testnet: %s", 2, pubList.size(), p2sh.getFid()));
@@ -354,10 +371,32 @@ public class FchTransferTest {
         pubList1.add(HexUtil.decode("023ad3fbc7d73473f2eca9c46237988682ebd690ab260077af70357efcf9afbe90"));
         pubList1.add(HexUtil.decode("035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803"));
         pubList1.add(HexUtil.decode("039eefe5915a253db131c5a825f03ca048e5aad257edfcd295fea3fec78609d980"));
-        p2sh = FchUtil.genMultiP2sh(pubList1, 10);
+        p2sh = FchUtil.genMultiP2shForTest(pubList1, 10);
         System.out.println(String.format("makeMultiAddr (%s of %s) for mainnet: %s", 10, pubList1.size(), p2sh.getFid()));
         p2sh = FchUtil.genMultiP2sh(pubList1, 10, true);
         System.out.println(String.format("Order makeMultiAddr (%s of %s) for mainnet: %s", 10, pubList1.size(), p2sh.getFid()));
+
+        pubList1 = new ArrayList<>();
+        pubList1.add(HexUtil.decode("035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803"));
+        pubList1.add(HexUtil.decode("03c363f44196aa1a57ef7e14c19845acad721c9eefd837dacdf3fe3af1ba08ee21"));
+        pubList1.add(HexUtil.decode("029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b4"));
+        pubList1.add(HexUtil.decode("03743d75ac0ee77257dd11477a737bba2bd01a1b26246c477ef2a59fb8e873572a"));
+        pubList1.add(HexUtil.decode("03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c9"));
+        pubList1.add(HexUtil.decode("0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b"));
+        pubList1.add(HexUtil.decode("02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d"));
+        pubList1.add(HexUtil.decode("023ad3fbc7d73473f2eca9c46237988682ebd690ab260077af70357efcf9afbe90"));
+        pubList1.add(HexUtil.decode("02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b9"));
+        pubList1.add(HexUtil.decode("039eefe5915a253db131c5a825f03ca048e5aad257edfcd295fea3fec78609d980"));
+        pubList1.add(HexUtil.decode("02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0"));
+        pubList1.add(HexUtil.decode("02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd"));
+        pubList1.add(HexUtil.decode("03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df4"));
+        pubList1.add(HexUtil.decode("028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b7"));
+        pubList1.add(HexUtil.decode("02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03"));
+        p2sh = FchUtil.genMultiP2shForTest(pubList1, 10);
+        System.out.println(String.format("makeMultiAddr (%s of %s) for mainnet: %s", 10, pubList1.size(), p2sh.getFid()));
+        p2sh = FchUtil.genMultiP2sh(pubList1, 10, true);
+        System.out.println(String.format("Order makeMultiAddr (%s of %s) for mainnet: %s", 10, pubList1.size(), p2sh.getFid()));
+
     }
 
     /**
@@ -524,15 +563,46 @@ public class FchTransferTest {
 
     @Test
     public void getTxInfoTest() {
-        String txHash = "5e6c1e6ac94d9bdfcc26cf196d682e4b6e14760686df9740049802c850a05551";
+        String txHash = "228ca97ea7c1871e09f345d8d6f42833e74d091064ff1a9ecd52fbc1f6e4f209";
         ApipClient client = BlockchainAPIs.txByIdsPost(urlHead, new String[]{
-                txHash,
-                "5cda8e77bdbc65d90f18f5ce4d81d0966eaeef13a33ab79f664a27a48f9b06d6",
-                "74682f8e142f0b823faf41ddaf7afb1b9a4face199cce99e5cb2d75e3da0be04"
+                txHash
         }, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);
         System.out.println("tx info:\n" + client.getResponseBodyStr());
         List<TxInfo> txInfoList = ApipDataGetter.getTxInfoList(client.getResponseBody().getData());
         System.out.println(txInfoList.size());
+    }
+
+    @Test
+    public void getTxInfoCashIdInfoTest() throws Exception {
+        String txHash = "1d7840e548eafd6c11f689fdd9bcab4b899add4f7eb1464ea3e622089d6593ba";
+        ApipClient client = BlockchainAPIs.txByIdsPost(urlHead, new String[]{
+                txHash
+        }, via, sessionKey);
+        System.out.println("tx info:\n" + client.getResponseBodyStr());
+        List<TxInfo> txInfoList = ApipDataGetter.getTxInfoList(client.getResponseBody().getData());
+        TxInfo txInfo = txInfoList.get(0);
+
+        ArrayList<CashMark> inputList = txInfo.getSpentCashes();
+        List<String> usedCashIds = new ArrayList<>();
+        for (CashMark input : inputList) {
+            String inputAddress = input.getOwner();
+            System.out.println(inputAddress);
+            usedCashIds.add(input.getCashId());
+        }
+        String[] usedCashIdArray = new String[usedCashIds.size()];
+        usedCashIds.toArray(usedCashIdArray);
+        Map<String, Cash> usedUTXOs = this.getUTXOsByIds(usedCashIdArray);
+        System.out.println(JSONUtils.obj2PrettyJson(usedUTXOs));
+    }
+
+    private Map<String, Cash> getUTXOsByIds(String[] cashIds) {
+        ApipClient client = BlockchainAPIs.cashByIdsPost(urlHead, cashIds, via, sessionKey);
+        System.out.println(client.getResponseBodyStr());
+        Object data = client.getResponseBody().getData();
+        if (data == null) {
+            return null;
+        }
+        return ApipDataGetter.getCashMap(data);
     }
 
     @Test
@@ -557,6 +627,7 @@ public class FchTransferTest {
     }
 
     //fee = txSize * (feeRate/1000)*100000000
+
     public static long calcTxSize(int inputNum, int outputNum, int opReturnBytesLen) {
 
         long baseLength = 10;
@@ -569,7 +640,6 @@ public class FchTransferTest {
 
         return baseLength + inputLength + outputLength + opReturnLen;
     }
-
     private static int calcOpReturnLen(int opReturnBytesLen) {
         int dataLen;
         if (opReturnBytesLen < 76) {
@@ -690,7 +760,9 @@ public class FchTransferTest {
         long amount = totalMoney - fee;
         String msg = "";
         //Make raw tx
-        byte[] rawTx = FchUtil.createMultiSignRawTx(cashList, toAddress, amount, msg, oldP2SH, m, n, true);
+        byte[] rawTx = (byte[]) FchUtil.createMultiSignRawTxBase(
+                oldPubEcKeys.stream().map(bb -> ECKey.fromPublicOnly(bb)).collect(Collectors.toList()),
+                cashList, toAddress, amount, msg, m, n, 1, true, null)[0];
         return new Object[]{rawTx, oldP2SH, cashList};
     }
 
@@ -741,5 +813,247 @@ public class FchTransferTest {
         //build signed tx
         String signedTx = FchTool.buildSchnorrMultiSignTx(rawTx, signatures, p2sh);
         System.out.println("signedTx: " + signedTx);
+    }
+
+    @Test
+    public void testDeposit() throws IOException {
+        long feeRate = 1;
+        String pri = fromPriKey;
+        byte[] priBytes = HexUtil.decode(pri);
+        ECKey ecKey = ECKey.fromPrivate(priBytes, true);
+        String owner = KeyTools.pubKeyToFchAddr(ecKey.getPubKey());
+        System.out.println(String.format("from: %s", owner));
+
+        ApipClient apipClient = FreeGetAPIs.getCashes(urlHead, owner, 0);
+        List<Cash> cashList = ApipDataGetter.getCashList(apipClient.getResponseBody().getData());
+        long amount = new BigDecimal("0.6").movePointRight(8).longValue();
+
+        //String feeTo = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        //Double nerveFee = Double.valueOf("0.00002");
+        RechargeData rechargeData = new RechargeData();
+        rechargeData.setTo(AddressTool.getAddress("TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad"));
+        rechargeData.setValue(amount);
+        //if (nerveFee.doubleValue() > 0) {
+        //    rechargeData.setFeeTo(AddressTool.getAddress(feeTo));
+        //}
+        String opReturn = HexUtil.encode(rechargeData.serialize());
+
+        Object[] datas = FchUtil.calcFeeAndUTXO(cashList, amount, feeRate, opReturn.getBytes(StandardCharsets.UTF_8).length);
+        long fee = (long) datas[0];
+        List<Cash> spendingCashes = (List<Cash>) datas[1];
+        String to = "3QfGw89NpRY8U9tGzYedpjwVNHujzCEmEe";
+
+        List<SendTo> outputs = new ArrayList<>();
+        SendTo sendTo = new SendTo();
+        sendTo.setFid(to);
+        sendTo.setAmount(new BigDecimal(amount).movePointLeft(8).doubleValue());
+        outputs.add(sendTo);
+
+        String signedTx = FchTool.createTransactionSign(spendingCashes, priBytes, outputs, opReturn);
+        System.out.println(signedTx);
+        ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
+        System.out.println(client.getResponseBodyStr());
+    }
+
+
+    @Test
+    public void testMultisigTx() {
+        String from = "338uHAHG2Gs3aufiFz89R4wsvPYH6yYTHv";
+        String to = multisigAddress;
+        ApipClient apipClient = FreeGetAPIs.getCashes(urlHead, from, 0);
+        List<Cash> cashList = ApipDataGetter.getCashList(apipClient.getResponseBody().getData());
+        int n = 3, m = 2;
+        long feeRate = 1;
+        long feeSize = FchUtil.calcFeeMultiSign(cashList.size(), 0, 0, m, n);
+        long fee = feeSize * feeRate;
+        long totalMoney = 0;
+        for (Cash utxo : cashList) {
+            totalMoney += utxo.getValue();
+        }
+        long amount = totalMoney - fee;
+        String msg = "";
+        //Make raw tx
+        Object[] rawTxBase = FchUtil.createMultiSignRawTxBase(
+                pubECKeys,
+                cashList, to, amount, msg, m, n, feeRate, true, null);
+        byte[] rawTx = (byte[]) rawTxBase[0];
+        P2SH p2sh = (P2SH) rawTxBase[1];
+        List<Cash> realInputs = (List<Cash>) rawTxBase[3];
+
+        //Sign raw tx
+        MultiSigData multiSignData = new MultiSigData(rawTx, p2sh, realInputs);
+        MultiSigData multiSignDataA = FchTool.signSchnorrMultiSignTx(multiSignData, HexUtil.decode(pris.get(0)));
+        MultiSigData multiSignDataB = FchTool.signSchnorrMultiSignTx(multiSignData, HexUtil.decode(pris.get(1)));
+        MultiSigData multiSignDataC = FchTool.signSchnorrMultiSignTx(multiSignData, HexUtil.decode(pris.get(2)));
+        Map<String, List<byte[]>> sig1 = multiSignDataA.getFidSigMap();
+        Map<String, List<byte[]>> sig2 = multiSignDataB.getFidSigMap();
+        Map<String, List<byte[]>> sig3 = multiSignDataC.getFidSigMap();
+        Map<String, List<byte[]>> sigAll = new HashMap<>();
+        sigAll.putAll(sig1);
+        sigAll.putAll(sig2);
+        sigAll.putAll(sig3);
+
+        for (String fid : sigAll.keySet()) {
+            System.out.println(fid + ":");
+            List<byte[]> sigList = sigAll.get(fid);
+            for (byte[] sig : sigList) {
+                System.out.println("    " + HexUtil.encode(sig));
+            }
+        }
+
+        //build signed tx
+        String signedTx = FchTool.buildSchnorrMultiSignTx(rawTx, sigAll, p2sh);
+        System.out.println("signedTx: " + signedTx);
+
+        ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
+        System.out.println(client.getResponseBodyStr());
+
+    }
+
+    void setTestnet() {
+        pris = new ArrayList<>();
+        pris.add(pMap.get("t1").toString());
+        pris.add(pMap.get("t2").toString());
+        pris.add(pMap.get("t3").toString());
+        pubECKeys = pris.stream().map(p -> ECKey.fromPrivate(HexUtil.decode(p))).collect(Collectors.toList());
+    }
+    @Test
+    public void testWithdrawTx() {
+        setTestnet();
+        String from = "3BXpnXkAG7SYNxyKyDimcxjkyYQcaaJs5X";
+        String to = "3NLqrstiNFrLie6g9H3jMkAe2g9Sp8b8dR";
+        ApipClient apipClient = FreeGetAPIs.getCashes(urlHead, from, 0);
+        List<Cash> cashList = ApipDataGetter.getCashList(apipClient.getResponseBody().getData());
+        int n = pubECKeys.size(), m = FchUtil.getByzantineCount(n);
+        long feeRate = 1;
+        long total = 0;
+        for (Cash cash : cashList) {
+            total += cash.getValue();
+        }
+        long feeSize = FchUtil.calcFeeMultiSign(cashList.size(), 1, 0, m, n);
+        long fee = feeSize * feeRate;
+        long amount = total - fee;
+        String nerveHash = null;
+        //Make raw tx
+        Object[] rawTxBase = FchUtil.createMultiSignRawTxBase(
+                pubECKeys,
+                cashList, to, amount, nerveHash, m, n, feeRate, true, null);
+        byte[] rawTx = (byte[]) rawTxBase[0];
+        P2SH p2sh = (P2SH) rawTxBase[1];
+        List<Cash> realInputs = (List<Cash>) rawTxBase[3];
+
+        //Sign raw tx
+        MultiSigData multiSignData = new MultiSigData(rawTx, p2sh, realInputs);
+        MultiSigData multiSignDataA = FchTool.signSchnorrMultiSignTx(multiSignData, HexUtil.decode(pris.get(0)));
+        MultiSigData multiSignDataB = FchTool.signSchnorrMultiSignTx(multiSignData, HexUtil.decode(pris.get(1)));
+        Map<String, List<byte[]>> sig1 = multiSignDataA.getFidSigMap();
+        Map<String, List<byte[]>> sig2 = multiSignDataB.getFidSigMap();
+        Map<String, List<byte[]>> sigAll = new HashMap<>();
+        sigAll.putAll(sig1);
+        sigAll.putAll(sig2);
+        //MultiSigData multiSignDataC = FchTool.signSchnorrMultiSignTx(multiSignData, HexUtil.decode(pris.get(2)));
+        //Map<String, List<byte[]>> sig3 = multiSignDataC.getFidSigMap();
+        //sigAll.putAll(sig3);
+
+        for (String fid : sigAll.keySet()) {
+            System.out.println(fid + ":");
+            List<byte[]> sigList = sigAll.get(fid);
+            for (byte[] sig : sigList) {
+                System.out.println("    " + HexUtil.encode(sig));
+            }
+        }
+
+        //build signed tx
+        String signedTx = FchTool.buildSchnorrMultiSignTx(rawTx, sigAll, p2sh);
+        System.out.println("signedTx: " + signedTx);
+
+        ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
+        System.out.println(client.getResponseBodyStr());
+
+    }
+
+    @Test
+    public void testVerifySignCount() throws Exception {
+        String signatureData = "024173f84acb3de56b3ef99894fa3b9a1fe4c48c1bdc39163c37c274cd0334ba7501401611d7c3ad3f48f886249aa4d0f7801448a9a128e244c441d0e29fe32691e0c5f7f1f01a4fdaa880e8101d8b054de66d6c1c02329af125312a253c0bac1b7a0c,02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded014028adc4c9672bee8588a853a18126c6528040dc29c273d7bc30ce980b1594c55f5c95e10a6428e70d0ac3c53883e06c2e9e34b2c55b1c252906fd827e424a5355,03b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd901408aa6b8440820157cc7dae938063b2ae1f60e7cb93e44650faf57f955ae0bbaa68f308afa1e2591ca4b28c6be3c1f6dc105cc9351024d057a6b788893fed74ae2,02184978060ada31b7db704789dfa986cd5a6f7ed63f727a66d29598e0186058770140c9a2b956c4b44ea4e8f2c33f0e73ff542d820f0e1a1e0463b982b17fd6053dae1264b1e938dc8b0051bb73bb0f986dd350f11cf00bca2a733ea606dfa45bf1fe";
+        Map<String, List<byte[]>> signatures = new HashMap<>();
+        String[] signDatas = signatureData.split(",");
+        for (String signData : signDatas) {
+            BtcSignData signDataObj = new BtcSignData();
+            signDataObj.parse(HexUtil.decode(signData.trim()), 0);
+            signatures.put(HexUtil.encode(signDataObj.getPubkey()), signDataObj.getSignatures());
+        }
+        List<ECKey> pubEcKeys = new ArrayList<>(List.of(
+                ECKey.fromPublicOnly(HexUtil.decode("02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded")),
+                ECKey.fromPublicOnly(HexUtil.decode("02184978060ada31b7db704789dfa986cd5a6f7ed63f727a66d29598e018605877")),
+                ECKey.fromPublicOnly(HexUtil.decode("024173f84acb3de56b3ef99894fa3b9a1fe4c48c1bdc39163c37c274cd0334ba75")),
+                ECKey.fromPublicOnly(HexUtil.decode("03b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd9"))
+        ));
+        List<Cash> inputs = new ArrayList<>(List.of(FchUtil.converterUTXOToCash(
+                "f0ea35da22ae8284dd847264a07c65738a52892d170a874203a7fb419ef0b9f9",
+                0,
+                14865479
+        )));
+        String to = "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD";
+        long amount = 2000000;
+        String opReturn = "d5c0ae95b0ae606b1abc9b80a44005011e629c5fd5b7b8514ce9a974899532db";
+        int m = 3;
+        int n = 4;
+        long feeRate = 1;
+        boolean useAllUTXO = false;
+        Long splitGranularity = 8000000L;
+        int signCount = FchUtil.verifyMultiSignCount(
+                signatures, pubEcKeys, inputs, to, amount, opReturn, m, n, feeRate, useAllUTXO, splitGranularity
+        );
+        System.out.println(signCount);
+    }
+
+    @Test
+    public void testCreateTx() throws Exception {
+        String signatureData = "024173f84acb3de56b3ef99894fa3b9a1fe4c48c1bdc39163c37c274cd0334ba7501401611d7c3ad3f48f886249aa4d0f7801448a9a128e244c441d0e29fe32691e0c5f7f1f01a4fdaa880e8101d8b054de66d6c1c02329af125312a253c0bac1b7a0c,02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded014028adc4c9672bee8588a853a18126c6528040dc29c273d7bc30ce980b1594c55f5c95e10a6428e70d0ac3c53883e06c2e9e34b2c55b1c252906fd827e424a5355,03b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd901408aa6b8440820157cc7dae938063b2ae1f60e7cb93e44650faf57f955ae0bbaa68f308afa1e2591ca4b28c6be3c1f6dc105cc9351024d057a6b788893fed74ae2,02184978060ada31b7db704789dfa986cd5a6f7ed63f727a66d29598e0186058770140c9a2b956c4b44ea4e8f2c33f0e73ff542d820f0e1a1e0463b982b17fd6053dae1264b1e938dc8b0051bb73bb0f986dd350f11cf00bca2a733ea606dfa45bf1fe";
+        Map<String, List<byte[]>> signatures = new HashMap<>();
+        String[] signDatas = signatureData.split(",");
+        for (String signData : signDatas) {
+            BtcSignData signDataObj = new BtcSignData();
+            signDataObj.parse(HexUtil.decode(signData.trim()), 0);
+            signatures.put(HexUtil.encode(signDataObj.getPubkey()), signDataObj.getSignatures());
+        }
+        List<ECKey> pubEcKeys = new ArrayList<>(List.of(
+                ECKey.fromPublicOnly(HexUtil.decode("02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded")),
+                ECKey.fromPublicOnly(HexUtil.decode("02184978060ada31b7db704789dfa986cd5a6f7ed63f727a66d29598e018605877")),
+                ECKey.fromPublicOnly(HexUtil.decode("024173f84acb3de56b3ef99894fa3b9a1fe4c48c1bdc39163c37c274cd0334ba75")),
+                ECKey.fromPublicOnly(HexUtil.decode("03b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd9"))
+        ));
+        List<Cash> inputs = new ArrayList<>(List.of(FchUtil.converterUTXOToCash(
+                "f0ea35da22ae8284dd847264a07c65738a52892d170a874203a7fb419ef0b9f9",
+                0,
+                14865479
+        )));
+        String to = "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD";
+        long amount = 2000000;
+        String opReturn = "d5c0ae95b0ae606b1abc9b80a44005011e629c5fd5b7b8514ce9a974899532db";
+        int m = 3;
+        int n = 4;
+        long feeRate = 1;
+        boolean useAllUTXO = false;
+        Long splitGranularity = 8000000L;
+        String multiSignTx = FchUtil.createMultiSignTx(
+                signatures, pubEcKeys, inputs, to, amount, opReturn, m, n, feeRate, useAllUTXO, splitGranularity
+        );
+        System.out.println(multiSignTx);
+    }
+
+    @Test
+    public void createDevMultisigAddress() {
+        // dev
+        List<byte[]> pubList = new ArrayList<>();
+        pubList.add(HexUtil.decode("02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded"));
+        pubList.add(HexUtil.decode("02184978060ada31b7db704789dfa986cd5a6f7ed63f727a66d29598e018605877"));
+        pubList.add(HexUtil.decode("024173f84acb3de56b3ef99894fa3b9a1fe4c48c1bdc39163c37c274cd0334ba75"));
+        pubList.add(HexUtil.decode("03b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd9"));
+        int m = FchUtil.getByzantineCount(pubList.size());
+        P2SH p2sh = FchUtil.genMultiP2shForTest(pubList, m);
+        System.out.println(String.format("makeMultiAddr (%s of %s) for testnet: %s", m, pubList.size(), p2sh.getFid()));
+        p2sh = FchUtil.genMultiP2sh(pubList, m, true);
+        System.out.println(String.format("Order makeMultiAddr (%s of %s) for testnet: %s", m, pubList.size(), p2sh.getFid()));
     }
 }

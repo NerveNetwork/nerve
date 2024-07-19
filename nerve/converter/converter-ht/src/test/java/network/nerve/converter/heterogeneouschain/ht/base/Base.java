@@ -34,6 +34,7 @@ import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -49,11 +50,17 @@ import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -96,13 +103,53 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://http-mainnet.hecochain.com/";
+        //String mainEthRpcAddress = "https://http-mainnet.hecochain.com/";
+        String mainEthRpcAddress = "http://heco.nerve.network/";
         //String mainEthRpcAddress = "http://heco.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
         //String mainEthRpcAddress = "http://heco.nerve.network";
+
+        //OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        //        .sslSocketFactory(getUnsafeSSLSocketFactory(), getUnsafeTrustManager())
+        //        .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+        //        .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+        //        .build();
+        //Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
+
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
         htgContext.config.setChainIdOnHtgNetwork(128);
+    }
+
+    private static final int CONNECT_TIMEOUT = 5;
+
+    private static final int READ_TIMEOUT = 7;
+
+    private static SSLSocketFactory getUnsafeSSLSocketFactory() {
+        try {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, new X509TrustManager[]{getUnsafeTrustManager()}, new SecureRandom());
+            return sslContext.getSocketFactory();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create unsafe SSLSocketFactory", e);
+        }
+    }
+
+    private static X509TrustManager getUnsafeTrustManager() {
+        return new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+        };
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {

@@ -27,6 +27,8 @@ import com.neemre.btcdcli4j.core.domain.RawInput;
 import com.neemre.btcdcli4j.core.domain.RawOutput;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import io.nuls.base.basic.AddressTool;
+import io.nuls.base.data.CoinData;
+import io.nuls.base.data.CoinTo;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
@@ -59,6 +61,7 @@ import network.nerve.converter.heterogeneouschain.lib.storage.HtgMultiSignAddres
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousAccount;
+import network.nerve.converter.model.bo.NerveAssetInfo;
 import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
 import network.nerve.converter.model.bo.WithdrawalUTXO;
 import org.bitcoinj.core.Transaction;
@@ -68,6 +71,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -205,7 +209,8 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
                     List.of(HexUtil.decode(txHash)),
                     m, n,
                     withdrawlUTXO.getFeeRate(),
-                    htgContext.getConverterCoreApi().isNerveMainnet()
+                    htgContext.getConverterCoreApi().isNerveMainnet(),
+                    getSplitGranularity()
             );
             signerPub = pri.getPubKey();
             BtcSignData signData = new BtcSignData(signerPub, signatures.stream().map(s -> HexUtil.decode(s)).collect(Collectors.toList()));
@@ -223,7 +228,8 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
                     txHash,
                     toAddress,
                     value.longValue(),
-                    withdrawlUTXO);
+                    withdrawlUTXO,
+                    getSplitGranularity());
             return signatures;
         }
     }
@@ -255,7 +261,8 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
                 List.of(HexUtil.decode(txHash)),
                 m, n,
                 withdrawlUTXO.getFeeRate(),
-                htgContext.getConverterCoreApi().isNerveMainnet());
+                htgContext.getConverterCoreApi().isNerveMainnet(),
+                getSplitGranularity());
     }
 
     private void beforeSend(HtgWaitingTxPo po) {
@@ -353,7 +360,8 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
                     List.of(HexUtil.decode(nerveTxHash)),
                     m, n,
                     withdrawlUTXO.getFeeRate(),
-                    htgContext.getConverterCoreApi().isNerveMainnet()
+                    htgContext.getConverterCoreApi().isNerveMainnet(),
+                    getSplitGranularity()
             );
             String htgTxHash = btcWalletApi.broadcast(tx);
             if (StringUtils.isNotBlank(htgTxHash)) {
@@ -497,7 +505,8 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
                     n,
                     withdrawlUTXO.getFeeRate(),
                     coreApi.isNerveMainnet(),
-                    true
+                    true,
+                    null
             );
             signerPub = pri.getPubKey();
             BtcSignData signData = new BtcSignData(signerPub, signatures.stream().map(s -> HexUtil.decode(s)).collect(Collectors.toList()));
@@ -564,7 +573,7 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
                 (int) baseInfo[4],
                 (int) baseInfo[5],
                 withdrawlUTXO.getFeeRate(),
-                htgContext.getConverterCoreApi().isNerveMainnet(), true);
+                htgContext.getConverterCoreApi().isNerveMainnet(), true, null);
     }
 
     @Override
@@ -604,7 +613,7 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
                 (int) baseInfo[4],
                 (int) baseInfo[5],
                 withdrawlUTXO.getFeeRate(),
-                htgContext.getConverterCoreApi().isNerveMainnet(), true);
+                htgContext.getConverterCoreApi().isNerveMainnet(), true, null);
         int byzantineCount = htgContext.getConverterCoreApi().getByzantineCount(pubs.size());
         return verified >= byzantineCount;
     }
@@ -717,7 +726,7 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
                     (int) baseInfo[4],
                     (int) baseInfo[5],
                     withdrawlUTXO.getFeeRate(),
-                    coreApi.isNerveMainnet(), true);
+                    coreApi.isNerveMainnet(), true, null);
             String htgTxHash = btcWalletApi.broadcast(tx);
             // save UNCONFIRMED_TX_QUEUE
             this.saveUnconfirmedTxQueue(nerveTxHash, po, withdrawlUTXO.getCurrentMultiSignAddress(), htgTxHash, HeterogeneousChainTxType.CHANGE);
@@ -739,10 +748,11 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
     }
 
     @Override
-    public void recordFeePayment(long blockHeight, String blockHash, String htgTxHash, long fee, boolean recharge) throws Exception {
+    public void recordFeePayment(long blockHeight, String blockHash, String htgTxHash, long fee, boolean recharge, Boolean nerveInner) throws Exception {
         WithdrawalFeeLog feeLog = new WithdrawalFeeLog(
                 blockHeight, blockHash, htgTxHash, htgContext.HTG_CHAIN_ID(), fee, recharge
         );
+        feeLog.setNerveInner(nerveInner);
         htgMultiSignAddressHistoryStorageService.saveChainWithdrawalFee(feeLog);
     }
 
@@ -757,7 +767,10 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
     }
 
     @Override
-    public WithdrawalFeeLog takeWithdrawalFeeLogFromTxParse(String htgTxHash) throws Exception {
+    public WithdrawalFeeLog takeWithdrawalFeeLogFromTxParse(String htgTxHash, boolean nerveInner) throws Exception {
+        if (nerveInner) {
+            return this.parseWithdrawalFeeLogByNerveInner(htgTxHash);
+        }
         RawTransaction txInfo = btcWalletApi.getTransactionByHash(htgTxHash);
         if (txInfo.getConfirmations() == null || txInfo.getConfirmations().intValue() == 0) {
             return null;
@@ -785,24 +798,26 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
         if (txType == null) {
             return null;
         }
+        WithdrawalFeeLog feeLog = null;
         if (txType == HeterogeneousChainTxType.DEPOSIT) {
             BtcUnconfirmedTxPo po = (BtcUnconfirmedTxPo) btcParseTxHelper.parseDepositTransaction(txInfo, null, true);
             if (po.getNerveAddress().equals(ConverterContext.BITCOIN_SYS_WITHDRAWAL_FEE_ADDRESS)) {
                 // Record chain fee entry
-                WithdrawalFeeLog feeLog = new WithdrawalFeeLog(
+                feeLog = new WithdrawalFeeLog(
                         po.getBlockHeight(), po.getBlockHash(), htgTxHash, htgContext.HTG_CHAIN_ID(), po.getValue().longValue(), true);
                 feeLog.setTxTime(txInfo.getBlockTime());
-                return feeLog;
             }
         } else if (txType == HeterogeneousChainTxType.WITHDRAW) {
             // All transactions with nerve multi-signature addresses in from must record handling fee expenditures.
             long fee = BtcUtil.calcTxFee(txInfo, btcWalletApi);
-            WithdrawalFeeLog feeLog = new WithdrawalFeeLog(
+            feeLog = new WithdrawalFeeLog(
                     Long.valueOf(btcWalletApi.getBlockHeaderByHash(txInfo.getBlockHash()).getHeight()), txInfo.getBlockHash(), htgTxHash, htgContext.HTG_CHAIN_ID(), fee, false);
             feeLog.setTxTime(txInfo.getBlockTime());
-            return feeLog;
         }
-        return null;
+        if (feeLog != null && htgContext.getConverterCoreApi().isProtocol36()) {
+            feeLog.setNerveInner(nerveInner);
+        }
+        return feeLog;
     }
 
     @Override
@@ -841,7 +856,15 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
     }
 
     @Override
-    public long getWithdrawalFeeSize(int utxoSize) {
+    public long getWithdrawalFeeSize(long fromTotal, long transfer, long feeRate, int inputNum) {
+        int n = htgContext.getConverterCoreApi().getVirtualBankSize();
+        int m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        return BtcUtil.calcFeeMultiSignSizeP2WSHWithSplitGranularity(
+                fromTotal, transfer, feeRate, getSplitGranularity(), inputNum, new int[]{32}, m, n);
+    }
+
+    @Override
+    public long getChangeFeeSize(int utxoSize) {
         int n = htgContext.getConverterCoreApi().getVirtualBankSize();
         int m = htgContext.getConverterCoreApi().getByzantineCount(n);
         long size = BtcUtil.calcFeeMultiSignSizeP2WSH(utxoSize, 1, new int[]{32}, m, n);
@@ -887,6 +910,88 @@ public class BitCoinApi implements IBitCoinApi, BeanInitial {
         resultMap.put("utxoSize", String.valueOf(UTXOList.size()));
         resultMap.put("feeRate", String.valueOf(withdrawlUTXO.getFeeRate()));
         return resultMap;
+    }
+
+    @Override
+    public void recordFeePaymentByNerveInner(String nerveTxHash) {
+        try {
+            WithdrawalFeeLog feeLog = this.parseWithdrawalFeeLogByNerveInner(nerveTxHash);
+            htgCallBackManager.getTxConfirmedProcessor().txRecordWithdrawFee(
+                    HeterogeneousChainTxType.WITHDRAW_FEE_RECHARGE,
+                    nerveTxHash,
+                    feeLog.getBlockHash(),
+                    feeLog.getBlockHeight(),
+                    feeLog.getTxTime(),
+                    feeLog.getFee(),
+                    true,
+                    String.format("Record withdraw fee [%s] by Nerve inner, chainId: %s, amount: %s, hash: %s, blockHeight: %s, blockHash: %s",
+                            HeterogeneousChainTxType.WITHDRAW_FEE_RECHARGE.name().replace("WITHDRAW_FEE_", ""),
+                            htgContext.HTG_CHAIN_ID(),
+                            feeLog.getFee(),
+                            nerveTxHash,
+                            feeLog.getBlockHeight(),
+                            feeLog.getBlockHash()).getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private WithdrawalFeeLog parseWithdrawalFeeLogByNerveInner(String nerveTxHash) {
+        try {
+            io.nuls.base.data.Transaction nerveTx = htgContext.getConverterCoreApi().getNerveTx(nerveTxHash);
+            if (nerveTx == null) {
+                throw new RuntimeException("empty nerve tx for fee payment record");
+            }
+            CoinData coinData = nerveTx.getCoinDataInstance();
+            List<CoinTo> tos = coinData.getTo();
+            if (tos.isEmpty()) {
+                throw new RuntimeException("empty nerve tx coin data for fee payment record");
+            }
+            NerveAssetInfo mainAsset = htgContext.getConverterCoreApi().getHtgMainAsset(htgContext.HTG_CHAIN_ID());
+            byte[] feeAddr = AddressTool.getAddress(ConverterContext.BITCOIN_SYS_WITHDRAWAL_FEE_ADDRESS);
+            BigInteger fee = BigInteger.ZERO;
+            for (CoinTo to : tos) {
+                if (to.getAssetsChainId() == mainAsset.getAssetChainId()
+                        && to.getAssetsId() == mainAsset.getAssetId()
+                        && Arrays.equals(to.getAddress(), feeAddr)) {
+                    fee = fee.add(to.getAmount());
+                }
+            }
+            if (fee.compareTo(BigInteger.ZERO) == 0) {
+                throw new RuntimeException("ZERO fee for fee payment record");
+            }
+            String blockHash = htgContext.getConverterCoreApi().getBlockHashByHeight(nerveTx.getBlockHeight());
+
+            WithdrawalFeeLog txData = new WithdrawalFeeLog();
+            txData.setBlockHeight(nerveTx.getBlockHeight());
+            txData.setBlockHash(blockHash);
+            txData.setHtgTxHash(nerveTxHash);
+            txData.setHtgChainId(htgContext.HTG_CHAIN_ID());
+            txData.setFee(fee.longValue());
+            txData.setRecharge(true);
+            txData.setNerveInner(true);
+            txData.setTxTime(nerveTx.getTime());
+            return txData;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<String> getNerveHashOfLockedUTXOList(List<UTXOData> utxoDataList) throws Exception {
+        List<byte[]> list = htgMultiSignAddressHistoryStorageService.getNerveHashListByLockedUTXO(utxoDataList);
+        return list.stream().map(l -> l != null ? HexUtil.encode(l) : null).collect(Collectors.toList());
+    }
+
+    @Override
+    public void saveSplitGranularity(long splitGranularity) throws Exception {
+        htgMultiSignAddressHistoryStorageService.saveSplitGranularity(splitGranularity);
+    }
+
+    @Override
+    public Long getSplitGranularity() {
+        long splitGranularity = htgMultiSignAddressHistoryStorageService.getCurrentSplitGranularity();
+        return splitGranularity;
     }
 
     private void saveUnconfirmedTxQueue(String nerveTxHash, HtgUnconfirmedTxPo po, String multiSignAddress, String htgTxHash, HeterogeneousChainTxType txType) throws Exception {

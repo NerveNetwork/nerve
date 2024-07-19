@@ -37,6 +37,7 @@ import network.nerve.converter.btc.model.BtcUnconfirmedTxPo;
 import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
 import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
@@ -90,6 +91,8 @@ public class ByzantineTransactionHelper {
     private HeterogeneousChainInfoStorageService heterogeneousChainInfoStorageService;
     @Autowired
     private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     public boolean genByzantineTransaction(Chain nerveChain, String byzantineTxhash, int txType, String nerveTxHash, List<HeterogeneousHash> hashList) throws Exception {
         boolean validation = false;
@@ -131,21 +134,27 @@ public class ByzantineTransactionHelper {
                 break;
             case TxType.WITHDRAWAL_UTXO_FEE_PAYMENT:
                 hash = hashList.get(0);
-                validation = withdrawFee(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash());
+                boolean nerveInner = StringUtils.isNotBlank(nerveTxHash);
+                validation = withdrawFee(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash(), nerveInner);
                 break;
         }
         return validation;
     }
 
-    private boolean withdrawFee(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
+    private boolean withdrawFee(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash, boolean nerveInner) throws Exception {
         nerveChain.getLogger().info("establish [BtcSys-RecordWithdrawFee] Byzantine transactions [{}] news, Heterogeneous Chain Trading hash: {}", byzantineTxhash, hTxHash);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
-        WithdrawalFeeLog feeLog = docking.getBitCoinApi().takeWithdrawalFeeLogFromTxParse(hTxHash);
+        WithdrawalFeeLog feeLog = docking.getBitCoinApi().takeWithdrawalFeeLogFromTxParse(hTxHash, nerveInner);
         if (feeLog == null) {
             return false;
         }
-        Transaction tx = assembleTxService.createWithdrawlFeeLogTxWithoutSign(nerveChain, feeLog, feeLog.getTxTime(), String.format("Record withdraw fee [%s], chainId: %s, amount: %s, hash: %s, blockHeight: %s, blockHash: %s",
+        if (converterCoreApi.isProtocol36()) {
+            feeLog.setNerveInner(nerveInner);
+        }
+        String nerveInnerRemark = nerveInner ? " by Nerve inner" : "";
+        Transaction tx = assembleTxService.createWithdrawlFeeLogTxWithoutSign(nerveChain, feeLog, feeLog.getTxTime(), String.format("Record withdraw fee [%s]%s, chainId: %s, amount: %s, hash: %s, blockHeight: %s, blockHash: %s",
                 feeLog.isRecharge() ? "RECHARGE" : "USED",
+                nerveInnerRemark,
                 hChainId,
                 feeLog.getFee(),
                 hTxHash,
@@ -155,8 +164,9 @@ public class ByzantineTransactionHelper {
             nerveChain.getLogger().error("[BtcSys-RecordWithdrawFee] Byzantine transaction verification failed, transaction details: {}", tx.format(WithdrawalFeeLog.class));
             return false;
         }
-        assembleTxService.createWithdrawlFeeLogTx(nerveChain, feeLog, feeLog.getTxTime(), String.format("Record withdraw fee [%s], chainId: %s, amount: %s, hash: %s, blockHeight: %s, blockHash: %s",
+        assembleTxService.createWithdrawlFeeLogTx(nerveChain, feeLog, feeLog.getTxTime(), String.format("Record withdraw fee [%s]%s, chainId: %s, amount: %s, hash: %s, blockHeight: %s, blockHash: %s",
                 feeLog.isRecharge() ? "RECHARGE" : "USED",
+                nerveInnerRemark,
                 hChainId,
                 feeLog.getFee(),
                 hTxHash,

@@ -93,7 +93,7 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
             }
             walletApi.checkApi();
             if (walletApi.isReSyncBlock()) {
-                htgContext.logger().info("[{}]Delete all local blocks from the network and wait for the next round of execution", htgContext.getConfig().getSymbol());
+                htgContext.logger().info("[{}] Delete all local blocks from the network and wait for the next round of execution", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteAllLocalBlockHeader();
                 walletApi.setReSyncBlock(false);
                 return;
@@ -111,7 +111,7 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
                 // When starting a node, the local block is empty and will be removed from theHTGStarting synchronization at the latest height of the network
                 BlockInfo block = walletApi.getBlockByHeight(blockHeightFromNet);
                 if(block == null) {
-                    htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
+                    htgContext.logger().info("Unable to obtain {} Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                     return;
                 }
                 htgBlockAnalysisHelper.analysisEthBlock(block, btcAnalysisTxHelper);
@@ -124,7 +124,7 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
             if (firstSync && Math.abs(difference) >= 20) {
                 BlockInfo block = walletApi.getBlockByHeight(blockHeightFromNet);
                 if(block == null) {
-                    htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
+                    htgContext.logger().info("Unable to obtain {} Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                     return;
                 }
                 htgLocalBlockHelper.deleteAllLocalBlockHeader();
@@ -136,10 +136,10 @@ public class BtcBlockHandler implements Runnable, BeanInitial {
             // Verify if the latest block is correct
             int resultCode = checkNewestBlock(localMax);
             if (resultCode == 0) {
-                htgContext.logger().error("obtain{}Block failure", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("obtain {} Block failure", htgContext.getConfig().getSymbol());
                 return;
             } else if (resultCode == 1) {
-                htgContext.logger().error("{}Block fork", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("{} Block fork", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteByHeightAndUpdateMemory(localBlockHeight);
                 return;
             }

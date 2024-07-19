@@ -54,13 +54,14 @@ public class FchBlockAnalysisHelper implements BeanInitial {
     public void analysisEthBlock(BlockInfo block, FchAnalysisTxHelper analysisTx) throws Exception {
         ArrayList<TxMark> txList = block.getTxList();
         long blockHeight = block.getHeight();
+        String blockHash = block.getBlockId();
         if (txList != null && txList.size() > 0) {
             List<TxInfo> txInfoList = walletApi.getTxInfoList(txList.stream().map(tx -> tx.getTxId()).collect(Collectors.toList()));
             long txTime = block.getTime();
             for (int i = 0, len = txInfoList.size(); i < len; i++) {
                 TxInfo tx = txInfoList.get(i);
                 try {
-                    analysisTx.analysisTx(tx, txTime, blockHeight);
+                    analysisTx.analysisTx(tx, txTime, blockHeight, blockHash);
                 } catch (Exception e) {
                     htgContext.logger().error(String.format("[%s] Network transaction parsing failed: %s", htgContext.getConfig().getSymbol(), tx.getId()), e);
                 }

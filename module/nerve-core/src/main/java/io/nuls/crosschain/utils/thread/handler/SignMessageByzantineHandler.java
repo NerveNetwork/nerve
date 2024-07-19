@@ -25,7 +25,7 @@ public class SignMessageByzantineHandler implements Runnable{
             try {
                 UntreatedMessage untreatedMessage = chain.getSignMessageByzantineQueue().take();
                 String nativeHex = untreatedMessage.getCacheHash().toHex();
-                chain.getLogger().debug("Start monitoring nodes within the chain{}Cross chain transaction signature message broadcasted for signature Byzantine verification,Hash：{}", untreatedMessage.getNodeId(), nativeHex);
+                chain.getLogger().info("Start monitoring nodes within the chain{}Cross chain transaction signature message broadcasted for signature Byzantine verification,Hash：{}", untreatedMessage.getNodeId(), nativeHex);
                 MessageUtil.handleSignMessage(chain, untreatedMessage.getCacheHash(), untreatedMessage.getChainId(), untreatedMessage.getNodeId(),(BroadCtxSignMessage)untreatedMessage.getMessage(), nativeHex);
             } catch (Exception e) {
                 chain.getLogger().error(e);

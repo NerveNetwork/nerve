@@ -1,0 +1,67 @@
+[
+  {
+    "version": "1",
+    "extend": "",
+    "validTxs": [
+      {
+        "type": "228",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "CoinTradingProcessorV1",
+        "packProduce": true
+      },
+      {
+        "type": "229",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "TradingOrderProcessorV1",
+        "packProduce": true
+      },
+      {
+        "type": "230",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "OrderCancelProcessorV1",
+        "packProduce": true
+      },
+      {
+        "type": "231",
+        "systemTx": true,
+        "unlockTx": true,
+        "verifyFee": false,
+        "verifySignature": false,
+        "handler": "TradingDealProcessorV1",
+        "packProduce": true,
+        "packGenerate": true
+      },
+      {
+        "type": "232",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifyFee": true,
+        "verifySignature": true,
+        "handler": "editCoinTradingProcessorV1",
+        "packProduce": true
+      },
+      {
+        "type": "233",
+        "systemTx": true,
+        "unlockTx": true,
+        "verifyFee": false,
+        "verifySignature": false,
+        "handler": "OrderCancelConfirmProcessorV1",
+        "packProduce": true,
+        "packGenerate": true
+      }
+    ],
+    "validMsgs": [],
+    "invalidTxs": "",
+    "invalidMsgs": ""
+  }
+]

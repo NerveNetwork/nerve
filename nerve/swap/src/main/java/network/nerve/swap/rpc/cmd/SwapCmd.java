@@ -1,5 +1,6 @@
 package network.nerve.swap.rpc.cmd;
 
+import fchClass.Cash;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.NulsHash;
@@ -7,6 +8,7 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
@@ -14,6 +16,7 @@ import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
+import keyTools.KeyTools;
 import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.cache.SwapPairCache;
 import network.nerve.swap.config.SwapConfig;
@@ -30,16 +33,24 @@ import network.nerve.swap.model.TokenAmount;
 import network.nerve.swap.model.bo.StableCoin;
 import network.nerve.swap.model.bo.SwapResult;
 import network.nerve.swap.model.business.RemoveLiquidityBus;
+import network.nerve.swap.model.business.stable.StableAddLiquidityBus;
+import network.nerve.swap.model.business.stable.StableRemoveLiquidityBus;
 import network.nerve.swap.model.dto.RealAddLiquidityOrderDTO;
 import network.nerve.swap.model.dto.SwapPairDTO;
 import network.nerve.swap.model.dto.stable.StableSwapPairDTO;
+import network.nerve.swap.model.po.stable.StableSwapPairPo;
 import network.nerve.swap.model.vo.RouteVO;
 import network.nerve.swap.model.vo.StableCoinVo;
 import network.nerve.swap.model.vo.SwapPairVO;
 import network.nerve.swap.model.vo.TokenAmountVo;
+import network.nerve.swap.rpc.call.AccountCall;
 import network.nerve.swap.service.SwapService;
 import network.nerve.swap.storage.SwapExecuteResultStorageService;
 import network.nerve.swap.utils.SwapUtils;
+import network.nerve.swap.utils.fch.BtcSignData;
+import network.nerve.swap.utils.fch.FchUtil;
+import network.nerve.swap.utils.fch.WithdrawalUTXOTxData;
+import org.bitcoinj.core.ECKey;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -931,6 +942,100 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
+
+    @CmdAnnotation(cmd = STABLE_SWAP_MIN_AMOUNT_ADD_LIQUIDITY, version = 1.0, description = "STABLE_SWAP_MIN_AMOUNT_ADD_LIQUIDITY")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "pairAddress"),
+            @Parameter(parameterName = "tokenStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenAmount", parameterType = "String", parameterDes = "tokenAmount")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response calMinAmountOnStableSwapAddLiquidity(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String pairAddress = (String) params.get("pairAddress");
+            String tokenStr = (String) params.get("tokenStr");
+            NerveToken token = SwapUtils.parseTokenStr(tokenStr);
+            BigInteger tokenAmount = new BigInteger(params.get("tokenAmount").toString());
+            StableSwapPairDTO pairDTO = stableSwapPairCache.get(pairAddress);
+            StableSwapPairPo po = pairDTO.getPo();
+            NerveToken[] coins = po.getCoins();
+            int index = -1;
+            for (int i = 0; i < coins.length; i++) {
+                if (coins[i].equals(token)) {
+                    index = i;
+                    break;
+                }
+            }
+            BigInteger[] amounts = SwapUtils.emptyFillZero(new BigInteger[coins.length]);
+            amounts[index] = tokenAmount;
+            StableAddLiquidityBus dto = SwapUtils.calStableAddLiquididy(swapHelper, chainId, iPairFactory, pairAddress, SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS, amounts, SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS);
+            if (dto == null) {
+                return failed(SwapErrorCode.DATA_ERROR);
+            }
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", dto.getLiquidity().toString());
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = STABLE_SWAP_MIN_AMOUNT_REMOVE_LIQUIDITY, version = 1.0, description = "STABLE_SWAP_MIN_AMOUNT_REMOVE_LIQUIDITY")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "pairAddress"),
+            @Parameter(parameterName = "tokenStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "liquidity", parameterType = "String", parameterDes = "Removed assetsLPQuantity of")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response calMinAmountOnStableSwapRemoveLiquidity(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String pairAddress = (String) params.get("pairAddress");
+            String tokenStr = (String) params.get("tokenStr");
+            NerveToken token = SwapUtils.parseTokenStr(tokenStr);
+            BigInteger liquidity = new BigInteger(params.get("liquidity").toString());
+            StableSwapPairDTO pairDTO = stableSwapPairCache.get(pairAddress);
+            StableSwapPairPo po = pairDTO.getPo();
+            NerveToken[] coins = po.getCoins();
+            int index = -1;
+            for (int i = 0; i < coins.length; i++) {
+                if (coins[i].equals(token)) {
+                    index = i;
+                    break;
+                }
+            }
+            byte[] indexes = new byte[]{(byte) index};
+            StableRemoveLiquidityBus dto = SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, liquidity, indexes, AddressTool.getAddress(pairAddress), SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS);
+            if (dto == null) {
+                return failed(SwapErrorCode.DATA_ERROR);
+            }
+            BigInteger[] amounts = dto.getAmounts();
+            int count = 0;
+            for (BigInteger amount : amounts) {
+                if (amount.compareTo(BigInteger.ZERO) > 0) {
+                    count++;
+                }
+                if (count > 1) {
+                    return failed(SwapErrorCode.INSUFFICIENT_LIQUIDITY);
+                }
+            }
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", (dto.getAmounts()[index]).toString());
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
     @CmdAnnotation(cmd = SWAP_PAIR_INFO, version = 1.0, description = "querySwapTransaction pair information")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
@@ -1153,21 +1258,266 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = IS_LEGAL_BTC_ADDR, version = 1.0, description = "Check if BTC address is legal")
+    @CmdAnnotation(cmd = SIGN_FCH_WITHDRAW, version = 1.0, description = "SIGN_FCH_WITHDRAW")
     @Parameters(value = {
-            @Parameter(parameterName = "mainnet", parameterType = "boolean", parameterDes = "mainnet"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "BTC address")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "withdrawalUTXO", parameterType = "String", parameterDes = "utxo info"),
+            @Parameter(parameterName = "signer", parameterType = "String", parameterDes = "signer"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "to"),
+            @Parameter(parameterName = "amount", parameterType = "long", parameterDes = "amount"),
+            @Parameter(parameterName = "feeRate", parameterType = "long", parameterDes = "feeRate"),
+            @Parameter(parameterName = "opReturn", parameterType = "String", parameterDes = "opReturn"),
+            @Parameter(parameterName = "m", parameterType = "int", parameterDes = "m"),
+            @Parameter(parameterName = "n", parameterType = "int", parameterDes = "n"),
+            @Parameter(parameterName = "useAllUTXO", parameterType = "boolean", parameterDes = "useAllUTXO"),
+            @Parameter(parameterName = "splitGranularity", parameterType = "long", parameterDes = "splitGranularity"),
     })
     @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
+            @Key(name = "value")
     }))
-    public Response checkLegalBTCAddr(Map<String, Object> params) {
+    public Response signFchWithdraw(Map<String, Object> params) {
         try {
-            boolean mainnet = (boolean) params.get("mainnet");
-            String address = (String) params.get("address");
-            logger().debug("mainnet: {}, btc address: {}", mainnet, address);
+
+            Integer chainId = (Integer) params.get("chainId");
+            String withdrawalUTXO = (String) params.get("withdrawalUTXO");
+            String signer = (String) params.get("signer");
+            String to = (String) params.get("to");
+            Long amount = Long.parseLong(params.get("amount").toString());
+            Long feeRate = Long.parseLong(params.get("feeRate").toString());
+            String opReturn = (String) params.get("opReturn");
+            Integer m = (Integer) params.get("m");
+            Integer n = (Integer) params.get("n");
+            Boolean useAllUTXO = (Boolean) params.get("useAllUTXO");
+            Long splitGranularity = null;
+            Object obj = params.get("splitGranularity");
+            if (obj != null) {
+                splitGranularity = Long.parseLong(obj.toString());
+            }
+
+            WithdrawalUTXOTxData utxoTxData = new WithdrawalUTXOTxData();
+            utxoTxData.parse(HexUtil.decode(withdrawalUTXO), 0);
+            List<ECKey> pubEcKeys = utxoTxData.getPubs().stream().map(b -> ECKey.fromPublicOnly(b)).collect(Collectors.toList());
+            List<Cash> inputs = utxoTxData.getUtxoDataList().stream().map(utxo -> FchUtil.converterUTXOToCash(utxo.getTxid(), utxo.getVout(), utxo.getAmount().longValue())).collect(Collectors.toList());
+
+
+            String prikey = AccountCall.getAccountPrikey(chainId, signer, SwapContext.PASSWORD);
+            ECKey privKey = ECKey.fromPrivate(HexUtil.decode(prikey));
+            byte[] signData = FchUtil.createMultiSignByOne(
+                    privKey,
+                    pubEcKeys,
+                    inputs,
+                    to,
+                    amount,
+                    opReturn,
+                    m, n,
+                    feeRate,
+                    useAllUTXO,
+                    splitGranularity);
             Map<String, Object> resultData = new HashMap<>();
-            resultData.put("value", true);//TODO pierre dev code
+            resultData.put("value", HexUtil.encode(signData));
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = VERIFY_FCH_WITHDRAW, version = 1.0, description = "VERIFY_FCH_WITHDRAW")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "withdrawalUTXO", parameterType = "String", parameterDes = "utxo info"),
+            @Parameter(parameterName = "signData", parameterType = "String", parameterDes = "signData"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "to"),
+            @Parameter(parameterName = "amount", parameterType = "long", parameterDes = "amount"),
+            @Parameter(parameterName = "feeRate", parameterType = "long", parameterDes = "feeRate"),
+            @Parameter(parameterName = "opReturn", parameterType = "String", parameterDes = "opReturn"),
+            @Parameter(parameterName = "m", parameterType = "int", parameterDes = "m"),
+            @Parameter(parameterName = "n", parameterType = "int", parameterDes = "n"),
+            @Parameter(parameterName = "useAllUTXO", parameterType = "boolean", parameterDes = "useAllUTXO"),
+            @Parameter(parameterName = "splitGranularity", parameterType = "long", parameterDes = "splitGranularity"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response verifyFchWithdraw(Map<String, Object> params) {
+        try {
+
+            Integer chainId = (Integer) params.get("chainId");
+            String withdrawalUTXO = (String) params.get("withdrawalUTXO");
+            String signData = (String) params.get("signData");
+            String to = (String) params.get("to");
+            Long amount = Long.parseLong(params.get("amount").toString());
+            Long feeRate = Long.parseLong(params.get("feeRate").toString());
+            String opReturn = (String) params.get("opReturn");
+            Integer m = (Integer) params.get("m");
+            Integer n = (Integer) params.get("n");
+            Boolean useAllUTXO = (Boolean) params.get("useAllUTXO");
+            Long splitGranularity = null;
+            Object obj = params.get("splitGranularity");
+            if (obj != null) {
+                splitGranularity = Long.parseLong(obj.toString());
+            }
+
+            WithdrawalUTXOTxData utxoTxData = new WithdrawalUTXOTxData();
+            utxoTxData.parse(HexUtil.decode(withdrawalUTXO), 0);
+            List<ECKey> pubEcKeys = utxoTxData.getPubs().stream().map(b -> ECKey.fromPublicOnly(b)).collect(Collectors.toList());
+            List<Cash> inputs = utxoTxData.getUtxoDataList().stream().map(utxo -> FchUtil.converterUTXOToCash(utxo.getTxid(), utxo.getVout(), utxo.getAmount().longValue())).collect(Collectors.toList());
+
+            BtcSignData fchSignData = new BtcSignData();
+            fchSignData.parse(HexUtil.decode(signData), 0);
+
+            boolean verified = FchUtil.verifyMultiSignByOne(
+                    fchSignData.getPubkey(),
+                    fchSignData.getSignatures(),
+                    pubEcKeys,
+                    inputs,
+                    to,
+                    amount,
+                    opReturn,
+                    m, n,
+                    feeRate,
+                    useAllUTXO,
+                    splitGranularity);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", verified);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = VERIFY_FCH_WITHDRAW_COUNT, version = 1.0, description = "VERIFY_FCH_WITHDRAW_COUNT")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "withdrawalUTXO", parameterType = "String", parameterDes = "utxo info"),
+            @Parameter(parameterName = "signData", parameterType = "String", parameterDes = "signData"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "to"),
+            @Parameter(parameterName = "amount", parameterType = "long", parameterDes = "amount"),
+            @Parameter(parameterName = "feeRate", parameterType = "long", parameterDes = "feeRate"),
+            @Parameter(parameterName = "opReturn", parameterType = "String", parameterDes = "opReturn"),
+            @Parameter(parameterName = "m", parameterType = "int", parameterDes = "m"),
+            @Parameter(parameterName = "n", parameterType = "int", parameterDes = "n"),
+            @Parameter(parameterName = "useAllUTXO", parameterType = "boolean", parameterDes = "useAllUTXO"),
+            @Parameter(parameterName = "splitGranularity", parameterType = "long", parameterDes = "splitGranularity"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response verifyFchWithdrawCount(Map<String, Object> params) {
+        try {
+
+            Integer chainId = (Integer) params.get("chainId");
+            String withdrawalUTXO = (String) params.get("withdrawalUTXO");
+            String signatureData = (String) params.get("signData");
+            String to = (String) params.get("to");
+            Long amount = Long.parseLong(params.get("amount").toString());
+            Long feeRate = Long.parseLong(params.get("feeRate").toString());
+            String opReturn = (String) params.get("opReturn");
+            Integer m = (Integer) params.get("m");
+            Integer n = (Integer) params.get("n");
+            Boolean useAllUTXO = (Boolean) params.get("useAllUTXO");
+            Long splitGranularity = null;
+            Object obj = params.get("splitGranularity");
+            if (obj != null) {
+                splitGranularity = Long.parseLong(obj.toString());
+            }
+
+            WithdrawalUTXOTxData utxoTxData = new WithdrawalUTXOTxData();
+            utxoTxData.parse(HexUtil.decode(withdrawalUTXO), 0);
+            List<ECKey> pubEcKeys = utxoTxData.getPubs().stream().map(b -> ECKey.fromPublicOnly(b)).collect(Collectors.toList());
+            List<Cash> inputs = utxoTxData.getUtxoDataList().stream().map(utxo -> FchUtil.converterUTXOToCash(utxo.getTxid(), utxo.getVout(), utxo.getAmount().longValue())).collect(Collectors.toList());
+
+            Map<String, List<byte[]>> signatures = new HashMap<>();
+            String[] signDatas = signatureData.split(",");
+            for (String signData : signDatas) {
+                BtcSignData signDataObj = new BtcSignData();
+                signDataObj.parse(HexUtil.decode(signData.trim()), 0);
+                signatures.put(HexUtil.encode(signDataObj.getPubkey()), signDataObj.getSignatures());
+            }
+
+            int verifiedCount = FchUtil.verifyMultiSignCount(
+                    signatures,
+                    pubEcKeys,
+                    inputs,
+                    to,
+                    amount,
+                    opReturn,
+                    m, n,
+                    feeRate,
+                    useAllUTXO,
+                    splitGranularity);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", verifiedCount);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = CREATE_FCH_MULTISIGN_WITHDRAW_TX, version = 1.0, description = "CREATE_FCH_MULTISIGN_WITHDRAW_TX")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "withdrawalUTXO", parameterType = "String", parameterDes = "utxo info"),
+            @Parameter(parameterName = "signData", parameterType = "String", parameterDes = "signData"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "to"),
+            @Parameter(parameterName = "amount", parameterType = "long", parameterDes = "amount"),
+            @Parameter(parameterName = "feeRate", parameterType = "long", parameterDes = "feeRate"),
+            @Parameter(parameterName = "opReturn", parameterType = "String", parameterDes = "opReturn"),
+            @Parameter(parameterName = "m", parameterType = "int", parameterDes = "m"),
+            @Parameter(parameterName = "n", parameterType = "int", parameterDes = "n"),
+            @Parameter(parameterName = "useAllUTXO", parameterType = "boolean", parameterDes = "useAllUTXO"),
+            @Parameter(parameterName = "splitGranularity", parameterType = "long", parameterDes = "splitGranularity"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response createFchMultiSignWithdrawTx(Map<String, Object> params) {
+        try {
+
+            Integer chainId = (Integer) params.get("chainId");
+            String withdrawalUTXO = (String) params.get("withdrawalUTXO");
+            String signatureData = (String) params.get("signData");
+            String to = (String) params.get("to");
+            Long amount = Long.parseLong(params.get("amount").toString());
+            Long feeRate = Long.parseLong(params.get("feeRate").toString());
+            String opReturn = (String) params.get("opReturn");
+            Integer m = (Integer) params.get("m");
+            Integer n = (Integer) params.get("n");
+            Boolean useAllUTXO = (Boolean) params.get("useAllUTXO");
+            Long splitGranularity = null;
+            Object obj = params.get("splitGranularity");
+            if (obj != null) {
+                splitGranularity = Long.parseLong(obj.toString());
+            }
+
+            WithdrawalUTXOTxData utxoTxData = new WithdrawalUTXOTxData();
+            utxoTxData.parse(HexUtil.decode(withdrawalUTXO), 0);
+            List<ECKey> pubEcKeys = utxoTxData.getPubs().stream().map(b -> ECKey.fromPublicOnly(b)).collect(Collectors.toList());
+            List<Cash> inputs = utxoTxData.getUtxoDataList().stream().map(utxo -> FchUtil.converterUTXOToCash(utxo.getTxid(), utxo.getVout(), utxo.getAmount().longValue())).collect(Collectors.toList());
+
+            Map<String, List<byte[]>> signatures = new HashMap<>();
+            String[] signDatas = signatureData.split(",");
+            for (String signData : signDatas) {
+                BtcSignData signDataObj = new BtcSignData();
+                signDataObj.parse(HexUtil.decode(signData.trim()), 0);
+                signatures.put(KeyTools.pubKeyToFchAddr(signDataObj.getPubkey()), signDataObj.getSignatures());
+            }
+
+            String signedTx = FchUtil.createMultiSignTx(
+                    signatures,
+                    pubEcKeys,
+                    inputs,
+                    to,
+                    amount,
+                    opReturn,
+                    m, n,
+                    feeRate,
+                    useAllUTXO,
+                    splitGranularity);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", signedTx);
             return success(resultData);
         } catch (Exception e) {
             logger().error(e);

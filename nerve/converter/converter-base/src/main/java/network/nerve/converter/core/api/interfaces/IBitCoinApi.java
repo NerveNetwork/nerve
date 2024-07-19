@@ -63,10 +63,10 @@ public interface IBitCoinApi {
     boolean validateManagerChangesTx(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException;
 
     boolean hasRecordFeePayment(String htgTxHash) throws NulsException;
-    void recordFeePayment(long blockHeight, String blockHash, String htgTxHash, long fee, boolean recharge) throws Exception;
+    void recordFeePayment(long blockHeight, String blockHash, String htgTxHash, long fee, boolean recharge, Boolean nerveInner) throws Exception;
     BigInteger getChainWithdrawalFee();
     WithdrawalFeeLog getWithdrawalFeeLogFromDB(String htgTxHash) throws Exception;
-    WithdrawalFeeLog takeWithdrawalFeeLogFromTxParse(String htgTxHash) throws Exception;
+    WithdrawalFeeLog takeWithdrawalFeeLogFromTxParse(String htgTxHash, boolean nerveInner) throws Exception;
 
     void saveWithdrawalUTXOs(WithdrawalUTXOTxData txData) throws Exception;
     boolean isLockedUTXO(String txid, int vout);
@@ -76,9 +76,17 @@ public interface IBitCoinApi {
     void saveWithdrawalUTXORebuildPO(String nerveTxHash, WithdrawalUTXORebuildPO po) throws Exception;
     WithdrawalUTXORebuildPO getWithdrawalUTXORebuildPO(String nerveTxHash) throws Exception;
 
-    long getWithdrawalFeeSize(int utxoSize);
+    long getWithdrawalFeeSize(long fromTotal, long transfer, long feeRate, int inputNum);
+    long getChangeFeeSize(int inputNum);
 
     long convertMainAssetByFee(AssetName feeAssetName, BigDecimal fee);
 
     Map<String, String> getMinimumFeeOfWithdrawal(String nerveTxHash);
+
+    void recordFeePaymentByNerveInner(String nerveTxHash);
+
+    List<String> getNerveHashOfLockedUTXOList(List<UTXOData> utxoDataList) throws Exception;
+
+    void saveSplitGranularity(long splitGranularity) throws Exception;
+    Long getSplitGranularity();
 }

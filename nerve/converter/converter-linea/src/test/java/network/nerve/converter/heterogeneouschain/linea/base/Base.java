@@ -189,6 +189,20 @@ public class Base {
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
 
+    protected String signDataForMainAssetWithdraw(String txKey, String toAddress, String value, int signCount) {
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(18)).toBigInteger();
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, htgContext.VERSION());
+        String signData = this.ethSign(vHash, signCount);
+        return signData;
+    }
+
+    protected String signDataForERC20Withdraw(String txKey, String toAddress, String value, String erc20, int tokenDecimals, int signCount) {
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, true, erc20, htgContext.VERSION());
+        String signData = this.ethSign(vHash, signCount);
+        return signData;
+    }
+
     protected String sendERC20Withdraw(String txKey, String toAddress, String value, String erc20, int tokenDecimals, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).movePointRight(tokenDecimals).toBigInteger();
         String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, true, erc20, VERSION);

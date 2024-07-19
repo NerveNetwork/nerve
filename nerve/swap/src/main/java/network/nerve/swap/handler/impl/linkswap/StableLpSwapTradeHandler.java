@@ -171,25 +171,42 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(new StableLpSwapTradeBus(stableAddLiquidityBus, swapTradeBus))));
             // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
-            Transaction sysDealTx0 = stableAddLiquidityHandler.makeSystemDealTx(stableAddLiquidityBus, pairPo.getCoins(), pairPo.getTokenLP(), tx.getHash().toHex(), blockTime, tempBalanceManager);
-            // generateswapSystem transactions
-            Transaction sysDealTx1 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getFrom());
-
-            // Integrate two generated transactions
-            Transaction sysDealTx = sysDealTx0;
-            CoinData coinDataInstance = sysDealTx.getCoinDataInstance();
-            CoinData coinData1 = sysDealTx1.getCoinDataInstance();
-            coinDataInstance.getFrom().addAll(coinData1.getFrom());
-            coinDataInstance.getTo().addAll(coinData1.getTo());
-            sysDealTx.setCoinData(SwapUtils.nulsData2HexBytes(coinDataInstance));
-            if (swapHelper.isSupportProtocol35()) {
-                sysDealTx.setHash(null);
+            Transaction sysDealTx;
+            if (swapHelper.isSupportProtocol36()) {
+                Transaction sysDealTx0 = stableAddLiquidityHandler.makeSystemDealTx(stableAddLiquidityBus, pairPo.getCoins(), pairPo.getTokenLP(), tx.getHash().toHex(), blockTime, tempBalanceManager);
+                // Update temporary balance only
+                tempBalanceManager.refreshTempBalanceOnly(chainId, sysDealTx0, blockTime);
+                // generateswapSystem transactions
+                Transaction sysDealTx1 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getFrom());
+                // Update temporary balance only
+                tempBalanceManager.refreshTempBalanceOnly(chainId, sysDealTx1, blockTime);
+                sysDealTx = sysDealTx0;
+                CoinData coinDataInstance = sysDealTx.getCoinDataInstance();
+                CoinData coinData1 = sysDealTx1.getCoinDataInstance();
+                coinDataInstance.getFrom().addAll(coinData1.getFrom());
+                coinDataInstance.getTo().addAll(coinData1.getTo());
+                sysDealTx.setCoinData(SwapUtils.nulsData2HexBytes(coinDataInstance));
+                tempBalanceManager.refreshTempNonceOnly(chainId, sysDealTx, blockTime);
+            } else {
+                Transaction sysDealTx0 = stableAddLiquidityHandler.makeSystemDealTx(stableAddLiquidityBus, pairPo.getCoins(), pairPo.getTokenLP(), tx.getHash().toHex(), blockTime, tempBalanceManager);
+                // generateswapSystem transactions
+                Transaction sysDealTx1 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getFrom());
+                // Integrate two generated transactions
+                sysDealTx = sysDealTx0;
+                CoinData coinDataInstance = sysDealTx.getCoinDataInstance();
+                CoinData coinData1 = sysDealTx1.getCoinDataInstance();
+                coinDataInstance.getFrom().addAll(coinData1.getFrom());
+                coinDataInstance.getTo().addAll(coinData1.getTo());
+                sysDealTx.setCoinData(SwapUtils.nulsData2HexBytes(coinDataInstance));
+                if (swapHelper.isSupportProtocol35()) {
+                    sysDealTx.setHash(null);
+                }
+                tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
             }
 
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
             // Update temporary balance
-            tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
             // update StableAddLiquidity Temporary data
             stablePair.update(stableAddLiquidityBus.getLiquidity(), stableAddLiquidityBus.getRealAmounts(), stableAddLiquidityBus.getBalances(), blockHeight, blockTime);
             // update SwapTrade Temporary data

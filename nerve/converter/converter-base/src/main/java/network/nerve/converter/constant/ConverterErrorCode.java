@@ -139,5 +139,9 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode WITHDRAWAL_UTXO_LOCKED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0111");
     ErrorCode WITHDRAWAL_NOT_ENOUGH_SIGNATURE = ErrorCode.init(ModuleE.CV.getPrefix() + "_0112");
     ErrorCode CHANGE_WAITING = ErrorCode.init(ModuleE.CV.getPrefix() + "_0113");
+    ErrorCode BTC_DUST_AMOUNT = ErrorCode.init(ModuleE.CV.getPrefix() + "_0114");
+    ErrorCode WITHDRAWAL_ZERO_AMOUNT = ErrorCode.init(ModuleE.CV.getPrefix() + "_0115");
+
+
 
 }

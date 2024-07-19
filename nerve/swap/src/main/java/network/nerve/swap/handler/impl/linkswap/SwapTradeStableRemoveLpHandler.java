@@ -189,7 +189,25 @@ public class SwapTradeStableRemoveLpHandler extends SwapHandlerConstraints {
             // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx;
-            if (swapHelper.isSupportProtocol35()) {
+            if (swapHelper.isSupportProtocol36()) {
+                // generateswapSystem transactions
+                Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getUserAddress());
+                // Update temporary balance only
+                tempBalanceManager.refreshTempBalanceOnly(chainId, sysDealTx0, blockTime);
+                // Generate and revoke stablecoin liquidity system transactions
+                Transaction sysDealTx1 = stableRemoveLiquidityHandler.makeSystemDealTx(chain, stableRemoveLiquidityBus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
+                // Update temporary balance only
+                tempBalanceManager.refreshTempBalanceOnly(chainId, sysDealTx1, blockTime);
+                // Integrate two generated transactions
+                sysDealTx = sysDealTx0;
+                CoinData coinDataInstance = sysDealTx.getCoinDataInstance();
+                CoinData coinData1 = sysDealTx1.getCoinDataInstance();
+                coinDataInstance.getFrom().addAll(coinData1.getFrom());
+                coinDataInstance.getTo().addAll(coinData1.getTo());
+                sysDealTx.setCoinData(SwapUtils.nulsData2HexBytes(coinDataInstance));
+                sysDealTx.setHash(null);
+                tempBalanceManager.refreshTempNonceOnly(chainId, sysDealTx, blockTime);
+            } else if (swapHelper.isSupportProtocol35()) {
                 // generateswapSystem transactions
                 Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getUserAddress());
                 // Generate and revoke stablecoin liquidity system transactions

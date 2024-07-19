@@ -126,10 +126,17 @@ public class HttpClientUtil {
      */
     public static CloseableHttpClient createHttpClient(int maxTotal,
                                                        int maxPerRoute, int maxRoute, String hostname, int port) {
+        return createHttpClient(maxTotal, maxPerRoute, maxRoute, hostname, port, null);
+    }
+
+    public static CloseableHttpClient createHttpClient(int maxTotal,
+                                                       int maxPerRoute, int maxRoute, String hostname, int port, SSLConnectionSocketFactory socketFactory) {
         ConnectionSocketFactory plainsf = PlainConnectionSocketFactory
                 .getSocketFactory();
-        LayeredConnectionSocketFactory sslsf = SSLConnectionSocketFactory
-                .getSocketFactory();
+        LayeredConnectionSocketFactory sslsf = socketFactory;
+        if (sslsf == null) {
+            sslsf = SSLConnectionSocketFactory.getSocketFactory();
+        }
         Registry<ConnectionSocketFactory> registry = RegistryBuilder
                 .<ConnectionSocketFactory>create().register("http", plainsf)
                 .register("https", sslsf).build();

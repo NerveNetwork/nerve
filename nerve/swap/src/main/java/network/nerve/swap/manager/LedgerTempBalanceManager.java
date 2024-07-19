@@ -178,6 +178,78 @@ public class LedgerTempBalanceManager {
         }
     }
 
+    public void refreshTempNonceOnly(int chainId, Transaction tx, long blockTime) {
+        tx.setHash(null);
+        NulsHash hash = tx.getHash();
+        byte[] hashBytes = hash.getBytes();
+        byte[] currentNonceBytes = Arrays.copyOfRange(hashBytes, hashBytes.length - 8, hashBytes.length);
+        CoinData coinData;
+        try {
+            coinData = new CoinData();
+            coinData.parse(tx.getCoinData(), 0);
+        } catch (NulsException e) {
+            throw new NulsRuntimeException(e);
+        }
+        List<CoinFrom> froms = coinData.getFrom();
+        byte[] address;
+        int assetChainId, assetId;
+        for (CoinFrom from : froms) {
+            address = from.getAddress();
+            assetChainId = from.getAssetsChainId();
+            assetId = from.getAssetsId();
+            Result<LedgerBalance> balanceResult = getBalance(address, assetChainId, assetId);
+            if (balanceResult.isFailed()) {
+                throw new NulsRuntimeException(balanceResult.getErrorCode());
+            }
+            LedgerBalance ledgerBalance = balanceResult.getData();
+            ledgerBalance.setNonce(currentNonceBytes);
+        }
+    }
+
+    public void refreshTempBalanceOnly(int chainId, Transaction tx, long blockTime) {
+        CoinData coinData;
+        try {
+            coinData = new CoinData();
+            coinData.parse(tx.getCoinData(), 0);
+        } catch (NulsException e) {
+            throw new NulsRuntimeException(e);
+        }
+        List<CoinFrom> froms = coinData.getFrom();
+        List<CoinTo> tos = coinData.getTo();
+        byte[] address;
+        int assetChainId, assetId;
+        for (CoinFrom from : froms) {
+            address = from.getAddress();
+            assetChainId = from.getAssetsChainId();
+            assetId = from.getAssetsId();
+            Result<LedgerBalance> balanceResult = getBalance(address, assetChainId, assetId);
+            if (balanceResult.isFailed()) {
+                throw new NulsRuntimeException(balanceResult.getErrorCode());
+            }
+            LedgerBalance ledgerBalance = balanceResult.getData();
+            if (isLockedAmount(blockTime, from.getLocked())) {
+                ledgerBalance.minusLockedTemp(from.getAmount());
+            } else {
+                ledgerBalance.minusTemp(from.getAmount());
+            }
+        }
+        for (CoinTo to : tos) {
+            address = to.getAddress();
+            assetChainId = to.getAssetsChainId();
+            assetId = to.getAssetsId();
+            Result<LedgerBalance> balanceResult = getBalance(address, assetChainId, assetId);
+            if (balanceResult.isFailed()) {
+                throw new NulsRuntimeException(balanceResult.getErrorCode());
+            }
+            LedgerBalance ledgerBalance = balanceResult.getData();
+            if (isLockedAmount(blockTime, to.getLockTime())) {
+                ledgerBalance.addLockedTemp(to.getAmount());
+            } else {
+                ledgerBalance.addTemp(to.getAmount());
+            }
+        }
+    }
+
     protected String balanceKey(byte[] address, int assetChainId, int assetId) {
         return new StringBuilder(chainId).append(asStringByBase64(address)).append(SwapConstant.LINE).append(assetChainId).append(SwapConstant.LINE).append(assetId).toString();
     }

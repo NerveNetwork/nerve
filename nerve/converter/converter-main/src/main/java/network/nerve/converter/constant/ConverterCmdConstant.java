@@ -86,5 +86,12 @@ public interface ConverterCmdConstant {
     String HAS_RECORD_FEE_PAYMENT = "cv_hasRecordFeePayment";
     String WITHDRAWAL_FEE_LOG = "cv_withdrawalFeeLog";
     String MINIMUM_FEE_OF_WITHDRAWAL = "cv_minimumFeeOfWithdrawal";
+    String UNLOCK_UTXO = "cv_unlock_utxo";
+    String RECORD_FEE_PAYMENT_NERVE_INNER = "cv_record_fee_payment_nerve_inner";
+    String GET_SPLIT_GRANULARITY = "cv_getSplitGranularity";
+    String GET_UTXO_CHECKED_INFO = "cv_getUtxoCheckedInfo";
+    String GET_WITHDRAWAL_UTXO_INFO = "cv_getWithdrawalUTXOInfo";
+    String CHECK_PAUSE_IN = "cv_checkPauseIn";
+    String CHECK_PAUSE_OUT = "cv_checkPauseOut";
 
 }

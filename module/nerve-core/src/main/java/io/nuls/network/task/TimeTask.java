@@ -49,11 +49,11 @@ public class TimeTask implements Runnable {
             while (true) {
                 long newTime = System.currentTimeMillis();
                 if (Math.abs(newTime - lastTime) > TimeManager.TIME_OFFSET_BOUNDARY) {
-                    LoggerUtil.COMMON_LOG.info("-----local time changed ：{}------", newTime - lastTime);
+                    LoggerUtil.COMMON_LOG.debug("-----local time changed ：{}------", newTime - lastTime);
                     timeManager.syncWebTime();
                 } else if (TimeManager.currentTimeMillis() - TimeManager.lastSyncTime > TimeManager.NET_REFRESH_TIME) {
                     //Update network time periodically
-                    LoggerUtil.COMMON_LOG.info("-----TimeManager refresh ntp time------");
+                    LoggerUtil.COMMON_LOG.debug("-----TimeManager refresh ntp time------");
                     timeManager.syncWebTime();
                 }
                 lastTime = newTime;

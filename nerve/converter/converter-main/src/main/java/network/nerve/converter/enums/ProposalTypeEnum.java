@@ -61,7 +61,8 @@ public enum ProposalTypeEnum {
 
     TRANSACTION_WHITELIST((byte) 13),
 
-    CLOSE_HTG_CHAIN((byte) 14);
+    CLOSE_HTG_CHAIN((byte) 14),
+    SPLIT_GRANULARITY((byte) 15);
 
     private byte value;
     private static Map<Byte, ProposalTypeEnum> map;

@@ -160,7 +160,7 @@ public class SwapTxSendTest {
     protected NerveToken swap_lp_nvt8safemoon9;
     protected NerveToken swap_lp_goat9safemoon9;
     protected NerveToken stable_swap_lp = new NerveToken(chainId, stableLpAssetId);
-    protected String stablePairAddress = "TNVTdTSQh4hP4ZhLfw4ZbufkUifeaARpGEZBP";
+    protected String stablePairAddress = "TNVTdTSQfgN6jXp87DLE3qQi2L7GoFgbUYsPh";
 
     protected NerveToken U1D = new NerveToken(5, 3);
     protected NerveToken U2D = new NerveToken(5, 4);
@@ -409,7 +409,7 @@ public class SwapTxSendTest {
         //this.create4(params);
         //this.create5(params);
         params.put("tokenAStr", new NerveToken(5, 1).str());
-        params.put("tokenBStr", new NerveToken(5, 11).str());
+        params.put("tokenBStr", new NerveToken(5, 9).str());
 
         this.sendTx(from, SWAP_CREATE_PAIR, params);
     }
@@ -502,12 +502,12 @@ public class SwapTxSendTest {
         //this.addLiquidityGoat9usdx_bnb(params);
         //this.addLiquidityNvt8safemoon9(params);
         //this.addLiquidityGoat9safemoon9(params);
-        String amountA = "100000";
-        String amountB = "500000";
+        String amountA = "1000";
+        String amountB = "500";
         amountA = new BigDecimal(amountA).scaleByPowerOfTen(8).toPlainString();
         amountB = new BigDecimal(amountB).scaleByPowerOfTen(18).toPlainString();
         params.put("tokenAStr", new NerveToken(5, 1).str());
-        params.put("tokenBStr", new NerveToken(5, 11).str());
+        params.put("tokenBStr", new NerveToken(5, 9).str());
         params.put("amountA", amountA);
         params.put("amountB", amountB);
 
@@ -515,7 +515,7 @@ public class SwapTxSendTest {
         params.put("amountAMin", minAmounts[0].toString());
         params.put("amountBMin", minAmounts[1].toString());
         params.put("deadline", deadline());
-        params.put("to", address32);
+        params.put("to", address31);
         this.sendTx(from, SWAP_ADD_LIQUIDITY, params);
     }
 
@@ -567,9 +567,9 @@ public class SwapTxSendTest {
         //amountIn = new BigDecimal(amountIn).scaleByPowerOfTen(18).toPlainString();
         //String tokenOut = nvt.str();
         String tokenIn = "5-1";
-        String amountIn = "300";
+        String amountIn = "3";
         amountIn = new BigDecimal(amountIn).scaleByPowerOfTen(8).toPlainString();
-        String tokenOut = "5-11";
+        String tokenOut = "5-9";
 
         //String[] pairs = new String[]{"TNVTdTSQ4vfckRXy2GWUykx174o3np9b7TC5q",
         //                                "TNVTdTSQBq61Gw6s8R9g8Jd7p6M2859Wn7kXW",
@@ -591,9 +591,9 @@ public class SwapTxSendTest {
         BigInteger amountOutMin = new BigInteger(outMap.get("amount").toString());
         System.out.println(String.format("amountOutMin: %s", amountOutMin));
         params.put("amountOutMin", amountOutMin);
-        params.put("feeTo", address51);
+        params.put("feeTo", address31);
         params.put("deadline", deadline());
-        params.put("to", address32);
+        params.put("to", address31);
         this.sendTx(from, SWAP_TOKEN_TRADE, params);
     }
 
@@ -625,7 +625,11 @@ public class SwapTxSendTest {
         // U4D[5-5] decimals: 18, initNumber: 100000000, type: 1
         // UDN[5-6] decimals: 18, initNumber: 0, type: 10
         Map<String, Object> params = new HashMap<>();
-        params.put("coins", new String[]{"5-7", "5-8", "5-9", "5-10", "5-11"});
+        params.put("coins", new String[]{
+                "5-5",
+                "5-6",
+                "5-7",
+                "5-8"});
         params.put("symbol", "UDN");
         this.sendTx(from, STABLE_SWAP_CREATE_PAIR, params);
     }
@@ -651,20 +655,20 @@ public class SwapTxSendTest {
     @Test
     public void stableSwapAddLiquidity() throws Exception {
         String amount0 = new BigDecimal("23").scaleByPowerOfTen(18).toPlainString();
-        //String amount1 = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
-        //String amount2 = new BigDecimal("2000").scaleByPowerOfTen(18).toPlainString();
-        //String amount3 = new BigDecimal("300").scaleByPowerOfTen(18).toPlainString();
+        String amount1 = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
+        String amount2 = new BigDecimal("2000").scaleByPowerOfTen(18).toPlainString();
+        String amount3 = new BigDecimal("300").scaleByPowerOfTen(18).toPlainString();
         //String amount4 = new BigDecimal("700").scaleByPowerOfTen(18).toPlainString();
 
         Map<String, Object> params = new HashMap<>();
         //params.put("amounts", new String[]{amount0, amount1, amount2, amount3, amount4});
-        params.put("amounts", new String[]{amount0});
+        params.put("amounts", new String[]{amount0, amount1, amount2, amount3});
         //params.put("tokens", new String[]{"5-7", "5-8", "5-9", "5-10", "5-11"});
-        params.put("tokens", new String[]{"5-7"});//"5-7","5-8","5-9","5-10","5-11"
+        params.put("tokens", new String[]{"5-5","5-6","5-7","5-8"});//"5-7","5-8","5-9","5-10","5-11"
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
         params.put("to", address31);
-        from = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        //from = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         this.sendTx(from, STABLE_SWAP_ADD_LIQUIDITY, params);
     }
 
@@ -1178,13 +1182,20 @@ public class SwapTxSendTest {
         //this.balanceInfoPrint("HT-assetHUSD", husd_18, address);
         //this.balanceInfoPrint("OKT-assetOKUSD", okusd_8, address);
 
-        this.balanceInfoPrint("U1Dasset", new NerveToken(5, 17), address);
-        this.balanceInfoPrint("U2Dasset", new NerveToken(5, 18), address);
-        this.balanceInfoPrint("U3Dasset", new NerveToken(5, 19), address);
-        this.balanceInfoPrint("U4Dasset", new NerveToken(5, 20), address);
-        this.balanceInfoPrint("U5Dasset", new NerveToken(5, 22), address);
-        this.balanceInfoPrint("U6Dasset", new NerveToken(5, 23), address);
-        this.balanceInfoPrint("Stable-LPasset", new NerveToken(5, 21), address);
+        this.balanceInfoPrint("U1Dasset", new NerveToken(5, 5), address);
+        this.balanceInfoPrint("U2Dasset", new NerveToken(5, 6), address);
+        this.balanceInfoPrint("U3Dasset", new NerveToken(5, 7), address);
+        this.balanceInfoPrint("U4Dasset", new NerveToken(5, 8), address);
+        this.balanceInfoPrint("Stable-LPasset", new NerveToken(5, 9), address);
+        this.balanceInfoPrint("Swap-LPasset", new NerveToken(5, 10), address);
+
+        //this.balanceInfoPrint("U1Dasset", new NerveToken(5, 17), address);
+        //this.balanceInfoPrint("U2Dasset", new NerveToken(5, 18), address);
+        //this.balanceInfoPrint("U3Dasset", new NerveToken(5, 19), address);
+        //this.balanceInfoPrint("U4Dasset", new NerveToken(5, 20), address);
+        //this.balanceInfoPrint("U5Dasset", new NerveToken(5, 22), address);
+        //this.balanceInfoPrint("U6Dasset", new NerveToken(5, 23), address);
+        //this.balanceInfoPrint("Stable-LPasset", new NerveToken(5, 21), address);
 
         //this.balanceInfoPrint("Swap-LPasset(nvt8usdx_bnb)", swap_lp_nvt8usdx_bnb, address);
         //this.balanceInfoPrint("Swap-LPasset(nvt8usdx_eth)", swap_lp_nvt8usdx_eth, address);

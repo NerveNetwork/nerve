@@ -8,7 +8,7 @@
     "commonRpcAddress": "https://geth.nerve.network",
     "mainRpcAddress": "https://geth.nerve.network",
     "orderRpcAddresses": "https://geth.nerve.network",
-    "standbyRpcAddresses": "https://ethapi.bridge.link/",
+    "standbyRpcAddresses": "https://geth.nerve.network",
     "defaultStartHeight": 0,
     "txBlockConfirmations": 10,
     "txBlockConfirmationsOfWithdraw": 1,

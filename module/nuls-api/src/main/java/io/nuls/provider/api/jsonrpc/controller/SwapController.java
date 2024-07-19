@@ -18,6 +18,7 @@ import io.nuls.v2.model.annotation.Api;
 import io.nuls.v2.model.annotation.ApiOperation;
 import io.nuls.v2.model.annotation.ApiType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -441,6 +442,74 @@ public class SwapController {
         Result<Map<String, Object>> result = swapTools.calMinAmountOnSwapRemoveLiquidity(chainId, amountLP, tokenAStr, tokenBStr);
         return ResultUtil.getJsonRpcResult(result);
     }
+
+    @RpcMethod("calMinAmountOnStableSwapAddLiquidity")
+    @ApiOperation(description = "calMinAmountOnStableSwapAddLiquidity", order = 709)
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "pairAddress"),
+            @Parameter(parameterName = "tokenStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenAmount", parameterType = "String", parameterDes = "tokenAmount")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public RpcResult calMinAmountOnStableSwapAddLiquidity(List<Object> params) {
+        VerifyUtils.verifyParams(params, 4);
+        int i = 0;
+        int chainId;
+        try {
+            chainId = (int) params.get(i++);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("pairAddress", params.get(i++));
+        params1.put("tokenStr", params.get(i++));
+        params1.put("tokenAmount", params.get(i++));
+        Result<Map<String, Object>> result = swapTools.commonRequest("sw_stable_swap_min_amount_add_liquidity", params1);
+
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("calMinAmountOnStableSwapRemoveLiquidity")
+    @ApiOperation(description = "calMinAmountOnStableSwapRemoveLiquidity", order = 709)
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "pairAddress"),
+            @Parameter(parameterName = "tokenStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "liquidity", parameterType = "String", parameterDes = "Removed assetsLPQuantity of")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public RpcResult calMinAmountOnStableSwapRemoveLiquidity(List<Object> params) {
+        VerifyUtils.verifyParams(params, 4);
+        int i = 0;
+        int chainId;
+        try {
+            chainId = (int) params.get(i++);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("pairAddress", params.get(i++));
+        params1.put("tokenStr", params.get(i++));
+        params1.put("liquidity", params.get(i++));
+        Result<Map<String, Object>> result = swapTools.commonRequest("sw_stable_swap_min_amount_remove_liquidity", params1);
+
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+
 
     @RpcMethod("getStablePairListForSwapTrade")
     @ApiOperation(description = "Queries available forSwapStable currency trading for transactions", order = 710)

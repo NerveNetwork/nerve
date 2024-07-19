@@ -597,4 +597,169 @@ public class ConverterController {
         Result<Map<String, Object>> result = converterTools.commonRequest("cv_minimumFeeOfWithdrawal", params1);
         return ResultUtil.getJsonRpcResult(result);
     }
+
+    @RpcMethod("recordFeePaymentNerveInner")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainid"),
+            @Parameter(parameterName = "nerveTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "nerve tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
+    })
+    )
+    public RpcResult recordFeePaymentNerveInner(List<Object> params) {
+        VerifyUtils.verifyParams(params, 3);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        int heterogeneousChainId = (int) params.get(i++);
+        String nerveTxHash = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("heterogeneousChainId", heterogeneousChainId);
+        params1.put("nerveTxHash", nerveTxHash);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_record_fee_payment_nerve_inner", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("unlockUtxo")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "nerveTxHash", parameterType = "String", parameterDes = "nerveTxHash"),
+            @Parameter(parameterName = "forceUnlock", parameterType = "boolean", parameterDes = "forceUnlock"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password"),
+            @Parameter(parameterName = "htgChainId", parameterType = "int", parameterDes = "htgChainId"),
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    })
+    )
+    public RpcResult unlockUtxo(List<Object> params) {
+        VerifyUtils.verifyParams(params, 5);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        String nerveTxHash = (String) params.get(i++);
+        boolean forceUnlock = (boolean) params.get(i++);
+        String address = (String) params.get(i++);
+        String password = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("nerveTxHash", nerveTxHash);
+        params1.put("forceUnlock", forceUnlock ? 1 : 0);
+        params1.put("address", address);
+        params1.put("password", password);
+        if (params.size() > 5) {
+            params1.put("htgChainId", params.get(i++));
+        }
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_unlock_utxo", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getSplitGranularity")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "heterogeneousChainId")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "splitGranularity")
+    }))
+    public RpcResult getSplitGranularity(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        int i = 0;
+        int heterogeneousChainId = (int) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("heterogeneousChainId", heterogeneousChainId);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_getSplitGranularity", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+    @RpcMethod("getUtxoCheckedInfo")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "heterogeneousChainId"),
+            @Parameter(parameterName = "utxoList", requestType = @TypeDescriptor(value = List.class), parameterDes = "utxoList")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "detail data")
+    }))
+    public RpcResult getUtxoCheckedInfo(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int i = 0;
+        int heterogeneousChainId = (int) params.get(i++);
+        List utxoList = (List) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("heterogeneousChainId", heterogeneousChainId);
+        params1.put("utxoList", utxoList);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_getUtxoCheckedInfo", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getWithdrawalUTXOInfo")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "heterogeneousChainId"),
+            @Parameter(parameterName = "nerveTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "nerve tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "detail data")
+    }))
+    public RpcResult getWithdrawalUTXOInfo(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int i = 0;
+        int heterogeneousChainId = (int) params.get(i++);
+        String nerveTxHash = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("heterogeneousChainId", heterogeneousChainId);
+        params1.put("nerveTxHash", nerveTxHash);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_getWithdrawalUTXOInfo", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("checkPauseOut")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "htgChainId", parameterType = "int", parameterDes = "htgChainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    })
+    )
+    public RpcResult checkPauseOut(List<Object> params) {
+        VerifyUtils.verifyParams(params, 4);
+        int i = 0;
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", params.get(i++));
+        params1.put("htgChainId", params.get(i++));
+        params1.put("nerveAssetChainId", params.get(i++));
+        params1.put("nerveAssetId", params.get(i++));
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_checkPauseOut", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("checkPauseIn")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "htgChainId", parameterType = "int", parameterDes = "htgChainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    })
+    )
+    public RpcResult checkPauseIn(List<Object> params) {
+        VerifyUtils.verifyParams(params, 4);
+        int i = 0;
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", params.get(i++));
+        params1.put("htgChainId", params.get(i++));
+        params1.put("nerveAssetChainId", params.get(i++));
+        params1.put("nerveAssetId", params.get(i++));
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_checkPauseIn", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
 }

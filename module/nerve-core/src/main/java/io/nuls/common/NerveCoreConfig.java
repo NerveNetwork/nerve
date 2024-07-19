@@ -186,6 +186,7 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
     private int sigMode = 0;
 
     private String sigMacUrl ;
+    private String otherSigMacUrl ;
     private String sigMacApiKey ;
 
     private String sigMacAddress;
@@ -711,6 +712,14 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
 
     public void setSigMacUrl(String sigMacUrl) {
         this.sigMacUrl = sigMacUrl;
+    }
+
+    public String getOtherSigMacUrl() {
+        return otherSigMacUrl;
+    }
+
+    public void setOtherSigMacUrl(String otherSigMacUrl) {
+        this.otherSigMacUrl = otherSigMacUrl;
     }
 
     public String getSigMacApiKey() {

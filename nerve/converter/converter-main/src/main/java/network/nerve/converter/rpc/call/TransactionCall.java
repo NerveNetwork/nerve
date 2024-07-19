@@ -103,7 +103,10 @@ public class TransactionCall extends BaseCall {
             if(StringUtils.isBlank(txStr)){
                 return null;
             }
-            return Transaction.getInstance(RPCUtil.decode(txStr));
+            long blockHeight = Long.parseLong(map.get("blockHeight").toString());
+            Transaction tx = Transaction.getInstance(RPCUtil.decode(txStr));
+            tx.setBlockHeight(blockHeight);
+            return tx;
         } catch (Exception e) {
             chain.getLogger().error(e);
             throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD);

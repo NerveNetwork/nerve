@@ -142,9 +142,10 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
             List<String> deleteAssetKeyList = new ArrayList<>();
             List<Map<String, Object>> list = (List<Map<String, Object>>) params.get("crossChainAssetList");
             Collection<Map<String, Object>> dataList;
-            if (height >= LedgerConstant.PROTOCOL_1_32_0) {
+//            if (height >= LedgerConstant.PROTOCOL_1_32_0) {
+            if (height >= 55644100L) {
                 Map<String, Map<String, Object>> dataMap = new HashMap<>();
-                for(Map<String, Object> assetMap : list) {
+                for (Map<String, Object> assetMap : list) {
                     String key = assetMap.get("assetChainId").toString() + "-" + assetMap.get("assetId").toString();
                     dataMap.put(key, assetMap);
                 }
@@ -153,7 +154,7 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
                 dataList = list;
             }
             boolean usable;
-            for(Map<String, Object> assetMap : dataList) {
+            for (Map<String, Object> assetMap : dataList) {
                 int assetChainId = Integer.parseInt(assetMap.get("assetChainId").toString());
                 // When an in chain asset is registered as a cross chain asset, the cross chain module will register the asset as a cross chain asset and notify the ledger. At this time, the ledger should be ignored and the asset should not be modified as a cross chain asset
                 if (assetType == 3 && chainId == assetChainId) {

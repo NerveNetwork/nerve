@@ -945,6 +945,54 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = ConverterCmdConstant.RECORD_FEE_PAYMENT_NERVE_INNER, version = 1.0, description = "record_fee_payment_nerve_inner")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainid"),
+            @Parameter(parameterName = "nerveTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "nerve tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
+    })
+    )
+    public Response recordFeePaymentNerveInner(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            int heterogeneousChainId = (Integer) params.get("heterogeneousChainId");
+            if (heterogeneousChainId < 200) {
+                throw new NulsRuntimeException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
+            }
+            String nerveTxHash = params.get("nerveTxHash").toString();
+            Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+
+            if (!VirtualBankUtil.isCurrentDirector(chain)) {
+                chain.getLogger().error("Current non virtual bank member nodes, Not processed recordFeePaymentNerveInner");
+                map.put("value", false);
+            } else {
+                heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId).getBitCoinApi().recordFeePaymentByNerveInner(nerveTxHash);
+                map.put("value", true);
+            }
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {
             LoggerUtil.LOG.error(e);

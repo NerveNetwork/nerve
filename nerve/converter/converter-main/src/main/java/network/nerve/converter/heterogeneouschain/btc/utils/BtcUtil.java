@@ -42,14 +42,13 @@ import network.nerve.converter.heterogeneouschain.btc.model.P2WSHMSInfo;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
 import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
-import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.WithdrawalUTXO;
 import network.nerve.converter.utils.ConverterUtil;
-import network.nerve.converter.utils.LoggerUtil;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.bitcoinj.base.Base58;
 import org.bitcoinj.base.*;
-import org.bitcoinj.base.internal.ByteUtils;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.ECKey;
 import org.bitcoinj.crypto.SignatureDecodeException;
@@ -59,10 +58,14 @@ import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.*;
 import org.bitcoinj.wallet.Wallet;
 import org.bouncycastle.math.ec.ECPoint;
-import org.junit.Test;
 import org.web3j.utils.Numeric;
 
+import javax.net.ssl.*;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -946,7 +949,7 @@ public class BtcUtil {
                 }
                 ECKey ecKey = _pubKeys.get(i);
                 List<String> signList = signatures.get(ecKey.getPublicKeyAsHex());
-                if (signList == null || signList.isEmpty()) {
+                if (signList == null || signList.isEmpty() || signList.size() < spendTxInputs.size()) {
                     continue;
                 }
                 ECKey.ECDSASignature ecdsaSignature = ECKey.ECDSASignature.decodeFromDER(HexUtil.decode(signList.get(k)));
@@ -1023,16 +1026,35 @@ public class BtcUtil {
         return length;
     }
 
-    public static List<String> createNativeSegwitMultiSignByOne(ECKey privKey,
-                                                          List<ECKey> pubEcKeys,
-                                                          long amount,
-                                                          String receiveAddr,
-                                                          List<UTXOData> utxos,
-                                                          List<byte[]> opReturns,
-                                                          int m, int n,
-                                                          long feeRate,
-                                                          boolean mainnet) {
-        return createNativeSegwitMultiSignByOne(privKey, pubEcKeys, amount, receiveAddr, utxos, opReturns, m, n, feeRate, mainnet, false);
+    /**
+     * calc split number of Transaction Change Spliting by splitGranularity
+     *      change = fromTotal - transfer - fee
+     *      change = splitNum * splitGranularity
+     *      fee = txSize * feeRate
+     *      txSize = f(splitNum)
+     *      f(splitNum) = f(1) + 43 * (splitNum - 1) ==> Derived from calcFeeMultiSignSizeP2WSH(inputNum, splitNum, opReturnBytesLen, m, n)
+     *  In summary:
+     *      splitNum = (fromTotal - transfer - calcFeeMultiSignSizeP2WSH(inputNum, 1, opReturnBytesLen, m, n) * feeRate + 43 * feeRate) / (43 * feeRate + splitGranularity)
+     *
+     * @param fromTotal
+     * @param transfer
+     * @param feeRate
+     * @param splitGranularity
+     * @param inputNum
+     * @param opReturnBytesLen
+     * @param m
+     * @param n
+     * @return
+     */
+    public static int calcSplitNumP2WSH(long fromTotal, long transfer, long feeRate, long splitGranularity, int inputNum, int[] opReturnBytesLen, int m, int n) {
+        // numerator and denominator
+        long numerator = fromTotal - transfer - calcFeeMultiSignSizeP2WSH(inputNum, 1, opReturnBytesLen, m, n) * feeRate + 43 * feeRate;
+        long denominator = 43 * feeRate + splitGranularity;
+        int splitNum = (int) (numerator / denominator);
+        if (splitNum == 0 && numerator % denominator > 0) {
+            splitNum = 1;
+        }
+        return splitNum;
     }
 
     public static List<String> createNativeSegwitMultiSignByOne(ECKey privKey,
@@ -1043,7 +1065,19 @@ public class BtcUtil {
                                                           List<byte[]> opReturns,
                                                           int m, int n,
                                                           long feeRate,
-                                                          boolean mainnet, boolean useAllUTXO) {
+                                                          boolean mainnet, Long splitGranularity) {
+        return createNativeSegwitMultiSignByOne(privKey, pubEcKeys, amount, receiveAddr, utxos, opReturns, m, n, feeRate, mainnet, false, splitGranularity);
+    }
+
+    public static List<String> createNativeSegwitMultiSignByOne(ECKey privKey,
+                                                          List<ECKey> pubEcKeys,
+                                                          long amount,
+                                                          String receiveAddr,
+                                                          List<UTXOData> utxos,
+                                                          List<byte[]> opReturns,
+                                                          int m, int n,
+                                                          long feeRate,
+                                                          boolean mainnet, boolean useAllUTXO, Long splitGranularity) {
         P2WSHMSInfo info = createNativeSegwitMultiSignBase(pubEcKeys,
                 amount,
                 receiveAddr,
@@ -1051,7 +1085,7 @@ public class BtcUtil {
                 opReturns,
                 m, n,
                 feeRate,
-                mainnet, useAllUTXO);
+                mainnet, useAllUTXO, splitGranularity);
         Transaction spendTx = info.getTx();
         Script redeemScript = info.getRedeemScript();
         //Sign tx, will fall if no private keys specified
@@ -1074,8 +1108,8 @@ public class BtcUtil {
                                                           List<byte[]> opReturns,
                                                           int m, int n,
                                                           long feeRate,
-                                                          boolean mainnet) throws NulsException {
-        return verifyNativeSegwitMultiSign(pub, signatures, pubEcKeys, amount, receiveAddr, utxos, opReturns, m, n, feeRate, mainnet, false);
+                                                          boolean mainnet, Long splitGranularity) throws NulsException {
+        return verifyNativeSegwitMultiSign(pub, signatures, pubEcKeys, amount, receiveAddr, utxos, opReturns, m, n, feeRate, mainnet, false, splitGranularity);
     }
 
     public static boolean verifyNativeSegwitMultiSign(ECKey pub, List<String> signatures,
@@ -1086,7 +1120,7 @@ public class BtcUtil {
                                                           List<byte[]> opReturns,
                                                           int m, int n,
                                                           long feeRate,
-                                                          boolean mainnet, boolean useAllUTXO) throws NulsException {
+                                                          boolean mainnet, boolean useAllUTXO, Long splitGranularity) throws NulsException {
         P2WSHMSInfo info = createNativeSegwitMultiSignBase(pubEcKeys,
                 amount,
                 receiveAddr,
@@ -1094,7 +1128,7 @@ public class BtcUtil {
                 opReturns,
                 m, n,
                 feeRate,
-                mainnet, useAllUTXO);
+                mainnet, useAllUTXO, splitGranularity);
         Transaction spendTx = info.getTx();
         Script redeemScript = info.getRedeemScript();
         //Sign tx, will fall if no private keys specified
@@ -1124,8 +1158,8 @@ public class BtcUtil {
                                                           List<byte[]> opReturns,
                                                           int m, int n,
                                                           long feeRate,
-                                                          boolean mainnet) throws NulsException {
-        return verifyNativeSegwitMultiSignCount(signatures, pubEcKeys, amount, receiveAddr, utxos, opReturns, m, n, feeRate, mainnet, false);
+                                                          boolean mainnet, Long splitGranularity) throws NulsException {
+        return verifyNativeSegwitMultiSignCount(signatures, pubEcKeys, amount, receiveAddr, utxos, opReturns, m, n, feeRate, mainnet, false, splitGranularity);
     }
 
     public static int verifyNativeSegwitMultiSignCount(Map<String, List<String>> signatures,
@@ -1136,7 +1170,7 @@ public class BtcUtil {
                                                           List<byte[]> opReturns,
                                                           int m, int n,
                                                           long feeRate,
-                                                          boolean mainnet, boolean useAllUTXO) throws NulsException {
+                                                          boolean mainnet, boolean useAllUTXO, Long splitGranularity) throws NulsException {
         P2WSHMSInfo info = createNativeSegwitMultiSignBase(pubEcKeys,
                 amount,
                 receiveAddr,
@@ -1144,7 +1178,7 @@ public class BtcUtil {
                 opReturns,
                 m, n,
                 feeRate,
-                mainnet, useAllUTXO);
+                mainnet, useAllUTXO, splitGranularity);
         Set<Map.Entry<String, List<String>>> entries = signatures.entrySet();
         Transaction spendTx = info.getTx();
         Script redeemScript = info.getRedeemScript();
@@ -1195,8 +1229,8 @@ public class BtcUtil {
                                                           List<byte[]> opReturns,
                                                           int m, int n,
                                                           long feeRate,
-                                                          boolean mainnet) throws Exception {
-        return createNativeSegwitMultiSignTx(signatures, pubEcKeys, amount, receiveAddr, utxos, opReturns, m, n, feeRate, mainnet, false);
+                                                          boolean mainnet, Long splitGranularity) throws Exception {
+        return createNativeSegwitMultiSignTx(signatures, pubEcKeys, amount, receiveAddr, utxos, opReturns, m, n, feeRate, mainnet, false, splitGranularity);
     }
 
     public static Transaction createNativeSegwitMultiSignTx(Map<String, List<String>> signatures,
@@ -1207,7 +1241,7 @@ public class BtcUtil {
                                                           List<byte[]> opReturns,
                                                           int m, int n,
                                                           long feeRate,
-                                                          boolean mainnet, boolean useAllUTXO) throws Exception {
+                                                          boolean mainnet, boolean useAllUTXO, Long splitGranularity) throws Exception {
         P2WSHMSInfo info = createNativeSegwitMultiSignBase(pubEcKeys,
                 amount,
                 receiveAddr,
@@ -1215,7 +1249,7 @@ public class BtcUtil {
                 opReturns,
                 m, n,
                 feeRate,
-                mainnet, useAllUTXO);
+                mainnet, useAllUTXO, splitGranularity);
         Transaction spendTx = info.getTx();
         List<ECKey> sortedPubKeys = info.getSortedPubKeys();
         Script redeemScript = info.getRedeemScript();
@@ -1232,7 +1266,7 @@ public class BtcUtil {
                 }
                 ECKey ecKey = sortedPubKeys.get(i);
                 List<String> signList = signatures.get(ecKey.getPublicKeyAsHex());
-                if (signList == null || signList.isEmpty()) {
+                if (signList == null || signList.isEmpty() || signList.size() < spendTxInputs.size()) {
                     continue;
                 }
                 ECKey.ECDSASignature ecdsaSignature = ECKey.ECDSASignature.decodeFromDER(HexUtil.decode(signList.get(k)));
@@ -1253,6 +1287,20 @@ public class BtcUtil {
         return spendTx;
     }
 
+    public static long calcFeeMultiSignSizeP2WSHWithSplitGranularity(long fromTotal, long transfer, long feeRate, Long splitGranularity, int inputNum, int[] opReturnBytesLen, int m, int n) {
+        long feeSize;
+        if (splitGranularity != null && splitGranularity > 0) {
+            if (splitGranularity < ConverterConstant.MIN_SPLIT_GRANULARITY) {
+                throw new RuntimeException("error splitGranularity: " + splitGranularity);
+            }
+            int splitNum = calcSplitNumP2WSH(fromTotal, transfer, feeRate, splitGranularity, inputNum, opReturnBytesLen, m, n);
+            feeSize = calcFeeMultiSignSizeP2WSH(inputNum, splitNum, opReturnBytesLen, m, n);
+        } else {
+            feeSize = calcFeeMultiSignSizeP2WSH(inputNum, 1, opReturnBytesLen, m, n);
+        }
+        return feeSize;
+    }
+
     private static P2WSHMSInfo createNativeSegwitMultiSignBase(List<ECKey> pubEcKeys,
                                                                long amount,
                                                                String receiveAddr,
@@ -1261,7 +1309,8 @@ public class BtcUtil {
                                                                int m, int n,
                                                                long feeRate,
                                                                boolean mainnet,
-                                                               boolean useAllUTXO) {
+                                                               boolean useAllUTXO,
+                                                               Long splitGranularity) {
         long fee = 0;
         int[] opReturnSize = null;
         if (opReturns != null) {
@@ -1294,7 +1343,17 @@ public class BtcUtil {
         for (UTXOData utxo : utxos) {
             usingUtxos.add(utxo);
             totalMoney += utxo.getAmount().longValue();
-            long feeSize = calcFeeMultiSignSizeP2WSH(usingUtxos.size(), 1, opReturnSize, m, n);
+            long feeSize = calcFeeMultiSignSizeP2WSHWithSplitGranularity(
+                    totalMoney, amount, feeRate, splitGranularity, usingUtxos.size(), opReturnSize, m, n);
+            /*if (splitGranularity != null) {
+                if (splitGranularity < ConverterConstant.MIN_SPLIT_GRANULARITY) {
+                    throw new RuntimeException("error splitGranularity: " + splitGranularity);
+                }
+                int splitNum = calcSplitNumP2WSH(totalMoney, amount, feeRate, splitGranularity, usingUtxos.size(), opReturnSize, m, n);
+                feeSize = calcFeeMultiSignSizeP2WSH(usingUtxos.size(), splitNum, opReturnSize, m, n);
+            } else {
+                feeSize = calcFeeMultiSignSizeP2WSH(usingUtxos.size(), 1, opReturnSize, m, n);
+            }*/
             fee = feeSize * feeRate;
 
             if (totalMoney >= (amount + fee)) {
@@ -1324,7 +1383,10 @@ public class BtcUtil {
         // The wallets' nodes that apply such a limit may reject transactions equal to or smaller than 546 satoshis
         if (leave > ConverterConstant.BTC_DUST_AMOUNT) {
             //Change output
-            spendTx.addOutput(Coin.valueOf(leave), fromAddress);
+            List<Long> changes = getChanges(splitGranularity, leave);
+            for (Long c : changes) {
+                spendTx.addOutput(Coin.valueOf(c), fromAddress);
+            }
         }
 
         //Add OP_RETURN
@@ -1348,6 +1410,28 @@ public class BtcUtil {
         }
 
         return new P2WSHMSInfo(spendTx, sortedPubKeys, redeemScript, networkParameters);
+    }
+
+    private static List<Long> getChanges(Long splitGranularity, long change) {
+        List<Long> changes = new ArrayList<>();
+        if (splitGranularity != null && splitGranularity > ConverterConstant.BTC_DUST_AMOUNT) {
+            if (change >= 2 * splitGranularity) {
+                long remain = change;
+                while (remain >= splitGranularity) {
+                    changes.add(splitGranularity);
+                    remain -= splitGranularity;
+                }
+                if (remain > 0) {
+                    changes.remove(changes.size() - 1);
+                    changes.add(remain + splitGranularity);
+                }
+            } else {
+                changes.add(change);
+            }
+        } else {
+            changes.add(change);
+        }
+        return changes;
     }
 
     public static String takeAddressWithP2WSH(RawInput input, boolean mainnet) {
@@ -1425,17 +1509,40 @@ public class BtcUtil {
     }
 
     public static BtcdClientImpl newInstanceBtcdClient(Properties nodeConfig) {
-        CloseableHttpClient closeableHttpClient = HttpClientUtil.createHttpClient(200, 40, 100, nodeConfig.getProperty(NodeProperties.RPC_HOST.getKey()), Integer.parseInt(nodeConfig.getProperty(NodeProperties.RPC_PORT.getKey())));
+        CloseableHttpClient closeableHttpClient = HttpClientUtil.createHttpClient(200, 40, 100, nodeConfig.getProperty(NodeProperties.RPC_HOST.getKey()), Integer.parseInt(nodeConfig.getProperty(NodeProperties.RPC_PORT.getKey())), disableVerifySSLFactory());
         return new BtcdClientImpl(closeableHttpClient, nodeConfig);
     }
 
-    public static int getByzantineCount(Integer virtualBankTotal) {
-        int directorCount = virtualBankTotal;
-        int ByzantineRateCount = directorCount * ConverterContext.BYZANTINERATIO;
-        int minPassCount = ByzantineRateCount / ConverterConstant.MAGIC_NUM_100;
-        if (ByzantineRateCount % ConverterConstant.MAGIC_NUM_100 > 0) {
-            minPassCount++;
+    private static SSLConnectionSocketFactory disableVerifySSLFactory() {
+        try {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            X509TrustManager tm = new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {}
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {}
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {return null;}
+            };
+            sslContext.init(null,new TrustManager[]{tm},null);
+            SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, new X509HostnameVerifier(){
+                @Override
+                public boolean verify(String s, SSLSession sslSession) {return true;}
+
+                @Override
+                public void verify(String host, SSLSocket ssl) throws IOException {}
+
+                @Override
+                public void verify(String host, X509Certificate cert) throws SSLException {}
+
+                @Override
+                public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException {}
+            });
+            return sslSocketFactory;
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
         }
-        return minPassCount;
     }
 }

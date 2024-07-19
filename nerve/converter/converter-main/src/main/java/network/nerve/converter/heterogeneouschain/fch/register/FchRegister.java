@@ -23,7 +23,6 @@
  */
 package network.nerve.converter.heterogeneouschain.fch.register;
 
-import com.neemre.btcdcli4j.core.client.BtcdClient;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.thread.ThreadUtils;
@@ -31,7 +30,6 @@ import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
-import network.nerve.converter.heterogeneouschain.btc.core.BtcWalletApi;
 import network.nerve.converter.heterogeneouschain.fch.context.FchContext;
 import network.nerve.converter.heterogeneouschain.fch.core.FchBitCoinApi;
 import network.nerve.converter.heterogeneouschain.fch.core.FchWalletApi;
@@ -44,10 +42,7 @@ import network.nerve.converter.heterogeneouschain.fch.helper.FchParseTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManagerNew;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgCommonHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgInvokeTxHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgLocalBlockHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgStorageHelper;
+import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
@@ -167,6 +162,7 @@ public class FchRegister extends HtgRegister {
             beanMap.add(FchAnalysisTxHelper.class);
             beanMap.add(FchBlockAnalysisHelper.class);
             beanMap.add(FchParseTxHelper.class);
+            beanMap.add(HtgPendingTxHelper.class);
             beanMap.add(HtgCommonHelper.class);
             beanMap.add(HtgInvokeTxHelper.class);
             beanMap.add(HtgLocalBlockHelper.class);

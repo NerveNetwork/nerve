@@ -126,7 +126,7 @@ public class NulsProtocolServiceImpl implements ProtocolService {
         if (messageBody.getSignature() != null) {
             signHex = HexUtil.encode(messageBody.getSignature());
         }
-        chain.getLogger().debug("Received in chain node{}Cross chain transactions broadcasted overHashAnd signature,Hash:{},autograph:{}", nodeId, nativeHex, signHex);
+        chain.getLogger().info("Received in chain node {} Cross chain transactions broadcasted overHashAnd signature,Hash:{},autograph:{}", nodeId, nativeHex, signHex);
         //If the transaction is received for the first time, obtain the complete cross chain transaction from the broadcast node
         CtxStatusPO ctxStatusPO = ctxStatusService.get(localHash, handleChainId);
         if (ctxStatusPO == null) {
@@ -138,7 +138,7 @@ public class NulsProtocolServiceImpl implements ProtocolService {
         }
         //If the transaction has been confirmed at this node, there is no need for further signature processing
         if (ctxStatusPO.getStatus() != TxStatusEnum.UNCONFIRM.getStatus() || messageBody.getSignature() == null) {
-            chain.getLogger().debug("Cross chain transactions have been processed at this node,Hash:{}\n\n", nativeHex);
+            chain.getLogger().info("Cross chain transactions have been processed at this node,Hash:{}\n\n", nativeHex);
             return;
         }
         try {

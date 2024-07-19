@@ -1,0 +1,93 @@
+[
+  {
+    "assetId": "1",
+    "oracleKey": "NERVE_PRICE",
+    "canBePeriodically": true,
+    "decimal": 8,
+    "simple": "NVT",
+    "weight": 2,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "1",
+    "chainId": "2",
+    "oracleKey": "NULS_PRICE",
+    "canBePeriodically": true,
+    "decimal": 8,
+    "simple": "NULS",
+    "weight": 2,
+    "stopHeight": 11240000
+  },
+  {
+    "assetId": "10",
+    "oracleKey": "NVTHUSDHMDXLP",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HMDX",
+    "weight": 25,
+    "stopHeight": 11240000
+  },
+  {
+    "assetId": "9",
+    "oracleKey": "HT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HT",
+    "weight": 1,
+    "stopHeight": 11240000
+  },
+  {
+    "assetId": "11",
+    "oracleKey": "HT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HT",
+    "weight": 1,
+    "stopHeight": 11240000
+  },
+  {
+    "assetId": "12",
+    "oracleKey": "OKT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "OKT",
+    "weight": 1,
+    "stopHeight": 11240000
+  },
+  {
+    "assetId": "103",
+    "oracleKey": "NVTUSDTNLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT_USDTN_LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "146",
+    "oracleKey": "NVTETHNLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT-ETHN-LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "158",
+    "oracleKey": "NVTUSDCNLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT-USDCN-LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "181",
+    "oracleKey": "NVTBTCLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT_BTC_LP",
+    "weight": 200,
+    "stopHeight": 0
+  }
+]

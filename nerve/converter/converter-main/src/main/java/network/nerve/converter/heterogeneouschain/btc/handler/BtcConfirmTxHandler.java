@@ -129,7 +129,7 @@ public class BtcConfirmTxHandler implements Runnable, BeanInitial {
             for (int i = 0; i < size; i++) {
                 po = htgContext.UNCONFIRMED_TX_QUEUE().poll();
                 if (po == null) {
-                    logger().info("Remove null valuesPO");
+                    logger().info("Remove null values PO");
                     continue;
                 }
                 // When the recharge confirmation task is abnormal and exceeds the number of retries, discard the task
@@ -273,7 +273,7 @@ public class BtcConfirmTxHandler implements Runnable, BeanInitial {
                 byte[] feeAddress = AddressTool.getAddressByPubKeyStr(converterConfig.getFeePubkey(), converterConfig.getChainId());
                 // RechargeablenerveThe receiving address cannot be a black hole or a fee subsidy address
                 if (Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole) || Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), feeAddress)) {
-                    logger().error("[{}][Abnormal recharge address][Black hole or subsidy address for handling fees]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+                    logger().error("[{}] [Abnormal recharge address] [Black hole or subsidy address for handling fees] Deposit Nerve address error: {}, heterogeneousHash: {}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
                     // Verification failed, fromDBRemove transactions from the queue
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
@@ -305,7 +305,7 @@ public class BtcConfirmTxHandler implements Runnable, BeanInitial {
             if (e instanceof NulsException &&
                     (TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
-                logger().info("NerveTransaction already exists, remove pending confirmation from queue{}transaction[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
+                logger().info("Nerve Transaction already exists, remove pending confirmation from queue {} transaction [{}]", htgContext.getConfig().getSymbol(), htgTxHash);
                 this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             }
@@ -359,6 +359,7 @@ public class BtcConfirmTxHandler implements Runnable, BeanInitial {
         }
         if (txPo == null) {
             logger().warn("[{}] [{} Task exception] DB Not obtained in PO In the queue PO: {}", symbol, po.getTxType(), po.toString());
+            this.clearDB(htgTxHash);
             return !isReOfferQueue;
         }
         String nerveTxHash = po.getNerveTxHash();

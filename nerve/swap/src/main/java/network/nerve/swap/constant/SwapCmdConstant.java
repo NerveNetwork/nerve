@@ -68,6 +68,13 @@ public interface SwapCmdConstant {
     String STABLE_SWAP_PAIR_BY_LP = "sw_stable_swap_pair_by_lp";
     String STABLE_SWAP_PAIRS_ALL = "sw_get_all_stable_swap_pairs";
     String IS_LEGAL_BTC_ADDR = "sw_is_legal_btc_addr";
+    String STABLE_SWAP_MIN_AMOUNT_ADD_LIQUIDITY = "sw_stable_swap_min_amount_add_liquidity";
+    String STABLE_SWAP_MIN_AMOUNT_REMOVE_LIQUIDITY = "sw_stable_swap_min_amount_remove_liquidity";
+    String STABLE_SWAP_MIN_AMOUNT_TOKEN_TRADE = "sw_stable_swap_min_amount_token_trade";
+    String SIGN_FCH_WITHDRAW = "sw_signFchWithdraw";
+    String VERIFY_FCH_WITHDRAW = "sw_verifyFchWithdraw";
+    String VERIFY_FCH_WITHDRAW_COUNT = "sw_verifyFchWithdrawCount";
+    String CREATE_FCH_MULTISIGN_WITHDRAW_TX = "sw_createFchMultiSignWithdrawTx";
 
     String CREATE_FARM = "sw_createFarm";
     String FARM_STAKE = "sw_farmstake";

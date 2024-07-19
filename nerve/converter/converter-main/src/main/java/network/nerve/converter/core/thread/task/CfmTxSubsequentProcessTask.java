@@ -104,12 +104,14 @@ public class CfmTxSubsequentProcessTask implements Runnable {
 
     private String p35ChangeHash = "6ef994439924c868bfd98f15f154c8280e7b25905510d80ae763c562d615e991";
     private boolean checkedFillInP35ChangeTxOnStartup = false;
+    private boolean checkedFillInP35v1ChangeTxOnStartup = false;
 
     @Override
     public void run() {
 
         try {
             fillInP35ChangeTx();
+            fillInP35v1ChangeTx();
             LinkedBlockingDeque<TxSubsequentProcessPO> pendingTxQueue = chain.getPendingTxQueue();
             out:
             while (!pendingTxQueue.isEmpty()) {
@@ -1700,5 +1702,41 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         }
 
     }
-    
+
+    void fillInP35v1ChangeTx() {
+        try {
+            if (chain.getChainId() != 9) {
+                return;
+            }
+            if (!converterCoreApi.isProtocol35()) {
+                return;
+            }
+            if (checkedFillInP35v1ChangeTxOnStartup) {
+                return;
+            }
+            List<String> addrList = new ArrayList<>();
+            addrList.add("NERVEepb66oGcmJnrjX5AGzFjXJrLiErHMo1cn");
+            addrList.add("NERVEepb69pdDv3gZEZtJEmahzsHiQE6CK4xRi");
+            addrList.add("NERVEepb66GmaKLaqiFyRqsEuLNM1i1qRwTQ64");
+            addrList.add("NERVEepb6B3jKbVM8SKHsb92j22yEKwxa19akB");
+
+            for (String addr : addrList) {
+                VirtualBankDirector director = virtualBankAllHistoryStorageService.findBySignAddress(chain, addr);
+                if (director != null && director.getHeterogeneousAddrMap() != null) {
+                    Map<Integer, HeterogeneousAddress> map = director.getHeterogeneousAddrMap();
+                    HeterogeneousAddress heterogeneousAddress = map.get(101);
+                    String address = heterogeneousAddress.getAddress();
+                    map.put(134, new HeterogeneousAddress(134, address));
+                    map.put(138, new HeterogeneousAddress(138, address));
+                    map.put(139, new HeterogeneousAddress(139, address));
+                    map.put(140, new HeterogeneousAddress(140, address));
+                    map.put(141, new HeterogeneousAddress(141, address));
+                    virtualBankAllHistoryStorageService.save(chain, director);
+                }
+            }
+            checkedFillInP35v1ChangeTxOnStartup = true;
+        } catch (Exception e) {
+            chain.getLogger().warn("fillInP35v1ChangeTx error", e);
+        }
+    }
 }

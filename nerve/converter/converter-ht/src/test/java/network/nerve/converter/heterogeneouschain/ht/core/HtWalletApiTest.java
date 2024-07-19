@@ -941,7 +941,7 @@ public class HtWalletApiTest extends Base {
     @Test
     public void getTestNetTxReceipt() throws Exception {
         // Directly callingerc20contract
-        String directTxHash = "0x466dd4be78d49664d24dce9564a0ff58758e31280d0ff897d8a65bd2cc7f80e2";
+        String directTxHash = "0xf26c22c86abbc823c9874b746c6dfec9a337e781bb31f66ebf76176f25661316";
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
     }
@@ -1007,11 +1007,11 @@ public class HtWalletApiTest extends Base {
 
     @Test
     public void covertNerveAddressByEthTxTest() throws Exception {
-        //setMain();
-        String txHash = "0x0cbb212442d0884b1b5f664bc005073b3b2c7a5e42cf0a7f7e211ecb20ee996d";
+        setMain();
+        String txHash = "0xf26c22c86abbc823c9874b746c6dfec9a337e781bb31f66ebf76176f25661316";
         Transaction tx = htgWalletApi.getTransactionByHash(txHash);
         System.out.println();
-        System.out.println(HtgUtil.covertNerveAddressByEthTx(tx, 5));
+        //System.out.println(HtgUtil.covertNerveAddressByEthTx(tx, 5));
     }
 
     @Test
@@ -1030,6 +1030,46 @@ public class HtWalletApiTest extends Base {
         List<Type> valueTypes = htgWalletApi.callViewFunction(multy, isMinterERC20Function, true);
         boolean isMinterERC20 = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
         System.out.println(isMinterERC20);
+    }
+
+    @Test
+    public void testGetTx() throws Exception {
+        setMain();
+        String txHash = "0xbc7067e3a0fd1f18643d8371cbe7e64aa1f3418aba6dd1379bc80e30c5a33bad";
+        Transaction tx = htgWalletApi.getTransactionByHash(txHash);
+        System.out.println();
+    }
+
+    @Test
+    public void tt() {
+        // 0x95c318a011e381095dac7224599d128167a7841c
+        System.out.println(new BigInteger("8670e9ec6598c0000", 16).toString());
+    }
+
+    @Test
+    public void txEstimateGasTest() throws Exception {
+        setMain();
+        String sender = "0x95c318a011e381095dac7224599d128167a7841c";
+        String contractAddress = "0x80d1769ac6fee59be5aac1952a90270bbd2ceb2f";
+        BigInteger value = BigInteger.ZERO;
+
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                sender,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                //"0xedf949e80000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000008670e9ec6598c0000" // revokeVote
+                //"0x2e1a7d4d0000000000000000000000000000000000000000000000000000000000000000" // withdraw
+                "0x2e1a7d4d000000000000000000000000000000000000000000000008670e9ec6598c0000" // withdraw
+        );
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
     }
 
     private List<Token20TransferDTO> parseToken20Transfer(Transaction ethTx, HtgWalletApi htgWalletApi) throws Exception {

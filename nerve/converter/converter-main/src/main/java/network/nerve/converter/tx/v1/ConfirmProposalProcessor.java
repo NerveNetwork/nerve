@@ -162,7 +162,9 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
 
     @Override
     public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
-        if (converterCoreApi.isProtocol35()) {
+        if (converterCoreApi.isProtocol36()) {
+            return commitProtocol36(chainId, txs, blockHeader, syncStatus, true);
+        } else if (converterCoreApi.isProtocol35()) {
             return commitProtocol35(chainId, txs, blockHeader, syncStatus, true);
         } else if (converterCoreApi.isProtocol27()) {
             return commitProtocol27(chainId, txs, blockHeader, syncStatus, true);
@@ -525,6 +527,136 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
             chain.getLogger().error(e);
             if (failRollback) {
                 rollbackProtocol16(chainId, txs, blockHeader, false);
+            }
+            return false;
+        }
+    }
+
+    private boolean commitProtocol36(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus, boolean failRollback) {
+        if (txs.isEmpty()) {
+            return true;
+        }
+        Chain chain = chainManager.getChain(chainId);
+        try {
+            boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
+            for (Transaction tx : txs) {
+                ConfirmProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ConfirmProposalTxData.class);
+                int heterogeneousChainId;
+                String heterogeneousTxHash;
+                IHeterogeneousChainDocking docking = null;
+                NulsHash proposalHash;
+                if (txData.getType() == ProposalTypeEnum.UPGRADE.value()) {
+                    ConfirmUpgradeTxData upgradeTxData = ConverterUtil.getInstance(txData.getBusinessData(), ConfirmUpgradeTxData.class);
+                    heterogeneousChainId = upgradeTxData.getHeterogeneousChainId();
+                    heterogeneousTxHash = upgradeTxData.getHeterogeneousTxHash();
+                    proposalHash = upgradeTxData.getNerveTxHash();
+                    // Update contract version number
+                    ProposalPO po = this.proposalStorageService.find(chain, proposalHash);
+                    String[] split = po.getContent().split("-");
+                    byte newVersion = Integer.valueOf(split[1].trim()).byteValue();
+                    docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+                    // Compatible with non Ethernet addresses update by pierre at 2021/11/16
+                    String newMultySignAddress = docking.getAddressString(upgradeTxData.getAddress());
+                    // Notify heterogeneous chains to update multiple signed contracts
+                    docking.updateMultySignAddressProtocol16(newMultySignAddress, newVersion);
+                    // Persistent updates with multiple signed contracts
+                    heterogeneousChainManager.updateMultySignAddress(heterogeneousChainId, newMultySignAddress);
+                }else{
+                    ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
+                    heterogeneousChainId = businessData.getHeterogeneousChainId();
+                    heterogeneousTxHash = businessData.getHeterogeneousTxHash();
+                    proposalHash = businessData.getProposalTxHash();
+                    ProposalPO po = this.proposalStorageService.find(chain, proposalHash);
+                    if(ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED){
+                        // Reset the execution of bank withdrawal node proposal flag
+                        heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, false);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.ADDCOIN) {
+                        // Add currency to stablecoin exchange transaction pairs
+                        String[] split = po.getContent().split("-");
+                        int assetChainId = Integer.parseInt(split[0].trim());
+                        int assetId = Integer.parseInt(split[1].trim());
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.addCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
+                    }  else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.REMOVECOIN) {
+                        // Execute currency removal for stablecoin exchange transactions
+                        String[] split = po.getContent().split("-");
+                        int assetChainId = Integer.parseInt(split[0].trim());
+                        int assetId = Integer.parseInt(split[1].trim());
+                        String status = "REMOVE";
+                        if (split.length > 2 && "recovery".equalsIgnoreCase(split[2])) {
+                            status = "RECOVERY";
+                        }
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.removeCoinForStable(chainId, stablePairAddress, assetChainId, assetId, status);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.MANAGE_STABLE_PAIR_FOR_SWAP_TRADE) {
+                        // Execution and management of stablecoin transactions-Used forSwaptransaction
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        if ("REMOVE".equals(po.getContent())) {
+                            SwapCall.removeStablePairForSwapTrade(chainId, stablePairAddress);
+                        } else {
+                            SwapCall.addStablePairForSwapTrade(chainId, stablePairAddress);
+                        }
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE) {
+                        // SWAPCustomized transaction fees
+                        Integer feeRate = Integer.parseInt(po.getContent());
+                        String swapPairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.updateSwapPairFeeRate(chainId, swapPairAddress, feeRate);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.TRANSACTION_WHITELIST) {
+                        String dataStr = po.getContent();
+                        AccountCall.saveWhitelist(chainId, dataStr);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.CLOSE_HTG_CHAIN) {
+                        int htgChainId = po.getHeterogeneousChainId();
+                        converterCoreApi.closeHtgChain(htgChainId);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.SPLIT_GRANULARITY) {
+                        int htgChainId = po.getHeterogeneousChainId();
+                        long splitGranularity = Long.parseLong(po.getContent());
+                        converterCoreApi.updateSplitGranularity(htgChainId, splitGranularity);
+                    }
+                }
+
+                if (null == docking) {
+                    docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
+                }
+                if (docking != null) {
+                    docking.txConfirmedCheck(heterogeneousTxHash, blockHeader.getHeight(), proposalHash.toHex(), tx.getRemark());
+                }
+
+                if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
+                    if (txData.getType() == ProposalTypeEnum.UPGRADE.value() ||
+                            txData.getType() == ProposalTypeEnum.EXPELLED.value() ||
+                            txData.getType() == ProposalTypeEnum.REFUND.value() ||
+                            txData.getType() == ProposalTypeEnum.WITHDRAW.value()) {
+                        if (null == docking) {
+                            docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+                        }
+                        docking.txConfirmedCompleted(heterogeneousTxHash, blockHeader.getHeight(), proposalHash.toHex(), tx.getRemark());
+
+                        // Subsidy handling fee
+                        if (txData.getType() == ProposalTypeEnum.UPGRADE.value() ||
+                                txData.getType() == ProposalTypeEnum.REFUND.value() ) {
+                            //Put into the subsequent processing queue, Possible initiation of handling fee subsidy transactions
+                            TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
+                            pendingPO.setTx(tx);
+                            pendingPO.setBlockHeader(blockHeader);
+                            pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
+                            txSubsequentProcessStorageService.save(chain, pendingPO);
+                            chain.getPendingTxQueue().offer(pendingPO);
+                        }
+                    }
+                }
+                boolean rs = proposalExeStorageService.save(chain, proposalHash.toHex(), tx.getHash().toHex());
+                if (!rs) {
+                    chain.getLogger().error("[commit] Confirm proposal execution transaction Save failed hash:{}, proposalType:{}", tx.getHash().toHex(), txData.getType());
+                    throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
+                }
+                chain.getLogger().info("[commit] Confirm proposal execution transaction hash:{} proposalType:{}",
+                        tx.getHash().toHex(), ProposalTypeEnum.getEnum(txData.getType()));
+            }
+            return true;
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            if (failRollback) {
+                rollbackProtocol35(chainId, txs, blockHeader, false);
             }
             return false;
         }

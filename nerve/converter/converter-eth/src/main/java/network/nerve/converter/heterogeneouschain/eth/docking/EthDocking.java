@@ -757,7 +757,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     @Override
     public void setRegister(IHeterogeneousChainRegister register) {
-        throw new RuntimeException("Unsupport Function");
+//        throw new RuntimeException("Unsupport Function");
     }
 
     @Override

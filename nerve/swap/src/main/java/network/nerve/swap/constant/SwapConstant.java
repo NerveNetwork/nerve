@@ -57,5 +57,7 @@ public interface SwapConstant {
     String BEST_PRICE = "bestPrice";
     String IMPACT_PRICE = "impactPrice";
     String UNAVAILABLE_STABLE_PAIR = "NERVEepb7SSeFvC7wpx3k6HuGQPJzYFqbP62am";
+    int PUB_LENGTH = 33;
+    long MIN_SPLIT_GRANULARITY = 100000;
 
 }

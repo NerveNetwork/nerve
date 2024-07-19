@@ -197,6 +197,20 @@ public class SwapBootstrap extends RpcModule {
             Log.error("Failed to get height_1_35_0", e);
             throw new RuntimeException(e);
         }
+        try {
+            long heightVersion1_36_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_36_0"));
+            SwapContext.PROTOCOL_1_36_0 = heightVersion1_36_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_36_0", e);
+            throw new RuntimeException(e);
+        }
+        try {
+            String password = configurationLoader.getValue(ModuleE.Constant.CONSENSUS, "password");
+            SwapContext.PASSWORD = password;
+        } catch (Exception e) {
+            Log.error("Failed to get password", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

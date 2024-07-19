@@ -1,0 +1,321 @@
+[
+  {
+    "version": "1",
+    "extend": "",
+    "validTxs": [
+      {
+        "type": "27",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "AssetRegTransferProcessorV5"
+      },
+      {
+        "type": "10",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": true,
+        "handler": "CrossChainProcessorV1"
+      },
+      {
+        "type": "24",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": true,
+        "handler": "VerifierChangeProcessorV1"
+      },
+      {
+        "type": "25",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": true,
+        "handler": "VerifierInitProcessorV1"
+      },
+      {
+        "type": "26",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": true,
+        "handler": "ContractCrossChainProcessorV1"
+      },
+      {
+        "type": "60",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": true,
+        "handler": "RegisteredChainChangeProcessorV1"
+      },
+      {
+        "type": "76",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "ResetChainInfoTxProcessor"
+      },
+      {
+        "type": "1",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "CoinBaseProcessorV1",
+        "packGenerate": true
+      },
+      {
+        "type": "4",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "CreateAgentProcessorV1"
+      },
+      {
+        "type": "5",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "DepositProcessorV1"
+      },
+      {
+        "type": "6",
+        "systemTx": false,
+        "unlockTx": true,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "WithdrawProcessorV1"
+      },
+      {
+        "type": "7",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "YellowPunishProcessorV1",
+        "packGenerate": true
+      },
+      {
+        "type": "8",
+        "systemTx": true,
+        "unlockTx": true,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "RedPunishProcessorV1",
+        "packGenerate": true
+      },
+      {
+        "type": "9",
+        "systemTx": false,
+        "unlockTx": true,
+        "verifySignature": true,
+        "verifyFee": false,
+        "handler": "StopAgentProcessorV1"
+      },
+      {
+        "type": "28",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "AppendAgentDepositProcessorV1"
+      },
+      {
+        "type": "29",
+        "systemTx": false,
+        "unlockTx": true,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "ReduceAgentDepositProcessorV1"
+      },
+      {
+        "type": "32",
+        "systemTx": false,
+        "unlockTx": true,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "BatchWithdrawProcessorV1"
+      },
+      {
+        "type": "33",
+        "systemTx": false,
+        "unlockTx": true,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "BatchStakingMergeProcessorV1"
+      },
+      {
+        "type": "2",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "TransferProcessorV1"
+      },
+      {
+        "type": "3",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "AliasProcessorV1"
+      },
+      {
+        "type": "78",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "AccountLockProcessorV1"
+      },
+      {
+        "type": "79",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "AccountUnlockProcessorV1"
+      }
+    ],
+    "validMsgs": [
+      {
+        "name": "io.nuls.transaction.message.ForwardTxMessage",
+        "protocolCmd": "newHash",
+        "handlers": "ForwardTxMessageHandlerV1"
+      },
+      {
+        "name": "io.nuls.transaction.message.GetTxMessage",
+        "protocolCmd": "askTx",
+        "handlers": "GetTxMessageHandlerV1"
+      },
+      {
+        "name": "io.nuls.transaction.message.BroadcastTxMessage",
+        "protocolCmd": "receiveTx",
+        "handlers": "BroadcastTxMessageHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.BroadCtxHashMessage",
+        "protocolCmd": "recvCtxHash",
+        "handlers": "BroadCtxHashHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.BroadCtxSignMessage",
+        "protocolCmd": "recvCtxSign",
+        "handlers": "BroadCtxSignHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.CtxStateMessage",
+        "protocolCmd": "recvCtxState",
+        "handlers": "CtxStateHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.GetCirculationMessage",
+        "protocolCmd": "getCirculat",
+        "handlers": "GetCirculationHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.GetCtxStateMessage",
+        "protocolCmd": "getCtxState",
+        "handlers": "GetCtxStateHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.GetOtherCtxMessage",
+        "protocolCmd": "getOtherCtx",
+        "handlers": "GetOtherCtxHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.NewOtherCtxMessage",
+        "protocolCmd": "recvOtherCtx",
+        "handlers": "NewOtherCtxHandlerV1"
+      },
+      {
+        "name": "network.nerve.pocbft.v1.message.VoteMessage",
+        "protocolCmd": "vote",
+        "handlers": "VoteHandlerV1"
+      },
+      {
+        "name": "network.nerve.pocbft.v1.message.GetVoteResultMessage",
+        "protocolCmd": "getResult",
+        "handlers": "GetVoteResultDataHandlerV1"
+      },
+      {
+        "name": "network.nerve.pocbft.v1.message.VoteResultMessage",
+        "protocolCmd": "voteResult",
+        "handlers": "VoteResultDataHandlerV1"
+      },
+      {
+        "name": "network.nerve.pocbft.network.model.message.ConsensusIdentitiesMsg",
+        "protocolCmd": "pocIdentity",
+        "handlers": "ConsensusIdentityProcessorV1"
+      },
+      {
+        "name": "network.nerve.pocbft.network.model.message.ConsensusShareMsg",
+        "protocolCmd": "pocShare",
+        "handlers": "ConsensusShareProcessorV1"
+      },
+      {
+        "name": "network.nerve.pocbft.network.model.message.ConsensusIdentitiesMsg",
+        "protocolCmd": "pocDisConn",
+        "handlers": "ConsensusDisConnectProcessorV1"
+      },
+      {
+        "name": "io.nuls.block.message.BlockMessage",
+        "protocolCmd": "block",
+        "handlers": "BlockHandlerV1"
+      },
+      {
+        "name": "io.nuls.block.message.CompleteMessage",
+        "protocolCmd": "complete",
+        "handlers": "CompleteHandlerV1"
+      },
+      {
+        "name": "io.nuls.block.message.HashListMessage",
+        "protocolCmd": "getTxs",
+        "handlers": "GetTxGroupHandlerV1"
+      },
+      {
+        "name": "io.nuls.block.message.HashMessage",
+        "protocolCmd": "getBlock,forward,getsBlock",
+        "handlers": "ForwardSmallBlockHandlerV1,GetBlockHandlerV1,GetSmallBlockHandlerV1"
+      },
+      {
+        "name": "io.nuls.block.message.HeightRangeMessage",
+        "protocolCmd": "getBlocks",
+        "handlers": "GetBlocksHandlerV1"
+      },
+      {
+        "name": "io.nuls.block.message.HeightMessage",
+        "protocolCmd": "getBlockH",
+        "handlers": "GetBlockByHeightHandlerV1"
+      },
+      {
+        "name": "io.nuls.block.message.SmallBlockMessage",
+        "protocolCmd": "sBlock",
+        "handlers": "SmallBlockHandlerV1"
+      },
+      {
+        "name": "io.nuls.block.message.SmallBlockMessage",
+        "protocolCmd": "sBlockBZT",
+        "handlers": "SmallBlockBZTHandlerV1"
+      },
+      {
+        "name": "io.nuls.block.message.TxGroupMessage",
+        "protocolCmd": "txs",
+        "handlers": "TxGroupHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.CrossTxRehandleMessage",
+        "protocolCmd": "ctxRehandle",
+        "handlers": "CrossTxRehandleMsgHandlerV1"
+      }
+    ],
+    "invalidTxs": "",
+    "invalidMsgs": ""
+  }
+]

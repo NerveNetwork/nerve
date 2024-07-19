@@ -64,6 +64,16 @@ public class WithdrawalUTXOTxData extends BaseNulsData {
         this.utxoDataList = utxoDataList;
     }
 
+    public WithdrawalUTXOTxData(WithdrawalUTXO utxo) {
+        this.nerveTxHash = utxo.getNerveTxHash();
+        this.htgChainId = utxo.getHtgChainId();
+        this.currentMultiSignAddress = utxo.getCurrentMultiSignAddress();
+        this.currentVirtualBankTotal = utxo.getCurrenVirtualBankTotal();
+        this.feeRate = utxo.getFeeRate();
+        this.pubs = utxo.getPubs();
+        this.utxoDataList = utxo.getUtxoDataList();
+    }
+
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
         stream.write(HexUtil.decode(nerveTxHash));

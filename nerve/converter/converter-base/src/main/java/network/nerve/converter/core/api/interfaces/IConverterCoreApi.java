@@ -28,10 +28,7 @@ import io.nuls.core.exception.NulsException;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.HeterogeneousSign;
-import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
-import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
-import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
-import network.nerve.converter.model.bo.WithdrawalUTXO;
+import network.nerve.converter.model.bo.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -185,7 +182,7 @@ public interface IConverterCoreApi {
     boolean isProtocol33();
     boolean isProtocol34();
     boolean isProtocol35();
-
+    boolean isProtocol36();
 
     /**
      * Add task
@@ -252,7 +249,7 @@ public interface IConverterCoreApi {
 
     HeterogeneousAssetInfo getHeterogeneousAssetByNerveAsset(int htgChainId, int nerveAssetChainId, int nerveAssetId);
 
-    String signBtcWithdrawByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData) throws NulsException;
+    String signBtcWithdrawByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData, Long splitGranularity) throws NulsException;
     String signBtcChangeByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData) throws NulsException;
 
     void updateMultySignAddress(int heterogeneousChainId, String multySignAddress) throws NulsException;
@@ -264,4 +261,12 @@ public interface IConverterCoreApi {
 
     void closeHtgChain(int htgChainId) throws Exception;
 
+    String signFchWithdrawByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData, Long splitGranularity) throws NulsException;
+    String signFchChangeByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData) throws NulsException;
+
+    NerveAssetInfo getHtgMainAsset(int htgChainId);
+
+    String getBlockHashByHeight(long height);
+
+    void updateSplitGranularity(int htgChainId, long splitGranularity) throws Exception;
 }

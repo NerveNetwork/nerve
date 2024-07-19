@@ -15,6 +15,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.io.IoUtils;
 import io.nuls.crosschain.base.constant.CommandConstant;
 import io.nuls.crosschain.base.constant.CrossChainConstant;
 import io.nuls.crosschain.base.message.BroadCtxSignMessage;
@@ -38,6 +39,8 @@ import io.nuls.crosschain.srorage.CtxStatusService;
 import io.nuls.crosschain.srorage.SendHeightService;
 import io.nuls.crosschain.utils.manager.ChainManager;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -130,9 +133,9 @@ public class MessageUtil {
             GetOtherCtxMessage responseMessage = new GetOtherCtxMessage();
             responseMessage.setRequestHash(cacheHash);
             NetWorkCall.sendToNode(chainId, responseMessage, nodeId, CommandConstant.GET_OTHER_CTX_MESSAGE);
-            chain.getLogger().info("Get transaction timeout, send to cross chain nodes{}Retrieve complete cross chain transactions again,Hash:{}", nodeId, hashHex);
+             chain.getLogger().info("Get transaction timeout, send to cross chain nodes {} Retrieve complete cross chain transactions again,Hash:{}", nodeId, hashHex);
         } else {
-            chain.getOtherHashNodeIdMap().putIfAbsent(cacheHash, new ArrayList<>());
+            chain.getOtherHashNodeIdMap().putIfAbsent(cacheHash, new LinkedHashSet<>());
             chain.getOtherHashNodeIdMap().get(cacheHash).add(new NodeType(nodeId, 1));
         }
         chain.getLogger().debug("Cross chain nodes{}Cross chain transactions broadcasted overHashOr signature message processing completed,Hash：{}\n\n", nodeId, hashHex);
@@ -199,7 +202,7 @@ public class MessageUtil {
         }
     }
 
-    private static boolean verifierInitLocalByzantine(Chain chain, Transaction ctx, TransactionSignature signature, List<String> packAddressList, NulsHash realHash) throws  IOException {
+    private static boolean verifierInitLocalByzantine(Chain chain, Transaction ctx, TransactionSignature signature, List<String> packAddressList, NulsHash realHash) throws IOException {
         List<String> handleAddressList = new ArrayList<>(packAddressList);
         int agentCount = handleAddressList.size();
         //Transaction Signature Byzantine
@@ -298,7 +301,7 @@ public class MessageUtil {
                 ctxStatusPO.setStatus(TxStatusEnum.CONFIRMED.getStatus());
                 ctxStatusService.save(realHash, ctxStatusPO, chain.getChainId());
                 saveCtxSendHeight(chain, broadHeight, ctx);
-                chain.getLogger().info("Cross chain transaction completed by Byzantium, placed in the waiting queue for packaging, waiting for broadcast,Hash:{},sendHeight:{},txType:{}",ctx.getHash().toHex(), broadHeight, ctx.getType());
+                chain.getLogger().info("Cross chain transaction completed by Byzantium, placed in the waiting queue for packaging, waiting for broadcast,Hash:{},sendHeight:{},txType:{}", ctx.getHash().toHex(), broadHeight, ctx.getType());
                 return true;
             } else {
                 signature.getP2PHKSignatures().addAll(misMatchSignList);
@@ -321,7 +324,7 @@ public class MessageUtil {
     public static boolean handleOtherChainCtx(Transaction ctx, Chain chain, int fromChainId) {
         NulsHash ctxHash = ctx.getHash();
         try {
-            if(ctx.getType() == TxType.REGISTERED_CHAIN_CHANGE && config.isMainNet()){
+            if (ctx.getType() == TxType.REGISTERED_CHAIN_CHANGE && config.isMainNet()) {
                 return false;
             }
             TransactionSignature signature = new TransactionSignature();
@@ -339,12 +342,12 @@ public class MessageUtil {
                 if (!handleOtherChainVerifierChangeTx(chain, ctx, signature, verifierChainId)) {
                     return false;
                 }
-            } else if(ctx.getType() == TxType.VERIFIER_INIT){
+            } else if (ctx.getType() == TxType.VERIFIER_INIT) {
                 if (!handleOtherChainVerifierInitTx(chain, ctx, signature, verifierChainId)) {
                     return false;
                 }
-            }else{
-                if(!handleOtherChainCrossTx(chain, ctx, signature, verifierChainId)){
+            } else {
+                if (!handleOtherChainCrossTx(chain, ctx, signature, verifierChainId)) {
                     return false;
                 }
             }
@@ -432,7 +435,36 @@ public class MessageUtil {
         return true;
     }
 
+    public static final Set<String> fileterSet = new HashSet<>();
+
+    static {
+        fileterSet.add("f4038ab51106ece367dc8b9281948e5ff3bddf1bd85c80ce8d252488cd88ff25");
+        fileterSet.add("93c7060d60a6f214f4e4a8600a61ccd297b78023537254df5e0acafb5f8d4a75");
+        fileterSet.add("763b3a133b7d9caa5401a4ed15fdf174c5c0ba0953b9649180f251dc7fe3fdf9");
+        fileterSet.add("15af0232e383436246c976b52d3ccbf84c9b2324f74923e85f4b71bfcb5ba1ad");
+        fileterSet.add("a334891d6d71a72ea96a65575357cf9483ed84f8396193a1121c467f2ada69bd");
+        fileterSet.add("28074835b3209ea59011596d9bda60bd2b9e54419f0ae3d55fe171ffdd84db83");
+        fileterSet.add("721916dcac55c8068596b437bfced0235e4de222cc763e966c160a7355f56879");
+        fileterSet.add("d8ae0309ad61314f9d78233e818e949c5c16e815e78043fcf897509611d4ea95");
+        fileterSet.add("e49683424705bd676e4c772036648114c0b75430606d9e92310c2ff0dfb9fe6d");
+        fileterSet.add("23ad588b403fd75bf2b20b3a757f40f7ecdf5bde08bb60305219233a0776bef4");
+        fileterSet.add("aeb092e7e02ab312bc08403f8e8eb721a7c104c0f7a5fce5133340a29cf6a8ad");
+        fileterSet.add("f8f9d01ed3b144022dab22ebaae7dc5851a227cafb102963046776df39717e51");
+        fileterSet.add("92bf7dfafac3521ee1040c808f3aa6cb5c0d81246b4e5b928bcf04a6609d8cdb");
+        fileterSet.add("fd2a70173fb04b4805ac6c96c3d8195670a50988542ecdca0159a1e3ed956a30");
+        fileterSet.add("8f1047e32d150f619b3aecd172f4620171e92b459067830869170b3e37bf0deb");
+        fileterSet.add("92ff4257fbecb510e62243d56643840e3bf7f44cce17a875efe5aec3a00ee2b1");
+        fileterSet.add("4747fa1710e01ae4c38c84611ba8e0ebf0b0a44b69c4fe9fa9e39d972be00692");
+        fileterSet.add("fb7923c326f9140105758627b33b515bb68248b4fe7556c675802c86363c82e0");
+        fileterSet.add("3e1ff5ffb6054a26f6338fef1bda7d09a2138e5c367a2f255f55c53e83f4e578");
+        fileterSet.add("1f0054781c25d0ab87ad6353283c5d829d967bad0a310f7fc2ae59fe74e54f9b");
+        fileterSet.add("c65a1931ca3dfab925aa3c5be6f5b45351fadc5efe6bace9c076fb04570a764d");
+    }
+
     private static boolean handleOtherChainCrossTransferTx(Chain chain, Transaction ctx, TransactionSignature signature, int verifierChainId) {
+        if (fileterSet.contains(ctx.getHash().toHex())) {
+            return true;
+        }
         ChainInfo chainInfo = chainManager.getChainInfo(verifierChainId);
         if (chainInfo == null) {
             chain.getLogger().error("Chain not registered,chainId:{}", verifierChainId);
@@ -463,7 +495,11 @@ public class MessageUtil {
                     return false;
                 }
             }
-            TransactionCall.sendTx(chain, RPCUtil.encode(packCtx.serialize()));
+            if (!TransactionCall.isConfirmed(chain, packCtx.getHash().toHex())) {
+                TransactionCall.sendTx(chain, RPCUtil.encode(packCtx.serialize()));
+            } else {
+                fileterSet.add(ctx.getHash().toHex());
+            }
             chain.getLogger().debug("The cross chain transfer transaction verification is completed and sent to the transaction module for processing,hash:{}", crossTxHashHex);
         } catch (NulsException | IOException e) {
             chain.getLogger().error(e);

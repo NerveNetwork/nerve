@@ -75,7 +75,7 @@ public class HeterogeneousDockingManager {
         return docking;
     }
 
-    public IHeterogeneousChainDocking getHeterogeneousDockingSmoothly(int heterogeneousChainId) throws NulsException {
+    public IHeterogeneousChainDocking getHeterogeneousDockingSmoothly(int heterogeneousChainId) {
         IHeterogeneousChainDocking docking = heterogeneousDockingMap.get(heterogeneousChainId);
         return docking;
     }

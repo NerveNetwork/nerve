@@ -50,6 +50,9 @@ public interface ITxConfirmedProcessor {
     void txRecordWithdrawFee(HeterogeneousChainTxType txType, String txHash,
                      String blockHash, Long blockHeight, Long txTime, long fee, byte[] remark) throws Exception;
 
+    void txRecordWithdrawFee(HeterogeneousChainTxType txType, String txHash,
+                     String blockHash, Long blockHeight, Long txTime, long fee, boolean nerveInner, byte[] remark) throws Exception;
+
     /**
      * @param nerveTxHash         This chain transactionhash
      * @param heterogeneousTxHash Heterogeneous Chain Tradinghash

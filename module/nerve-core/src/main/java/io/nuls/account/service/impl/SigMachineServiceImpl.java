@@ -20,13 +20,18 @@ public class SigMachineServiceImpl implements SigMachineService {
 
     @Override
     public String request(Map<String, Object> params) throws Exception {
+        String sigMacUrl = config.getSigMacUrl();
         JsonrpcParam param = new JsonrpcParam();
+        Boolean otherSigMacUrl = (Boolean) params.remove("otherSigMacUrl");
+        if (otherSigMacUrl != null && otherSigMacUrl) {
+            sigMacUrl = config.getOtherSigMacUrl();
+        }
         String method = (String) params.remove("method");
         param.setMethod(method);
         param.setId(StringUtils.newJsonrpcId());
         param.setParams(params);
 
-        String response = HttpClientUtil.postJsonrpc(config.getSigMacUrl(), config.getSigMacApiKey(), param);
+        String response = HttpClientUtil.postJsonrpc(sigMacUrl, config.getSigMacApiKey(), param);
         JsonrpcResult<String> result = JSONUtils.json2pojo(response, JsonrpcResult.class);
         return result.getResult();
     }

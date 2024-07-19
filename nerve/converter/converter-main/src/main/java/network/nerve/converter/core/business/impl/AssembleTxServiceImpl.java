@@ -2277,6 +2277,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
         heterogeneousHashList.add(new HeterogeneousHash(txData.getHtgChainId(), txData.getHtgTxHash()));
         BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
+        if (txData.isNerveInner()) {
+            message.setOriginalHash(txData.getHtgTxHash());
+        }
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
         // complete
         chain.getLogger().debug(tx.format(WithdrawalFeeLog.class));
@@ -2297,6 +2300,33 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_UTXO_FEE_PAYMENT, txDataBytes, txTime);
         tx.setCoinData(coinDataBytes);
         tx.setRemark(remark);
+        return tx;
+    }
+
+    @Override
+    public Transaction createUnlockUTXOTx(Chain chain, String from, String password, String nerveTxHash, int forceUnlock, Integer htgChainId) throws NulsException {
+        GeneralBusTxData txData = new GeneralBusTxData();
+        txData.setType(1);
+        txData.setData(HexUtil.decode(nerveTxHash + (forceUnlock == 0 ? "00" : "01") + (htgChainId == null ? "" : Integer.toHexString(htgChainId))));
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = new Transaction(TxType.GENERAL_BUS);
+        tx.setTxData(txDataBytes);
+        tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
+
+        SignAccountDTO signAccountDTO = new SignAccountDTO(from, password);
+        byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
+        tx.setCoinData(coinData);
+        //autograph
+        ConverterSignUtil.signTx(chain.getChainId(), signAccountDTO, tx);
+        //broadcast
+        TransactionCall.newTx(chain, tx);
+
+        chain.getLogger().debug(tx.format(GeneralBusTxData.class));
         return tx;
     }
 }

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="nuls-core-rpc" />
+        <module name="converter-bch" />
+        <module name="converter-enuls" />
+        <module name="converter-base" />
+        <module name="converter-scroll" />
+        <module name="converter-zkpolygon" />
+        <module name="converter-trx" />
+        <module name="dex" />
+        <module name="converter-arbitrum" />
+        <module name="converter-main" />
+        <module name="converter-ethII" />
+        <module name="nuls-base-api-provider" />
+        <module name="converter-manta" />
+        <module name="converter-celo" />
+        <module name="swap" />
+        <module name="nuls-core" />
+        <module name="converter-one" />
+        <module name="nuls-cmd-client" />
+        <module name="converter-cro" />
+        <module name="converter-ftm" />
+        <module name="converter-klay" />
+        <module name="converter-eos" />
+        <module name="converter-janus" />
+        <module name="converter-lib" />
+        <module name="converter-ht" />
+        <module name="nuls-base-protocol-update" />
+        <module name="nuls-core-rockdb" />
+        <module name="converter-kava" />
+        <module name="converter-brise" />
+        <module name="distribute" />
+        <module name="converter-ethw" />
+        <module name="converter-metis" />
+        <module name="converter-optimism" />
+        <module name="mykernel" />
+        <module name="nuls-base" />
+        <module name="nuls-api" />
+        <module name="converter-avax" />
+        <module name="converter-goerliETH" />
+        <module name="converter-iotx" />
+        <module name="converter-linea" />
+        <module name="converter-kcs" />
+        <module name="converter-eth" />
+        <module name="converter-basechain" />
+        <module name="converter-matic" />
+        <module name="converter-okt" />
+        <module name="converter-bnb" />
+        <module name="converter-rei" />
+        <module name="nerve-core" />
+        <module name="converter-zk" />
+        <module name="converter-etc" />
+        <module name="quotation" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="common" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-arbitrum" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-avax" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-base" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-basechain" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-bch" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-bnb" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-brise" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-celo" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-cro" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-enuls" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-eos" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-etc" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-eth" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-ethII" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-ethw" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-ftm" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-goerliETH" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-ht" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-iotx" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-janus" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-kava" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-kcs" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-klay" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-lib" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-linea" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-main" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-manta" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-matic" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-metis" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-okt" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-one" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-optimism" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-rei" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-scroll" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-trx" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-zk" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="converter-zkpolygon" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="dex" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="distribute" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="module" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="mykernel" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nerve" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nerve-core" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-api" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-base" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-base-api-provider" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-base-protocol-update" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-build" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-cmd-client" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-core" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-core-rockdb" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="nuls-core-rpc" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="quotation" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="swap" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+      <module name="test" options="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" />
+    </option>
+  </component>
+</project>

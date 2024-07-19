@@ -10,6 +10,10 @@ import io.nuls.crosschain.model.bo.Chain;
 import io.nuls.crosschain.model.bo.NodeType;
 import io.nuls.crosschain.rpc.call.NetWorkCall;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 
 /**
  * Complete cross chain transaction message processing threads broadcasted by other chain nodes
@@ -33,13 +37,19 @@ public class OtherCtxMessageHandler implements Runnable {
                 NewOtherCtxMessage messageBody = (NewOtherCtxMessage) untreatedMessage.getMessage();
                 otherHash = untreatedMessage.getCacheHash();
                 String otherHex = otherHash.toHex();
+                if (MessageUtil.fileterSet.contains(otherHex)) {
+                    chain.getOtherHashNodeIdMap().remove(otherHash);
+                    continue;
+                }
                 int fromChainId = untreatedMessage.getChainId();
                 chain.getLogger().debug("Start processing other chain nodes：{}Cross chain transactions sent,Hash:{}", untreatedMessage.getNodeId(), otherHex);
                 boolean handleResult = MessageUtil.handleOtherChainCtx(messageBody.getCtx(), chain, fromChainId);
-                if (!handleResult && chain.getOtherHashNodeIdMap().get(otherHash) != null && !chain.getOtherHashNodeIdMap().get(otherHash).isEmpty()) {
+                if (handleResult) {
+                    chain.getOtherHashNodeIdMap().remove(otherHash);
+                } else if (!handleResult && chain.getOtherHashNodeIdMap().get(otherHash) != null && !chain.getOtherHashNodeIdMap().get(otherHash).isEmpty()) {
                     regainCtx(chain, fromChainId, otherHash, otherHex);
                 }
-                chain.getLogger().debug("New transaction processing completed,Hash:{}\n\n", otherHex);
+                chain.getLogger().info("New transaction processing completed,Hash:{}\n\n", otherHex);
             } catch (Exception e) {
                 chain.getLogger().error(e);
             } finally {
@@ -58,14 +68,20 @@ public class OtherCtxMessageHandler implements Runnable {
      * @param cacheHash Cached transactionsHash
      */
     private void regainCtx(Chain chain, int chainId, NulsHash cacheHash, String nativeHex) {
-        NodeType nodeType = chain.getOtherHashNodeIdMap().get(cacheHash).remove(0);
+        Set<NodeType> set = chain.getOtherHashNodeIdMap().get(cacheHash);
+        if (set.isEmpty()) {
+            return;
+        }
+        Iterator<NodeType> iterator = set.iterator();
+        NodeType nodeType = iterator.next();
+        iterator.remove();
         if (chain.getOtherHashNodeIdMap().get(cacheHash).isEmpty()) {
             chain.getOtherHashNodeIdMap().remove(cacheHash);
         }
         GetOtherCtxMessage responseMessage = new GetOtherCtxMessage();
         responseMessage.setRequestHash(cacheHash);
         NetWorkCall.sendToNode(chainId, responseMessage, nodeType.getNodeId(), CommandConstant.GET_OTHER_CTX_MESSAGE);
-        chain.getLogger().info("Cross chain transaction processing failed, sending to other chain nodes：{}Retrieve cross chain transactions again,Hash:{}", nodeType.getNodeId(), nativeHex);
+        chain.getLogger().info("Cross chain transaction processing failed, sending to other chain nodes：{} Retrieve cross chain transactions again,Hash:{}", nodeType.getNodeId(), nativeHex);
 
     }
 }

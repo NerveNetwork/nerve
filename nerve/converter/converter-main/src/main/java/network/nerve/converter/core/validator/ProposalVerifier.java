@@ -36,6 +36,7 @@ import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterContext;
+import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.context.HeterogeneousChainManager;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
@@ -167,8 +168,21 @@ public class ProposalVerifier {
                 validBankVoteRange(chain, rangeType);
                 validCloseHtgChain(chain, txData.getHeterogeneousChainId());
                 break;
+            case SPLIT_GRANULARITY:
+                validBankVoteRange(chain, rangeType);
+                validSplitGranularity(chain, txData.getHeterogeneousChainId(), txData.getContent());
+                break;
             default:
                 break;
+        }
+    }
+
+    private void validSplitGranularity(Chain chain, int heterogeneousChainId, String content) {
+        if (heterogeneousChainId < 200) {
+            throw new NulsRuntimeException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
+        }
+        if (StringUtils.isBlank(content) || Long.parseLong(content) < ConverterConstant.MIN_SPLIT_GRANULARITY) {
+            throw new NulsRuntimeException(ConverterErrorCode.DATA_ERROR);
         }
     }
 

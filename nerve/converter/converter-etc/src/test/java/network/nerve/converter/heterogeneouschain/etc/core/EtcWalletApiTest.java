@@ -468,18 +468,6 @@ public class EtcWalletApiTest extends Base {
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setMainData() {
-        setMain();
-        // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
-        // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
-        // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
-        list = new ArrayList<>();
-        list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        list.add("");// Public key: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        list.add("");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
-        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
-        init();
-    }
     /**
      * Add N Administrators
      */
@@ -654,6 +642,59 @@ public class EtcWalletApiTest extends Base {
         int signCount = 10;
         String hash = this.sendMainAssetWithdraw(txKey, toAddress, value, signCount);
         System.out.println(String.format("MainAssetWithdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
+    }
+
+    protected void setMainData() {
+        setMain();
+        list = new ArrayList<>();
+        // To have ETC Put the private key of the balance first
+        list.add("978c6.....");
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        init();
+    }
+
+    /**
+     * 5Signatures
+     */
+    @Test
+    public void signDataForERC20WithdrawTest() throws Exception {
+        setMainData();
+        String txKey = "6755269867e972bea86c66d299b281a1ba891ce89ede31a50e190a01bacc9567";
+        // Recipient Address
+        String toAddress = "0x4aA04Ac1c34989cE6c36Fe7BEf9B1a2167bF59F5";
+        // Mint quantity
+        String value = "0.00000167";
+        // NEST tokencontract
+        String erc20 = "0x217dfff57e3b855803ce88a1374c90759ea071bd";
+        int tokenDecimals = 8;
+        int signCount = 5;
+        String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
+        System.out.println(String.format("ERC20 Withdrawal %s Pieces, %s Signatures, signData: %s", value, signCount, signData));
+    }
+
+    /**
+     * Based on existing signature data Send transaction - erc20Withdrawal
+     */
+    @Test
+    public void sendERC20WithdrawBySignDataTest() throws Exception {
+        setMainData();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        String txKey = "6755269867e972bea86c66d299b281a1ba891ce89ede31a50e190a01bacc9567";
+        // Recipient Address
+        String toAddress = "0x4aA04Ac1c34989cE6c36Fe7BEf9B1a2167bF59F5";
+        // Mint quantity
+        String value = "0.00000167";
+        // NEST tokencontract
+        String erc20 = "0x217dfff57e3b855803ce88a1374c90759ea071bd";
+        int tokenDecimals = 8;
+        String signData = "72e6589c43ab6f0a955880152fd89cc40fa91c9d1cb013ee1c45ab7eb28d3d2851d7af7941c4d2dd088f3c8151bfc53d10dc2d7e61cee7115e997661ad56adf91ce84aa869311d76bdba970fcef5e37979d95134055afca7c83575cce8b31234b032d0ca1ac284ce1cc44bc3875385c3b17a6a55494d2d563e9c5fffd3f357e0071c51c9b1ad74242a256e8f917e63e680373bc98212cb1e76b0cc020557536a86541dec07c82fc6a5780781841fb0d5dfc6dfe4443a5e4c67af4956e9e177cb28761b2ef007bfafa05d75ef07afbb10715388fceddd9edaaa05798201d2b3c3ff690f7a42f13f0e02113b34855243801f7bba830c7c95560f6ee01f89b2d9279ce1691cfbe2be39d45df2ee7a2ce9b894e316be989af74bbb6085515ed0fff9ed7565650f2d0378f24a62efcca383a0c01af58fa7f988b25d50ee5570863fef57f9aff91b1f25d35f7179e2f9ba265244eb0e430126913b988c1597b8792250ebc51db1273ff11ac62c9e98d7ca3ee4c89094a0404d055b9b44e6c0e6b24b568725be90691cc2497a56b7ff87e747e2101a691b46a0a64b1c62e5af17155f314876253252f42ff7e264887ab5ba51de876dadd55249d83b48dbaf54092d82d3b53252996bf81cb7cb55f46ea1f2371bb0d3d09f37caf05802bd518b09ee2f50ccbca6b561f6aa237c21c62d7abfad57988adb8b2a2fcdeb867d0cbb0103ba884c67eb0041c2ac1bf0ca156a84ece4f9242d3bc10bf29237578c189de2720f80d7f0f3131cb5639f614ac08d067dd7df4aad17db6944adf7e890a7da66aae7b7ecec30db9c3b23ea1bbc3930971409a52f9839ef08ae45711e7e6981287566e9cd85c23731d216bad20d06e44726c2dcf7e8b8197119531edf67206009a8fe65cb32fee9b8629de4601b";
+
+        String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
+        System.out.println(String.format("ERC20 Withdrawal %s Pieces, hash: %s", value, hash));
     }
 
     /**
@@ -995,10 +1036,10 @@ public class EtcWalletApiTest extends Base {
 
     @Test
     public void symboltest() throws Exception {
-        //setMain();
+        setMain();
         // usdt 0xb6D685346106B697E6b2BbA09bc343caFC930cA3
         // nvt 0x8B3b22C252F431a75644E544FCAf67E390A206F4
-        String contractAddress = "0x9b8510ac9b1cf5ac146f81553e92c861920da05b";
+        String contractAddress = "0x1d181E18A70920437a24d27F8A087624C7a7F4D4";
         List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getSymbolERC20Function());
         if (symbolResult.isEmpty()) {
             return;

@@ -227,7 +227,7 @@
         <dependency>
             <groupId>fc-NERVE</groupId>
             <artifactId>FC-SDK</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <exclusions>
                 <exclusion>
                     <artifactId>freecashj</artifactId>

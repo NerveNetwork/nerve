@@ -468,18 +468,6 @@ public class LineaWalletApiTest extends Base {
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setMainData() {
-        setMain();
-        // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
-        // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
-        // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
-        list = new ArrayList<>();
-        list.add("08ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        list.add("");// Public key: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        list.add("");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
-        this.multySignContractAddress = "0x8CD6e29d3686d24d3C2018CEe54621eA0f89313B";
-        init();
-    }
     /**
      * Add N Administrators
      */
@@ -674,6 +662,38 @@ public class LineaWalletApiTest extends Base {
         System.out.println(String.format("Withdrawal%sPieces,hash: %s", value, hash));
     }
 
+
+    protected void setMainData() {
+        setMain();
+        list = new ArrayList<>();
+        list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        this.multySignContractAddress = "0x8CD6e29d3686d24d3C2018CEe54621eA0f89313B";
+        init();
+    }
+
+    /**
+     * 5Signatures
+     */
+    @Test
+    public void signDataForERC20WithdrawTest() throws Exception {
+        setMainData();
+        String txKey = "066abbfbb225fa31dc26e63b5d83c44d29b5b1c5d28c104217af96e9774b5a55";
+        // Recipient Address
+        String toAddress = "0xc94fb74218e45725ffb2b8d933e795d86c670cf1";
+        // quantity
+        String value = "26";
+        // tokencontract
+        String erc20 = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff";
+        int tokenDecimals = 6;
+        int signCount = 5;
+        String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,signData: %s", value, signCount, signData));
+    }
+
     /**
      * Based on existing signature data Send transaction - erc20Withdrawal
      */
@@ -681,21 +701,19 @@ public class LineaWalletApiTest extends Base {
     public void sendERC20WithdrawBySignDataTest() throws Exception {
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         setMainData();
-        String txKey = "06285d641f56684ab8eb5e0c6bec06cef33de1baf319ec7b8f3a0ed6ba061b96";
+        String txKey = "066abbfbb225fa31dc26e63b5d83c44d29b5b1c5d28c104217af96e9774b5a55";
         // Recipient Address
-        String toAddress = "0xc4909a09e4adddab6488679473595150440043f6";
+        String toAddress = "0xc94fb74218e45725ffb2b8d933e795d86c670cf1";
         // quantity
-        String value = "0.012000000000000000";
+        String value = "26";
         // tokencontract
-        String erc20 = "0xC06A6b30A59E4BA16f29FF1b3fCE38228Dfc8C3c";
-        int tokenDecimals = 18;
-        String signData = "1612ac0fb3f0acd39334059870c75daaa70f6bc7177d2918ea8fff58552a6c2b42cb0f6e8a73d9fba7d72f57562445f3161cc11003fbc68fccd5c9bb9f67b1881be80bc3c4651c33147b018c88dbdd7de81ae9234b8dce3ed3b83503cfc5a531947a2072319492579206e49e0af93c799225eb9a817fe83083f628268ee131b86a1bad958d1c2d028ac9a3b8cacb0fefe3e3d24b00856658b2a51bde6a6ff37bbc145eca8c1a0d6e3b211dba6746dd5bcd106abff197fc74490943c1f16dfd5d96db1cbae27243279943394cd27068300d3897f367965d54074ff7216f09e8593f00ed148a2546eb3f6b32ac455736e5cb46bdbe2f74e332f067ef263b141a99a5791a1bdd42f8d1ffabfaee0b41a867360357cc15defcd921d24d66414b1f414e09f3d33d1ca9171716e68a441663dba5a3314ee403b2e80def65d94353b386e4bdcf981bd3107157d186bfb02ecb7a8856788002564a444704af3841621d6a86b712212540e217db3976346e0cc04034d7e0358d919b1f644a350611057947a4c9b2fa6c1b1bf4f1478ac89ab0de839014fb8cd2adf129a83d49d625745fb4b2218d67d8676eea52882d8904a70f4848fbd1f32b885f2a034dd26738acc2119e90c579ebbf1b7958b193cf9955028c690dc645ae6a32f608d56fdd3ed9d393595461736d09bc6ba6c7b74f58784d06943f8b0419645b033436464f7c47c346897b39edc67c861b1080891a172d3e473663298dcca46e746ce5cc43471525ab2eecc4afd19b9787528c45e75a9427650ff6f19bd6d9b8416caea82ad880ea08cac0e9e5071250ca1bdae5db5f439e9efafb99c62fa6e34e2ba21e76611107d8d1c15446345a04106c5fbe11e1163ee6d676dfad6437be0e2433ed51fc33feaee3c7befff0f07da7181c";
+        String erc20 = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff";
+        int tokenDecimals = 6;
+        String signData = "5ba1e42f625756bfb503efc42eab51d4f30a92f94015dbb5e8a768d201437ffe2c908a41b41240a4a3d9bedfbccbb39f9b24457f4fbfa794a52c27f2b56512dc1c3bd9ba1116e0a79ee093b34e00c845aa4f3a922adf13ed4bad3a0cf5102e05011e1c806866be1e0133fa68503e2ca982947799c0f7c318c9ab012eba06d5ca5b1b5c18ece6ea7ad8a62e2f182eb655a6d03758458d9efe51c6502b9501cf0718903795212b83c46c331aaa2e00084342350003e6ff4e6939a2045f2c99184b36eb1c0d6145e8c278fc961dd86efe67927c319c5256cda8ad47fcc3371e7e5810838750dd3de6ab68d3b59eec6c7a1e4d3a4675f13f1391c70435153543f7a71b949f1b0870f56502de73ed623736323a04a511443afdf0caa875f3a40ca66282c4c9c041d4224f1383ef1908f7688c6c6c5992391c968398418d7db435951ffd54ebab1c7c71c573d569a1e72552bf6c61c75902ac3f1fc331aba4d3a403d765ea67b9bb5373b43a3dd326b7c4015fbba7e4a676ce8ec0959a5a5f6ec471da9f80f5b75d1c451dd28077e60adb7e3968a06cff4f875d1748818fad1a6afb092ab3bb9e8c346368a1e35bb4a1d3bf95eea3a2d5509bd010ddea8cbd40214f959f812982d2841b570829d324bbf92682320925034af0069b608616ab3e64a8f2425f3874a773d40d872c3dd06b70a182321b40a7604ebd0e402f75424c510a790ed01a104748d71b6bc06adc056ab634eed0a837bc25d9251675ffaf27db819cb50ef788ff868b4e4b1da27497f41924da5eaabdf337a128be665bc25a92fe9471c52a269c8d10621b6d337db693d16c100291c9935dd695ab7410e9793a7ddd2a6fc3c888247457a65e5a35dc9cb1587d0c32a32b394be680fab9ced4a41d73cca0b6542f977199cd1b";
 
         String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
         System.out.println(String.format("ERC20Withdrawal%sPieces,hash: %s", value, hash));
 
-        sendERC20WithdrawBySignDataTest2();
-        sendERC20WithdrawBySignDataTest3();
     }
 
     public void sendERC20WithdrawBySignDataTest2() throws Exception {
@@ -728,6 +746,19 @@ public class LineaWalletApiTest extends Base {
 
         String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
         System.out.println(String.format("ERC20Withdrawal%sPieces,hash: %s", value, hash));
+    }
+
+    @Test
+    public void signDataForMainAssetWithdrawTest() throws Exception {
+        setMainData();
+        String txKey = "6661024000000000000000000000000000000000000000000000000000000000";
+        // Recipient Address
+        String toAddress = "0x4aA04Ac1c34989cE6c36Fe7BEf9B1a2167bF59F5";
+        // Mint quantity
+        String value = "200";
+        int signCount = 5;
+        String signData = this.signDataForMainAssetWithdraw(txKey, toAddress, value, signCount);
+        System.out.println(String.format("BNB Withdrawal %s Pieces, %s Signatures, signData: %s", value, signCount, signData));
     }
 
     /**

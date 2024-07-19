@@ -42,6 +42,7 @@ public class WithdrawalFeeLog extends BaseNulsData {
     private int htgChainId;
     private long fee;
     private boolean recharge;
+    private Boolean nerveInner;
     private transient long txTime;
 
     public WithdrawalFeeLog() {
@@ -64,6 +65,9 @@ public class WithdrawalFeeLog extends BaseNulsData {
         stream.writeUint16(htgChainId);
         stream.writeUint32(fee);
         stream.writeBoolean(recharge);
+        if (nerveInner != null) {
+            stream.writeBoolean(nerveInner);
+        }
     }
 
     @Override
@@ -74,6 +78,9 @@ public class WithdrawalFeeLog extends BaseNulsData {
         this.htgChainId = byteBuffer.readUint16();
         this.fee = byteBuffer.readUint32();
         this.recharge = byteBuffer.readBoolean();
+        if (!byteBuffer.isFinished()) {
+            this.nerveInner = byteBuffer.readBoolean();
+        }
     }
 
     @Override
@@ -85,7 +92,18 @@ public class WithdrawalFeeLog extends BaseNulsData {
         size += SerializeUtils.sizeOfUint16();
         size += SerializeUtils.sizeOfUint32();
         size += SerializeUtils.sizeOfBoolean();
+        if (nerveInner != null) {
+            size += SerializeUtils.sizeOfBoolean();
+        }
         return size;
+    }
+
+    public boolean isNerveInner() {
+        return nerveInner == null ? false : nerveInner;
+    }
+
+    public void setNerveInner(Boolean nerveInner) {
+        this.nerveInner = nerveInner;
     }
 
     public boolean isRecharge() {
@@ -164,6 +182,8 @@ public class WithdrawalFeeLog extends BaseNulsData {
 
         sb.append(",\"recharge\":")
                 .append(recharge);
+        sb.append(",\"nerveInner\":")
+                .append(nerveInner);
 
         sb.append('}');
         return sb.toString();

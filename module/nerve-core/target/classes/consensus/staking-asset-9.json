@@ -1,0 +1,219 @@
+[
+  {
+    "assetId": "1",
+    "oracleKey": "NERVE_PRICE",
+    "canBePeriodically": true,
+    "decimal": 8,
+    "simple": "NVT",
+    "weight": 2,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "1",
+    "chainId": "1",
+    "oracleKey": "NULS_PRICE",
+    "canBePeriodically": true,
+    "decimal": 8,
+    "simple": "NULS",
+    "weight": 2,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "2",
+    "oracleKey": "ETH_PRICE",
+    "canBePeriodically": true,
+    "decimal": 18,
+    "simple": "ETH",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "3",
+    "oracleKey": "USDT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 6,
+    "simple": "USDT",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "30",
+    "oracleKey": "USDT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "BUSD",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "70",
+    "oracleKey": "USDT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 8,
+    "simple": "HUSD",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "5",
+    "oracleKey": "USDC_PRICE",
+    "canBePeriodically": false,
+    "decimal": 6,
+    "simple": "USDC",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "6",
+    "oracleKey": "DAI_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "DAI",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "7",
+    "oracleKey": "PAX_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "PAX",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "25",
+    "oracleKey": "BNB_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "BNB",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "8",
+    "oracleKey": "HT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HT",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "55",
+    "oracleKey": "HT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HT",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "9",
+    "oracleKey": "OKB_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "OKB",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "32",
+    "oracleKey": "NVT-BNB_Cake-LP_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "Cake-LP",
+    "weight": 25,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "33",
+    "oracleKey": "NVT-ETH_UNI-V2-LP_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "UNI-V2",
+    "weight": 25,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "73",
+    "oracleKey": "NVTHUSDHMDXLP",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HMDX",
+    "weight": 25,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "87",
+    "oracleKey": "OKT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "OKT",
+    "weight": 1,
+    "stopHeight": 22180000
+  },
+  {
+    "assetId": "252",
+    "oracleKey": "NVTUSDTNLP",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT_USDTN_LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "232",
+    "oracleKey": "NULSNVTLP",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NULS_NVT_LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "250",
+    "oracleKey": "NVTETHLP",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT_ETH_LP",
+    "weight": 200,
+    "stopHeight": 45890000
+  },
+  {
+    "assetId": "251",
+    "oracleKey": "NVTBNBLP",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT_BNB_LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "672",
+    "oracleKey": "NVTETHNLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT-ETHN-LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "510",
+    "oracleKey": "NVTUSDCNLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT-USDCN-LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "793",
+    "oracleKey": "NVTBTCLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT_BTC_LP",
+    "weight": 200,
+    "stopHeight": 0
+  }
+]

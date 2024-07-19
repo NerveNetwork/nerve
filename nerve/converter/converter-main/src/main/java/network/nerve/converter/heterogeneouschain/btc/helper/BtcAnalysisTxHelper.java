@@ -139,6 +139,9 @@ public class BtcAnalysisTxHelper implements BeanInitial {
                 return;
             }
         }
+        if (isBroadcastTx) {
+            htgContext.logger().info("Listening to {} Network based [{}] transaction [{}], nerveTxHash: {}", htgContext.getConfig().getSymbol(), txType, htgTxHash, po.getNerveTxHash());
+        }
         // Check if it has been affectedNerveNetwork confirmation, the cause is the current node parsingethThe transaction is slower than other nodes, and the current node only resolves this transaction after other nodes confirm it
         HtgUnconfirmedTxPo txPoFromDB = null;
         if (isBroadcastTx || isDepositTx) {

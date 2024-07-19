@@ -24,7 +24,7 @@
 package network.nerve.converter.heterogeneouschain.fch.handler;
 
 import apipClass.BlockInfo;
-import com.neemre.btcdcli4j.core.domain.RawTransaction;
+import apipClass.TxInfo;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
@@ -32,6 +32,7 @@ import io.nuls.core.model.StringUtils;
 import network.nerve.converter.btc.model.BtcUnconfirmedTxPo;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
+import network.nerve.converter.heterogeneouschain.btc.utils.BtcUtil;
 import network.nerve.converter.heterogeneouschain.fch.context.FchContext;
 import network.nerve.converter.heterogeneouschain.fch.core.FchWalletApi;
 import network.nerve.converter.heterogeneouschain.fch.helper.FchParseTxHelper;
@@ -47,9 +48,11 @@ import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxStorageServic
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
 import network.nerve.converter.utils.LoggerUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static network.nerve.converter.constant.ConverterErrorCode.TX_DUPLICATION;
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.*;
 
 
@@ -71,8 +74,8 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
     private FchParseTxHelper htgParseTxHelper;
     private HtgResendHelper htgResendHelper;
     private HtgPendingTxHelper htgPendingTxHelper;
-    private FchContext htgContext;
     private HtgInvokeTxHelper htgInvokeTxHelper;
+    private FchContext htgContext;
 
     private NulsLogger logger() {
         return htgContext.logger();
@@ -104,16 +107,19 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
             } catch (Exception e) {
                 htgContext.logger().error(String.format("inspect%scurrentAPIfail", symbol), e);
             }
-            htgContext.logger().debug("[{}Transaction confirmation task] - every other{}Execute once per second.", symbol, htgContext.getConfig().getConfirmTxQueuePeriod());
+            htgContext.logger().debug("[{} Transaction confirmation task] - every other{}Execute once per second.", symbol, htgContext.getConfig().getConfirmTxQueuePeriod());
             // Persistent unconfirmed transactions loaded while waiting for application restart
             htgContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH().await();
             BlockInfo bestBlock = htgWalletApi.getBestBlock();
             long bestBlockHeight = bestBlock.getHeight();
             int size = htgContext.UNCONFIRMED_TX_QUEUE().size();
+            if (size == 0) {
+                return;
+            }
             for (int i = 0; i < size; i++) {
                 po = htgContext.UNCONFIRMED_TX_QUEUE().poll();
                 if (po == null) {
-                    logger().info("Remove null valuesPO");
+                    logger().info("Remove null values PO");
                     continue;
                 }
                 // When the recharge confirmation task is abnormal and exceeds the number of retries, discard the task
@@ -130,6 +136,7 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                         po.setTxTime(poFromDB.getTxTime());
                     }
                     if (po.getBlockHeight() == null) {
+                        queue.offer(po);
                         continue;
                     }
                 }
@@ -144,10 +151,7 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                     continue;
                 }
                 // Not reaching the confirmed height, put it back in the queue and continue checking next time
-                int confirmation = htgContext.getConfig().getTxBlockConfirmations();
-                if (po.getTxType() == HeterogeneousChainTxType.WITHDRAW) {
-                    confirmation = htgContext.getConfig().getTxBlockConfirmationsOfWithdraw();
-                }
+                int confirmation = getConfirmation(po.getTxType());
                 if (bestBlockHeight - po.getBlockHeight() < confirmation) {
                     if(logger().isDebugEnabled()) {
                         logger().debug("[{}]transaction[{}]Confirm altitude waiting: {}", symbol, po.getTxHash(), confirmation - (bestBlockHeight - po.getBlockHeight()));
@@ -164,8 +168,18 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                             queue.offer(po);
                         }
                         break;
+                    case WITHDRAW_FEE_RECHARGE:
+                    case WITHDRAW_FEE_USED:
+                        if (dealWithdrawFeeTx(po, poFromDB)) {
+                            if(logger().isDebugEnabled()) {
+                                logger().debug("[{}] Withdraw fee transactions are put back into the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
+                            }
+                            queue.offer(po);
+                        }
+                        break;
                     case WITHDRAW:
                     case CHANGE:
+                    case UPGRADE:
                         if (dealBroadcastTx(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
                                 logger().debug("[{}] Broadcast transactions are put back into the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
@@ -185,6 +199,17 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                 queue.offer(po);
             }
         }
+    }
+
+    private int getConfirmation(HeterogeneousChainTxType txType) {
+        int confirmation = htgContext.getConfig().getTxBlockConfirmations();
+        if (txType == HeterogeneousChainTxType.WITHDRAW
+                || txType == HeterogeneousChainTxType.WITHDRAW_FEE_RECHARGE
+                || txType == HeterogeneousChainTxType.WITHDRAW_FEE_USED
+        ) {
+            confirmation = htgContext.getConfig().getTxBlockConfirmationsOfWithdraw();
+        }
+        return confirmation;
     }
 
     private boolean dealDeposit(HtgUnconfirmedTxPo po, HtgUnconfirmedTxPo poFromDB) throws Exception {
@@ -219,7 +244,7 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
         }
         if (!po.isValidateTx()) {
             //Verify transaction again
-            boolean validateTx = validateDepositTxConfirmedInEthNet(htgTxHash, po.isIfContractAsset());
+            boolean validateTx = validateDepositTxConfirmedInFchNet(htgTxHash, po.isIfContractAsset());
             if (!validateTx) {
                 // Verification failed, fromDBRemove transactions from the queue
                 this.clearDB(htgTxHash);
@@ -238,7 +263,7 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                 byte[] feeAddress = AddressTool.getAddressByPubKeyStr(converterConfig.getFeePubkey(), converterConfig.getChainId());
                 // RechargeablenerveThe receiving address cannot be a black hole or a fee subsidy address
                 if (Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole) || Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), feeAddress)) {
-                    logger().error("[{}][Abnormal recharge address][Black hole or subsidy address for handling fees]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+                    logger().error("[{}] [Abnormal recharge address] [Black hole or subsidy address for handling fees] Deposit Nerve address error: {}, heterogeneousHash: {}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
                     // Verification failed, fromDBRemove transactions from the queue
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
@@ -270,7 +295,7 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
             if (e instanceof NulsException &&
                     (TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
-                logger().info("NerveTransaction already exists, remove pending confirmation from queue{}transaction[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
+                logger().info("Nerve Transaction already exists, remove pending confirmation from queue {} transaction [{}]", htgContext.getConfig().getSymbol(), htgTxHash);
                 this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             }
@@ -281,8 +306,6 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     private boolean dealBroadcastTx(HtgUnconfirmedTxPo po, HtgUnconfirmedTxPo poFromDB) throws Exception {
-        //TODO pierre Broadcast Tx Coding
-        if (1==1) return true;
         String symbol = htgContext.getConfig().getSymbol();
         boolean isReOfferQueue = true;
         String htgTxHash = po.getTxHash();
@@ -340,6 +363,7 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                     po.setValidateTx(validate == BroadcastTxValidateStatus.SUCCESS);
                 }
                 try {
+                    BtcUnconfirmedTxPo btcPo = (BtcUnconfirmedTxPo) txPo;
                     String realNerveTxHash = nerveTxHash;
                     logger().info("[{}] Signed {} transaction [{}] call Nerve confirm [{}]", po.getTxType(), symbol, htgTxHash, realNerveTxHash);
                     // The signed transaction will trigger a callbackNerve Core
@@ -351,7 +375,7 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
                             txPo.getTxTime(),
                             htgContext.MULTY_SIGN_ADDRESS(),
                             txPo.getSigners(),
-                            null);
+                            btcPo.getCheckWithdrawalUsedUTXOData());
                 } catch (NulsException e) {
                     // Transaction already exists, waiting for confirmation to remove
                     if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode()) || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {
@@ -369,24 +393,17 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
     /**
      * Verify recharge transactions
      */
-    private boolean validateDepositTxConfirmedInEthNet(String htgTxHash, boolean ifContractAsset) throws Exception {
+    private boolean validateDepositTxConfirmedInFchNet(String htgTxHash, boolean ifContractAsset) throws Exception {
         String symbol = htgContext.getConfig().getSymbol();
         boolean validateTx = true;
-        //do {
-        //    TransactionReceipt receipt = htgWalletApi.getTxReceipt(htgTxHash);
-        //    if (receipt == null) {
-        //        logger().error("[{}]Verify transaction again[{}]Failed, unable to obtainreceipt", symbol, htgTxHash);
-        //        break;
-        //    }
-        //    if (!receipt.isStatusOK()) {
-        //        logger().error("[{}]Verify transaction again[{}]Failed,receiptIncorrect status", symbol, htgTxHash);
-        //        break;
-        //    } else if (ifContractAsset && (receipt.getLogs() == null || receipt.getLogs().size() == 0)) {
-        //        logger().error("[{}]Verify transaction again[{}]Failed,receipt.LogIncorrect status", symbol, htgTxHash);
-        //        break;
-        //    }
-        //    validateTx = true;
-        //} while (false);
+        do {
+            TxInfo htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
+            if (htgTx.getHeight() <= 0) {
+                validateTx = false;
+                logger().error("[{}] Verify transaction [{}] Failed, tx not confirmed yet", symbol, htgTxHash);
+                break;
+            }
+        } while (false);
         return validateTx;
     }
 
@@ -395,18 +412,102 @@ public class FchConfirmTxHandler implements Runnable, BeanInitial {
         BroadcastTxValidateStatus status;
         String htgTxHash = po.getTxHash();
         do {
-            /*RawTransaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
-            if (htgTx.getConfirmations() == null || htgTx.getConfirmations().intValue() == 0) {
+            TxInfo htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
+            if (htgTx.getHeight() <= 0) {
                 po.setSkipTimes(3);
                 status = BroadcastTxValidateStatus.RE_VALIDATE;
                 logger().error("[{}] Verify transaction [{}] Failed, tx not confirmed yet", symbol, htgTxHash);
                 break;
-            }*/
+            }
             status = BroadcastTxValidateStatus.SUCCESS;
         } while (false);
         return status;
     }
 
+    private boolean dealWithdrawFeeTx(HtgUnconfirmedTxPo po, HtgUnconfirmedTxPo poFromDB) throws Exception {
+        String symbol = htgContext.getConfig().getSymbol();
+        boolean isReOfferQueue = true;
+        String htgTxHash = po.getTxHash();
+        String realHash = BtcUtil.removeTxHashPrefix(htgTxHash);
+        HtgUnconfirmedTxPo txPo = poFromDB;
+        if (txPo == null) {
+            txPo = htgUnconfirmedTxStorageService.findByTxHash(htgTxHash);
+        }
+        if (txPo == null) {
+            logger().warn("[{}] [{} Task exception] DB Not obtained in PO In the queue PO: {}", symbol, po.getTxType(), po.toString());
+            return !isReOfferQueue;
+        }
+        // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBDelete in, do not put back in queue
+        if (txPo.isDelete()) {
+            long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
+            if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
+                this.clearDB(htgTxHash);
+                isReOfferQueue = false;
+                logger().info("[{}] [{}] transaction [{}] Confirmed exceeding {} Height, Remove queue, nerve height: {}, nerver hash: {}", symbol, po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+            }
+            // supplementpoMemory data,poPrint logs for easy viewing of data
+            po.setDelete(txPo.isDelete());
+            po.setDeletedHeight(txPo.getDeletedHeight());
+            return isReOfferQueue;
+        }
+
+        switch (txPo.getStatus()) {
+            case INITIAL:
+                break;
+            case FAILED:
+                // Failed transactions, not handled by the current node, from the queue and DB Remove from middle
+                logger().info("Failed {} transaction [{}] The current node is not in the next order and will not be processed by the current node. Remove the queue", symbol, htgTxHash);
+                this.clearDB(htgTxHash);
+                return !isReOfferQueue;
+            case COMPLETED:
+                if (!po.isValidateTx()) {
+                    //Verify transaction again
+                    po.setTxHash(realHash);
+                    BroadcastTxValidateStatus validate = validateBroadcastTxConfirmedInFchNet(po);
+                    po.setTxHash(htgTxHash);
+                    switch (validate) {
+                        case RE_VALIDATE:
+                            // Put it back in the queue and verify again
+                            return isReOfferQueue;
+                        case SUCCESS:
+                        default:
+                            break;
+                    }
+                    po.setValidateTx(validate == BroadcastTxValidateStatus.SUCCESS);
+                }
+                try {
+                    BtcUnconfirmedTxPo btcPo = (BtcUnconfirmedTxPo) txPo;
+                    logger().info("[{}] {}, Withdraw fee transaction [{}] call Nerve tx", po.getTxType(), symbol, htgTxHash);
+                    // The signed transaction will trigger a callbackNerve Core
+                    htgCallBackManager.getTxConfirmedProcessor().txRecordWithdrawFee(
+                            po.getTxType(),
+                            realHash,
+                            btcPo.getBlockHash(),
+                            txPo.getBlockHeight(),
+                            txPo.getTxTime(),
+                            txPo.getValue().longValue(),
+                            String.format("Record withdraw fee [%s], chainId: %s, amount: %s, hash: %s, blockHeight: %s, blockHash: %s",
+                                    po.getTxType().name().replace("WITHDRAW_FEE_", ""),
+                                    htgContext.HTG_CHAIN_ID(),
+                                    txPo.getValue().longValue(),
+                                    realHash,
+                                    txPo.getBlockHeight(),
+                                    btcPo.getBlockHash()).getBytes(StandardCharsets.UTF_8));
+                } catch (NulsException e) {
+                    // Transaction already exists, waiting for confirmation to remove
+                    if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode())
+                            || TX_DUPLICATION.equals(e.getErrorCode())
+                            || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {
+                        logger().info("Nerve transaction [{}] Exists, remove pending confirmation from queue {} transaction [{}]", txPo.getNerveTxHash(), symbol, htgTxHash);
+                        this.clearDB(htgTxHash);
+                        return !isReOfferQueue;
+                    }
+                    throw e;
+                }
+                break;
+        }
+        return isReOfferQueue;
+    }
 
     private void clearDB(String htgTxHash) throws Exception {
         if(StringUtils.isBlank(htgTxHash)) {

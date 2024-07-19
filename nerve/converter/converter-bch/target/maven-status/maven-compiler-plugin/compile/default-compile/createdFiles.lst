@@ -1,0 +1,4 @@
+network/nerve/converter/heterogeneouschain/bch/callback/BchCallBackManager.class
+network/nerve/converter/heterogeneouschain/bch/context/BchContext.class
+network/nerve/converter/heterogeneouschain/bch/register/BchRegister.class
+network/nerve/converter/heterogeneouschain/bch/constant/BchDBConstant.class

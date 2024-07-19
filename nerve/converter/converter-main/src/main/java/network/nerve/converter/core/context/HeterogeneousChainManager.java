@@ -141,12 +141,13 @@ public class HeterogeneousChainManager {
                 storageList.stream().filter(
                         // Bitcoin chain’s multi-signature address, hard upgrade
                         info -> !(info.getChainId() == 201
-                        && (info.getMultySignAddress().equals("39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV")
-                                || info.getMultySignAddress().equals("2NDu3vcpjyiMgvRjDpQfbyh9uF2McfDJ3NF")))
+                            && (info.getMultySignAddress().equals("39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV") // mainnet
+                                || info.getMultySignAddress().equals("2NDu3vcpjyiMgvRjDpQfbyh9uF2McfDJ3NF"))) // testnet
                 ).filter(
                         // FCH chain’s multi-signature address, hard upgrade
                         info -> !(info.getChainId() == 202
-                                && info.getMultySignAddress().equals("39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV"))
+                            && (info.getMultySignAddress().equals("39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV") // mainnet
+                                || info.getMultySignAddress().equals("3BXpnXkAG7SYNxyKyDimcxjkyYQcaaJs5X"))) // testnet
                 ).filter(
                         // chain disabled
                         info -> !heterogeneousChainInfoStorageService.hadClosed(info.getChainId())
@@ -298,22 +299,33 @@ public class HeterogeneousChainManager {
                     }
                     boolean hasRecordFeePayment = docking.getBitCoinApi().hasRecordFeePayment(hardUpgradeHtgTxHash);
                     if (!hasRecordFeePayment) {
-                        docking.getBitCoinApi().recordFeePayment(blockHeight, blockHash, hardUpgradeHtgTxHash, fee, false);
+                        docking.getBitCoinApi().recordFeePayment(blockHeight, blockHash, hardUpgradeHtgTxHash, fee, false, null);
                     }
                 }
-                if (chainId == 202 && chain.getChainId() == 9) {
+                if (chainId == 202) {
                     String hardUpgradeHtgTxHash;
                     long blockHeight;
                     String blockHash;
                     long fee;
-                    // mainnet
-                    hardUpgradeHtgTxHash = "c04b71608630d79131196f43701651f2e30540eb3d43e6b19d51f01a2b192a22";
-                    blockHeight = 2248197;
-                    blockHash = "00000000000000fed94c741c04a45d045ac126d828597d16dd07c58f6139c8ba";
-                    fee = 2486;
+                    if (chain.getChainId() == 5) {
+                        // testnet
+                        hardUpgradeHtgTxHash = "3103c980b0b839693022afff636436a6733a5f422d420c609cc66204baae6128";
+                        blockHeight = 2314457;
+                        blockHash = "00000000000000a60bc63a0c1c4b8202c1aa032e31bc18fb628d5b2407ba6771";
+                        fee = 9070;
+                    } else if (chain.getChainId() == 9) {
+                        // mainnet
+                        hardUpgradeHtgTxHash = "c04b71608630d79131196f43701651f2e30540eb3d43e6b19d51f01a2b192a22";
+                        blockHeight = 2248197;
+                        blockHash = "00000000000000fed94c741c04a45d045ac126d828597d16dd07c58f6139c8ba";
+                        fee = 2486;
+                    } else {
+                        throw new RuntimeException("unsupport chain");
+                    }
+
                     boolean hasRecordFeePayment = docking.getBitCoinApi().hasRecordFeePayment(hardUpgradeHtgTxHash);
                     if (!hasRecordFeePayment) {
-                        docking.getBitCoinApi().recordFeePayment(blockHeight, blockHash, hardUpgradeHtgTxHash, fee, false);
+                        docking.getBitCoinApi().recordFeePayment(blockHeight, blockHash, hardUpgradeHtgTxHash, fee, false, null);
                     }
                 }
             }

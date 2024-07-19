@@ -35,6 +35,7 @@ import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
@@ -75,6 +76,8 @@ public class WithdrawalUTXOFeePaymentProcessor implements TransactionProcessor {
     private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
     @Autowired
     private HeterogeneousChainInfoStorageService heterogeneousChainInfoStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
@@ -147,7 +150,11 @@ public class WithdrawalUTXOFeePaymentProcessor implements TransactionProcessor {
                 WithdrawalFeeLog txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalFeeLog.class);
                 String htgTxHash = txData.getHtgTxHash();
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHtgChainId());
-                docking.getBitCoinApi().recordFeePayment(txData.getBlockHeight(), txData.getBlockHash(), htgTxHash, txData.getFee(), txData.isRecharge());
+                Boolean nerveInner = null;
+                if (converterCoreApi.isProtocol36()) {
+                    nerveInner = txData.isNerveInner();
+                }
+                docking.getBitCoinApi().recordFeePayment(txData.getBlockHeight(), txData.getBlockHash(), htgTxHash, txData.getFee(), txData.isRecharge(), nerveInner);
                 chain.getLogger().info("[commit] withdrawal UTXO fee payment transactions hash: {}, htgTxHash hash: {}", tx.getHash().toHex(), htgTxHash);
             }
             return true;

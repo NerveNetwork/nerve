@@ -47,6 +47,7 @@ keystoreFolder=/keystore/backup
 sigMode=0
 sigMacAddress=TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV
 sigMacUrl=http://127.0.0.1:8085/
+otherSigMacUrl=http://127.0.0.1:28086/
 sigMacApiKey=25eb1cb9-d19c-43d4-8899-32bef8b9b006
 
 [block]
@@ -169,6 +170,7 @@ height_1_32_0=56127000
 height_1_33_0=56500000
 height_1_34_0=57720000
 height_1_35_0=59850000
+height_1_36_0=62143155
 
 [nuls-api]
 #httpServerStart ofip

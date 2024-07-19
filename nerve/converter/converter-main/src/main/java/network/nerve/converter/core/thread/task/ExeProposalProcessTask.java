@@ -245,6 +245,13 @@ public class ExeProposalProcessTask implements Runnable {
                                 ProposalTypeEnum.CLOSE_HTG_CHAIN,
                                 proposalPO.getHash().toHex());
                         break;
+                    case SPLIT_GRANULARITY:
+                        // swapmodule Used forSwapCustomized transaction fees
+                        publishProposalConfirmed(proposalPO, pendingPO);
+                        chain.getLogger().info("[Create Proposal Confirmation-{}] proposalHash:{}",
+                                ProposalTypeEnum.SPLIT_GRANULARITY,
+                                proposalPO.getHash().toHex());
+                        break;
                     case OTHER:
                     default:
                         break;

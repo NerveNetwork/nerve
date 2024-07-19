@@ -115,6 +115,13 @@ public class ProposalProcessor implements TransactionProcessor {
                     log.error("[Validate CLOSE_HTG_CHAIN] error");
                     continue;
                 }
+                if (txData.getType() == ProposalTypeEnum.SPLIT_GRANULARITY.value() && !converterCoreApi.isProtocol36()) {
+                    failsList.add(tx);
+                    // Heterogeneous chain address cannot be empty
+                    errorCode = ConverterErrorCode.PROPOSAL_REJECTED.getCode();
+                    log.error("[Validate SPLIT_GRANULARITY] error");
+                    continue;
+                }
                 if (txData.getType() != ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE.value()) {
                     continue;
                 }

@@ -126,7 +126,7 @@ public class HeterogeneousAssetHelper {
             }
             total = total.add(utxo.getAmount());
             needUtxos.add(utxo);
-            spend = amount.add(BigInteger.valueOf(docking.getBitCoinApi().getWithdrawalFeeSize(needUtxos.size())).multiply(feeRate));
+            spend = amount.add(BigInteger.valueOf(docking.getBitCoinApi().getWithdrawalFeeSize(total.longValue(), amount.longValue(), feeRate.longValue(), needUtxos.size())).multiply(feeRate));
             if (total.compareTo(spend) >= 0) {
                 break;
             }
@@ -205,7 +205,12 @@ public class HeterogeneousAssetHelper {
         }
         long mainFee = docking.getBitCoinApi().convertMainAssetByFee(feeAssetName, new BigDecimal(totalAddingFee));
         List<UTXOData> utxoDataList = utxoTxData.getUtxoDataList();
-        long txSize = docking.getBitCoinApi().getWithdrawalFeeSize(utxoDataList.size());
+        BigInteger total = BigInteger.ZERO;
+        for (UTXOData utxo : utxoDataList) {
+            total = total.add(utxo.getAmount());
+        }
+
+        long txSize = docking.getBitCoinApi().getWithdrawalFeeSize(total.longValue(), amount.longValue(), rebuildPO.getBaseFeeRate(), utxoDataList.size());
         long addingFeeRate = mainFee / txSize;
         if (addingFeeRate == 0) {
             throw new RuntimeException(String.format("Not enough adding fee to rebuild utxo, hash: %s", txHash));
@@ -213,11 +218,7 @@ public class HeterogeneousAssetHelper {
 
         BigInteger feeRate = BigInteger.valueOf(rebuildPO.getBaseFeeRate() + addingFeeRate);
         BigInteger spend = amount.add(BigInteger.valueOf(txSize).multiply(feeRate));
-        BigInteger total = BigInteger.ZERO;
 
-        for (UTXOData utxo : utxoDataList) {
-            total = total.add(utxo.getAmount());
-        }
 
         if (total.compareTo(spend) < 0) {
             // docking get utxos
@@ -231,7 +232,7 @@ public class HeterogeneousAssetHelper {
                 }
                 total = total.add(utxo.getAmount());
                 utxoDataList.add(utxo);
-                spend = amount.add(BigInteger.valueOf(docking.getBitCoinApi().getWithdrawalFeeSize(utxoDataList.size())).multiply(feeRate));
+                spend = amount.add(BigInteger.valueOf(docking.getBitCoinApi().getWithdrawalFeeSize(total.longValue(), amount.longValue(), feeRate.longValue(), utxoDataList.size())).multiply(feeRate));
                 if (total.compareTo(spend) >= 0) {
                     break;
                 }
@@ -330,7 +331,7 @@ public class HeterogeneousAssetHelper {
             total = total.add(utxo.getAmount());
         }
         long mainFee = docking.getBitCoinApi().convertMainAssetByFee(AssetName.NVT, new BigDecimal(totalAddingFee));
-        long txSize = docking.getBitCoinApi().getWithdrawalFeeSize(needUtxos.size());
+        long txSize = docking.getBitCoinApi().getChangeFeeSize(needUtxos.size());
         long addingFeeRate = mainFee / txSize;
         if (addingFeeRate == 0) {
             throw new RuntimeException(String.format("Not enough adding fee to rebuild utxo, hash: %s", txHash));

@@ -609,7 +609,6 @@ public class TxSendTest {
         //getBalanceByAddress("packageAddressZP-User address", packageAddressZP);
         //getBalanceByAddress("address32-User address", address32);
     }
-
     protected void getBalanceByAddress(String title, String address) throws Exception {
         System.out.println();
         System.out.println(String.format("%s address: %s", title, address));
@@ -620,7 +619,7 @@ public class TxSendTest {
         //this.balanceInfoPrint("asset BNB", new NerveAssetInfo(5, 2), address, 18);
         //this.balanceInfoPrint("asset OKB", new NerveAssetInfo(5, 2), address, 18);
         //this.balanceInfoPrint("asset PLS", new NerveAssetInfo(5, 3), address, 18);
-        this.balanceInfoPrint("asset Mint-ETH", new NerveAssetInfo(5, 2), address, 18);
+        this.balanceInfoPrint("asset PLS", new NerveAssetInfo(5, 2), address, 18);
         this.balanceInfoPrint("asset FCH", new NerveAssetInfo(5, 3), address, 8);
         this.balanceInfoPrint("asset BTC", new NerveAssetInfo(5, 4), address, 8);
         //this.balanceInfoPrint("asset Mode-ETH", new NerveAssetInfo(5, 3), address, 18);
@@ -629,8 +628,8 @@ public class TxSendTest {
         //this.balanceInfoPrint("asset BTC", new NerveAssetInfo(5, 4), address, 8);
         //this.balanceInfoPrint("asset FCH", new NerveAssetInfo(5, 3), address, 8);
         //this.balanceInfoPrint("asset MANTA-ETH", new NerveAssetInfo(5, 2), address, 18);
-        this.balanceInfoPrint("asset USDT(mint)", new NerveAssetInfo(5, 5), address, 6);
-        this.balanceInfoPrint("asset USD18(mint)", new NerveAssetInfo(5, 6), address, 18);
+        //this.balanceInfoPrint("asset USDT(mint)", new NerveAssetInfo(5, 5), address, 6);
+        //this.balanceInfoPrint("asset USD18(mint)", new NerveAssetInfo(5, 6), address, 18);
         //this.balanceInfoPrint("asset USDT(pls)", new NerveAssetInfo(5, 6), address, 6);
         //this.balanceInfoPrint("asset USD18(pls)", new NerveAssetInfo(5, 7), address, 18);
         //this.balanceInfoPrint("asset U1D", new NerveAssetInfo(5, 8), address, 18);
@@ -808,6 +807,19 @@ public class TxSendTest {
     }
 
     @Test
+    public void withdrawalFCH() throws Exception {
+        int htgChainId = fchContext.HTG_CHAIN_ID();
+        String from = address31;
+        String to = "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD";
+        // Main assets quantity
+        BigInteger value = new BigDecimal("0.12").movePointRight(8).toBigInteger();
+        //BigInteger value = BigInteger.valueOf(2222220);
+        BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
+        NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
     public void withdrawalMintETH() throws Exception {
         int htgChainId = mintContext.HTG_CHAIN_ID();
         String from = address31;
@@ -897,8 +909,9 @@ public class TxSendTest {
         String from = address31;
         String to = "mmLahgkWGHQSKszCDcZXPooWoRuYhQPpCF";
         // Main assets quantity
-        BigInteger value = new BigDecimal("0.00001129").movePointRight(8).toBigInteger();
-        BigInteger fee = new BigInteger(Long.valueOf(29_1000_0000L).toString());
+        //BigInteger value = new BigDecimal("0.00001129").movePointRight(8).toBigInteger();
+        BigInteger value = BigInteger.valueOf(810);
+        BigInteger fee = new BigInteger(Long.valueOf(339_1000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
@@ -1522,13 +1535,13 @@ public class TxSendTest {
 
         Integer feeChainId = chainId;
         // Additional handling fees
-        String amount = "1245";
+        String amount = "3100";
         BigDecimal am = new BigDecimal(amount).movePointRight(8);
         amount = am.toPlainString();
         //params.put("rebuild", true);
         //params.put("htgChainId", 201);
 
-        params.put("txHash", "d4fb8db455aaf782fe2a9f09a6d926245ed920d7ed2f8e71988a9db07d9b5a49");
+        params.put("txHash", "7e53fb1366689198d87ffe6f96079182150d32029845e98d74dd51269a2a8e0d");
         params.put("amount", amount);
         params.put("feeChainId", feeChainId);
         params.put("remark", "Additional handling fees");
@@ -1683,9 +1696,9 @@ public class TxSendTest {
         //regHeterogeneousMainAsset(zetaContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(x1Context.HTG_CHAIN_ID());
         regHeterogeneousMainAsset(pulseContext.HTG_CHAIN_ID());
-        regHeterogeneousMainAsset(mintContext.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(mintContext.HTG_CHAIN_ID());
         // BNB
-        regHeterogeneousMainAsset(bnbContext.HTG_CHAIN_ID);
+        //regHeterogeneousMainAsset(bnbContext.HTG_CHAIN_ID);
         // HT
         //regHeterogeneousMainAsset(htContext.HTG_CHAIN_ID);
         // OKT
@@ -1749,7 +1762,7 @@ public class TxSendTest {
         // BTC
         //regHeterogeneousMainAsset(modeContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(blastContext.HTG_CHAIN_ID());
-        regHeterogeneousMainAsset(merlinContext.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(merlinContext.HTG_CHAIN_ID());
         regHeterogeneousMainAsset(btcContext.HTG_CHAIN_ID());
     }
 
@@ -2162,8 +2175,8 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put("chainId", 5);
-        params.put("heterogeneousChainId", 201);
-        params.put("heterogeneousTxHash", "ef942ebc15f875b280d24282be2b6c7a5ec84eec6e2eb0551a787be5e808fa27");
+        params.put("heterogeneousChainId", 202);
+        params.put("heterogeneousTxHash", "3d46cd0194303bab8f4a6d5a3de1a71f62d9bf0d7005f316c37b82dcf748eff9");
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, ConverterCmdConstant.CHECK_RETRY_HTG_TX, params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
     }
@@ -2222,11 +2235,11 @@ public class TxSendTest {
     @Test
     public void transferOne() throws Exception {
         String from = address31;
-        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
-        String value = "100";
+        String to = "TNVTdTSPSShZokMfXRo82TP2Kq6Fc2nhMNmF7";
+        String value = "0.00005";
         int assetChainId = 5;
-        int assetId = 8;
-        int decimals = 18;
+        int assetId = 4;
+        int decimals = 8;
 
         Map transferMap = new HashMap();
         transferMap.put("chainId", chainId);
@@ -2784,10 +2797,34 @@ public class TxSendTest {
 
         params.put("type", ProposalTypeEnum.CLOSE_HTG_CHAIN.value());
         params.put("content", "close htg chain");
-        params.put("heterogeneousChainId", 140);
+        params.put("heterogeneousChainId", 137);
         params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
         params.put("remark", "proposal");
         params.put("address", agentAddress);
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_proposal");
+        String hash = (String) result.get("value");
+        String txHex = (String) result.get("hex");
+        Log.debug("hash:{}", hash);
+        Log.debug("txHex:{}", txHex);
+    }
+
+    @Test
+    public void proposalSplitGranularity() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        params.put("type", ProposalTypeEnum.SPLIT_GRANULARITY.value());
+        //params.put("content", new BigDecimal("0.08").movePointRight(8).toPlainString());
+        params.put("content", 100000);
+        params.put("heterogeneousChainId", 201);
+        params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
+        params.put("remark", "proposal");
+        params.put("address", agentAddress);
+        password = "25eb1cb9-d19c-43d4-8899-32bef8b9b006";
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
@@ -2804,10 +2841,11 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "88ee5e5272772203cb3a6223b3a2e4f14ea48b722e821efa798732a3276b9a32");
+        params.put("proposalTxHash", "21339c58b76043e9cb6a1f1c7609fbf75944e173df7f2b8e9be1e5df3f919f07");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "voteremark");
         params.put("address", agentAddress);
+        password = "25eb1cb9-d19c-43d4-8899-32bef8b9b006";
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_voteProposal", params);
         Log.info(JSONUtils.obj2PrettyJson(cmdResp));

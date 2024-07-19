@@ -391,4 +391,10 @@ public interface AssembleTxService {
 
     Transaction createWithdrawlFeeLogTx(Chain chain, WithdrawalFeeLog txData, long txTime, byte[] remark) throws NulsException;
     Transaction createWithdrawlFeeLogTxWithoutSign(Chain chain, WithdrawalFeeLog txData, long txTime, byte[] remark) throws NulsException;
+
+    Transaction createUnlockUTXOTx(Chain chain,
+                                 String from,
+                                 String password,
+                                 String nerveTxHash,
+                                 int forceUnlock, Integer htgChainId) throws NulsException;
 }

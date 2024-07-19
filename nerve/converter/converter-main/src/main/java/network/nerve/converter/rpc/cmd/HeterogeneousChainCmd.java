@@ -35,7 +35,9 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
+import network.nerve.converter.btc.txdata.UTXOData;
 import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
+import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.config.AccountConfig;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
@@ -51,12 +53,15 @@ import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.*;
+import network.nerve.converter.model.vo.NerveLockedUTXO;
+import network.nerve.converter.model.vo.WithdrawalUTXOVO;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.rpc.call.SwapCall;
 import network.nerve.converter.utils.HeterogeneousUtil;
 import network.nerve.converter.utils.LoggerUtil;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1696,6 +1701,273 @@ public class HeterogeneousChainCmd extends BaseCmd {
             return failed(e.getMessage());
         }
 
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.UNLOCK_UTXO, version = 1.0, description = "unlock utxo")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "nerveTxHash", parameterType = "String", parameterDes = "nerveTxHash"),
+            @Parameter(parameterName = "forceUnlock", parameterType = "int", parameterDes = "forceUnlock"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password"),
+            @Parameter(parameterName = "htgChainId", parameterType = "int", parameterDes = "htgChainId"),
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    })
+    )
+    public Response unlockUtxo(Map params) {
+        Chain chain = null;
+        try {
+            if (!converterCoreApi.isSeedVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_SEED_VIRTUAL_BANK);
+            }
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("forceUnlock"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("password"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            String nerveTxHash = (String) params.get("nerveTxHash");
+            int forceUnlock = Integer.parseInt(params.get("forceUnlock").toString());
+            String address = (String) params.get("address");
+            String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
+                throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
+            }
+            Object htgChainId = params.get("htgChainId");
+            Transaction tx = assembleTxService.createUnlockUTXOTx(chain, address, password,
+                    nerveTxHash,
+                    forceUnlock, htgChainId == null ? null : Integer.parseInt(htgChainId.toString()));
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", tx.getHash().toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_SPLIT_GRANULARITY, version = 1.0, description = "GET_SPLIT_GRANULARITY")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "heterogeneousChainId")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "splitGranularity")
+    }))
+    public Response getSplitGranularity(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            if (heterogeneousChainId < 201) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            Map<String, Object> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", docking.getBitCoinApi().getSplitGranularity());
+            return success(map);
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_UTXO_CHECKED_INFO, version = 1.0, description = "GET_UTXO_CHECKED_INFO")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "heterogeneousChainId"),
+            @Parameter(parameterName = "utxoList", requestType = @TypeDescriptor(value = List.class), parameterDes = "utxoList")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "detail data")
+    }))
+    public Response getUtxoCheckedInfo(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            if (heterogeneousChainId < 201) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            List<Map> utxoList = (List<Map>) params.get("utxoList");
+            List<UTXOData> utxoDataList = new ArrayList<>();
+            for (Map map : utxoList) {
+                Object amount = map.get("amount");
+                if (amount == null) {
+                    amount = map.get("value");
+                }
+                utxoDataList.add(new UTXOData(map.get("txid").toString(), Integer.parseInt(map.get("vout").toString()), amount == null ? null : new BigInteger(amount.toString())));
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            List<String> nerveHashOfLockedUTXOList = docking.getBitCoinApi().getNerveHashOfLockedUTXOList(utxoDataList);
+
+            List<NerveLockedUTXO> resultList = new ArrayList<>();
+            int i = 0;
+            for (UTXOData data : utxoDataList) {
+                String nerveHash = nerveHashOfLockedUTXOList.get(i++);
+                boolean locked = StringUtils.isNotBlank(nerveHash);
+                resultList.add(new NerveLockedUTXO(data.getTxid(), data.getVout(), data.getAmount() == null ? null : data.getAmount().longValue(), locked, nerveHash));
+            }
+            Map<String, Object> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", resultList);
+            return success(map);
+        } catch (Exception e) {
+            LoggerUtil.LOG.error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_WITHDRAWAL_UTXO_INFO, version = 1.0, description = "GET_WITHDRAWAL_UTXO_INFO")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "heterogeneousChainId"),
+            @Parameter(parameterName = "nerveTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "nerve tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "detail data")
+    }))
+    public Response getWithdrawalUTXOInfo(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            if (heterogeneousChainId < 201) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            String nerveTxHash = (String) params.get("nerveTxHash");
+            if (StringUtils.isBlank(nerveTxHash)) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid txHash");
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (docking == null) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            WithdrawalUTXOTxData utxoTxData = docking.getBitCoinApi().takeWithdrawalUTXOs(nerveTxHash);
+            if (utxoTxData == null) {
+                return failed(ConverterErrorCode.DATA_NOT_FOUND, "invalid nerveTxHash");
+            }
+            Map<String, Object> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", new WithdrawalUTXOVO(utxoTxData));
+            return success(map);
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.CHECK_PAUSE_OUT, version = 1.0, description = "CHECK_PAUSE_OUT")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "htgChainId", parameterType = "int", parameterDes = "htgChainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    })
+    )
+    public Response checkPauseOut(Map params) {
+        Chain chain = null;
+        try {
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("htgChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveAssetChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveAssetId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            Integer htgChainId = (Integer) params.get("htgChainId");
+            Integer nerveAssetChainId = (Integer) params.get("nerveAssetChainId");
+            Integer nerveAssetId = (Integer) params.get("nerveAssetId");
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            HeterogeneousAssetInfo assetInfo = converterCoreApi.getHeterogeneousAssetByNerveAsset(htgChainId, nerveAssetChainId, nerveAssetId);
+            boolean pause = converterCoreApi.isPauseOutHeterogeneousAsset(assetInfo.getChainId(), assetInfo.getAssetId());
+            Map<String, Object> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", pause);
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.CHECK_PAUSE_IN, version = 1.0, description = "CHECK_PAUSE_IN")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "htgChainId", parameterType = "int", parameterDes = "htgChainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    })
+    )
+    public Response checkPauseIn(Map params) {
+        Chain chain = null;
+        try {
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("htgChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveAssetChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveAssetId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            Integer htgChainId = (Integer) params.get("htgChainId");
+            Integer nerveAssetChainId = (Integer) params.get("nerveAssetChainId");
+            Integer nerveAssetId = (Integer) params.get("nerveAssetId");
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            HeterogeneousAssetInfo assetInfo = converterCoreApi.getHeterogeneousAssetByNerveAsset(htgChainId, nerveAssetChainId, nerveAssetId);
+            boolean pause = converterCoreApi.isPauseInHeterogeneousAsset(assetInfo.getChainId(), assetInfo.getAssetId());
+            Map<String, Object> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", pause);
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
     }
 
     /*@CmdAnnotation(cmd = "cv_test", version = 1.0, description = "test")

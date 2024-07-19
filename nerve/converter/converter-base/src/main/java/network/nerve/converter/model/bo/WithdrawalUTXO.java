@@ -55,6 +55,10 @@ public class WithdrawalUTXO {
         this.utxoDataList = utxoDataList;
     }
 
+    public WithdrawalUTXO clone() {
+        return new WithdrawalUTXO(nerveTxHash, htgChainId, currentMultiSignAddress, currenVirtualBankTotal, feeRate, pubs, utxoDataList);
+    }
+
     public String getCurrentMultiSignAddress() {
         return currentMultiSignAddress;
     }

@@ -1,4 +1,5 @@
 package io.nuls.crosschain.utils.thread.handler;
+
 import io.nuls.crosschain.model.bo.message.UntreatedMessage;
 import io.nuls.crosschain.utils.TxUtil;
 import io.nuls.crosschain.model.bo.Chain;
@@ -22,6 +23,7 @@ public class GetCtxStateHandler implements Runnable {
             try {
                 UntreatedMessage untreatedMessage = chain.getGetCtxStateQueue().take();
                 TxUtil.getCtxState(chain, untreatedMessage.getCacheHash());
+                chain.getLogger().info("GetCtxState - {}", untreatedMessage.getCacheHash().toHex());
             } catch (Exception e) {
                 chain.getLogger().error(e);
             }

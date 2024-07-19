@@ -1,0 +1,17 @@
+{
+  "moduleCode":"cv",
+  "mainChainId": 1,
+  "mainAssetId": 1,
+  "encoding": "UTF-8",
+  "chainId":1,
+  "assetId":1,
+  "dataPath": "../../../../data",
+  "executeChangeVirtualBankPeriodicHeight" : 1000,
+  "feePubkey": "111111111111111111111111111111111111111111111111111111111111111111",
+  "initVirtualBankHeight": 10,
+  "virtualBankAgentTotal": 15,
+  "proposalPrice": 10000000000,
+  "proposalVotingDays": 10,
+  "distributionFee": 1000000000,
+  "byzantineRatio": 66
+}

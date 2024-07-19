@@ -178,6 +178,11 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
 
     @Override
     public void txRecordWithdrawFee(HeterogeneousChainTxType txType, String txHash, String blockHash, Long blockHeight, Long txTime, long fee, byte[] remark) throws Exception {
+        this.txRecordWithdrawFee(txType, txHash, blockHash, blockHeight, txTime, fee, false, remark);
+    }
+
+    @Override
+    public void txRecordWithdrawFee(HeterogeneousChainTxType txType, String txHash, String blockHash, Long blockHeight, Long txTime, long fee, boolean nerveInner, byte[] remark) throws Exception {
         if (hChainId < 200) {
             throw new RuntimeException("not support method");
         }
@@ -188,6 +193,9 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         txData.setHtgChainId(hChainId);
         txData.setFee(fee);
         txData.setRecharge(txType == HeterogeneousChainTxType.WITHDRAW_FEE_RECHARGE);
+        if (converterCoreApi.isProtocol36()) {
+            txData.setNerveInner(nerveInner);
+        }
         assembleTxService.createWithdrawlFeeLogTx(nerveChain, txData, txTime, remark);
     }
 

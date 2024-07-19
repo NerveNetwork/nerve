@@ -269,9 +269,11 @@ public class EthAccountTest extends Base {
         // 028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
         // 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0
         List<String> pubList = new ArrayList<>();
-        pubList.add("0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b");
-        pubList.add("02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d");
-        pubList.add("02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0");
+        //pubList.add("03743d75ac0ee77257dd11477a737bba2bd01a1b26246c477ef2a59fb8e873572a");
+        //pubList.add("029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b4");
+        //pubList.add("02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e3049");
+        //pubList.add("02a28a636088973c35ca0c28498b672cb8f61802164cf6904fc83463c4722c6292");
+        pubList.add("222222222222222222222222222222222222222222222222222222222222222222");
 
         chainId = 1;
         String pubkeys = "";

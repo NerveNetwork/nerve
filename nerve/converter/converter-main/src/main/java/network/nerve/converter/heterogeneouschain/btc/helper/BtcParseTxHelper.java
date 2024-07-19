@@ -225,7 +225,13 @@ public class BtcParseTxHelper implements BeanInitial {
             }
         }
         if (value.compareTo(BigInteger.ZERO) == 0) {
-            return null;
+            if (htgContext.getConverterCoreApi().isProtocol36()
+                    && "726f6061f8929f6d180a5fb6efc14242417fca40069ce8be750919b2d190cdf9".equals(htgTxHash)) {
+                txTo = "bc1p2h4xfk2k2t0u0pzeupw57c3852pd8lwf0u9ul3x5c02x63n0urassnvssn";
+            } else {
+                logger().warn("Withdrawal amount 0, Illegal transaction [{}]", htgTxHash);
+                return null;
+            }
         }
         // check withdrawal info
         String nerveTxHash = null;

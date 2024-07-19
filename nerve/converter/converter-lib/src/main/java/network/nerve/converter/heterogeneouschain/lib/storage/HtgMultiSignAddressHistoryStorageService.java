@@ -25,10 +25,8 @@
 package network.nerve.converter.heterogeneouschain.lib.storage;
 
 import io.nuls.core.exception.NulsException;
-import network.nerve.converter.btc.txdata.UsedUTXOData;
-import network.nerve.converter.btc.txdata.WithdrawalFeeLog;
-import network.nerve.converter.btc.txdata.WithdrawalUTXORebuildPO;
-import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
+import network.nerve.converter.btc.txdata.*;
+import org.rocksdb.RocksDBException;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -67,6 +65,7 @@ public interface HtgMultiSignAddressHistoryStorageService {
     boolean isLockedUTXO(String txid, int vout);
 
     String getNerveHashByLockedUTXO(String txid, int vout);
+    List<byte[]> getNerveHashListByLockedUTXO(List<UTXOData> utxoList) throws Exception;
 
     WithdrawalUTXOTxData checkLockedUTXO(String nerveTxHash, List<UsedUTXOData> usedUTXOs) throws Exception;
 
@@ -74,4 +73,7 @@ public interface HtgMultiSignAddressHistoryStorageService {
 
     void saveWithdrawalUTXORebuildPO(String nerveTxHash, WithdrawalUTXORebuildPO po) throws Exception;
     WithdrawalUTXORebuildPO getWithdrawalUTXORebuildPO(String nerveTxHash) throws Exception;
+
+    void saveSplitGranularity(long splitGranularity) throws Exception;
+    long getCurrentSplitGranularity();
 }

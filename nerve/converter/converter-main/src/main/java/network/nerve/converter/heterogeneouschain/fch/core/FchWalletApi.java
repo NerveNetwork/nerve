@@ -164,7 +164,7 @@ public class FchWalletApi implements BeanInitial {
 
     public BigDecimal getBalance(String address) {
         ApipClient apipClient = FreeGetAPIs.getFidCid(rpc, address);
-        Map data = (Map) apipClient.getResponseBody().getData();
+        Map data = (Map) checkBestHeight(apipClient.getResponseBody());
         if (data == null) {
             return BigDecimal.ZERO;
         }
@@ -177,7 +177,7 @@ public class FchWalletApi implements BeanInitial {
 
     public BigDecimal getPrice() {
         ApipClient apipClient = FreeGetAPIs.getPrices(rpc);
-        Map data = (Map) apipClient.getResponseBody().getData();
+        Map data = (Map) checkBestHeight(apipClient.getResponseBody());
         if (data == null) {
             return BigDecimal.ZERO;
         }
@@ -188,15 +188,30 @@ public class FchWalletApi implements BeanInitial {
         return new BigDecimal(balance.toString());
     }
 
+    ThreadLocal<Long> bestHeightLocal = new ThreadLocal<>();
+
+    public Long getBestHeightForCurrentThread() {
+        return bestHeightLocal.get();
+    }
+
+    private Object checkBestHeight(ResponseBody responseBody) {
+        if (responseBody.getCode() != 0) {
+            throw new RuntimeException(String.format("%s, detail: %s", responseBody.getMessage(), responseBody.getData()));
+        }
+        bestHeightLocal.set(responseBody.getBestHeight());
+        return responseBody.getData();
+    }
+
     private Object checkApiBalance(ResponseBody responseBody) {
+        checkBestHeight(responseBody);
         long balance = responseBody.getBalance();
         if (balance < 1000000000l) {
             // Last 1000,000 requests
-            String warn = String.format("[%s]Access paid API The number of times is about to run out, and the remaining amount is insufficient 10, please use %s towards FUmo2eez6VK2sfGWjek9i9aK5y1mdHSnqv Transfer", symbol(), via);
+            String warn = String.format("[%s] Access paid API The number of times is about to run out, and the remaining amount is insufficient 10, please use %s towards FUmo2eez6VK2sfGWjek9i9aK5y1mdHSnqv Transfer", symbol(), via);
             getLog().warn(warn);
         }
         if (getLog().isDebugEnabled())
-            getLog().debug("[{}]PaidAPIRemaining visits of: {}, Remaining amount: {}", symbol(), balance / 1000, new BigDecimal(balance).movePointLeft(8).stripTrailingZeros().toPlainString());
+            getLog().debug("[{}] Paid API Remaining visits of: {}, Remaining amount: {}", symbol(), balance / 1000, new BigDecimal(balance).movePointLeft(8).stripTrailingZeros().toPlainString());
         return responseBody.getData();
     }
 
@@ -266,20 +281,20 @@ public class FchWalletApi implements BeanInitial {
 
     public List<Cash> getAccountUTXOs(String address) {
         ApipClient apipClient = FreeGetAPIs.getCashes(rpc, address, 0);
-        Object data = apipClient.getResponseBody().getData();
+        Object data = checkBestHeight(apipClient.getResponseBody());
         if (data == null) {
             return null;
         }
         return ApipDataGetter.getCashList(data);
     }
 
-    public List<Cash> getUTXOsByIds(String[] cashIds) {
+    public Map<String, Cash> getUTXOsByIds(String[] cashIds) {
         ApipClient client = BlockchainAPIs.cashByIdsPost(rpc, cashIds, via, sessionKey);
         Object data = checkApiBalance(client.getResponseBody());
         if (data == null) {
             return null;
         }
-        return ApipDataGetter.getCashList(data);
+        return ApipDataGetter.getCashMap(data);
     }
 
     public String createMultisigAddress(List<byte[]> pubs, int minSign) {
@@ -291,6 +306,15 @@ public class FchWalletApi implements BeanInitial {
         }
         P2SH p2sh = FchTool.genMultiP2sh(pubs, minSign);
         return p2sh.getFid();
+    }
+
+    public String broadcast(String txHex) {
+        ApipClient apipClient = FreeGetAPIs.broadcast(rpc, txHex);
+        Object data = checkBestHeight(apipClient.getResponseBody());
+        if (data == null) {
+            return null;
+        }
+        return data.toString();
     }
 
 }

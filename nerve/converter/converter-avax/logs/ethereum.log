@@ -1,0 +1,211 @@
+13:36:03.885 DEBUG [o.w.p.h.HttpService]  --> POST https://api.avax.network/ext/bc/C/rpc
+13:36:03.885 DEBUG [o.w.p.h.HttpService]  Content-Type: application/json; charset=utf-8
+13:36:03.885 DEBUG [o.w.p.h.HttpService]  Content-Length: 60
+13:36:03.885 DEBUG [o.w.p.h.HttpService]  
+13:36:03.886 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":0}
+13:36:03.886 DEBUG [o.w.p.h.HttpService]  --> END POST (60-byte body)
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  <-- 200 https://api.avax.network/ext/bc/C/rpc (1222ms)
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  date: Tue, 19 Dec 2023 05:36:05 GMT
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  content-type: application/json
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  cf-ray: 837d492f488266b6-AMS
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  cf-cache-status: DYNAMIC
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  cache-control: private, no-cache
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  set-cookie: api-session=1702964166.041.37.236110|ea6fe5debfaeb9a420bd8a2d86ef8cc1; Max-Age=172800; Path=/; Secure; HttpOnly; SameSite=None
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  strict-transport-security: max-age=0
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  vary: Origin, Accept-Encoding
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  access-control-allow-credentials: true
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  x-cache: MISS
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  x-execution-weight: cheap
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  x-robots-tag: noindex
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  set-cookie: __cflb=02DiuGkhLNKExmHfnCWvsWTNjzm8aijt61jro7HvqKvH2; SameSite=Lax; path=/; expires=Wed, 20-Dec-23 05:36:05 GMT; HttpOnly
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  set-cookie: __cf_bm=8emb_giGOpI8_VKrJ2Kj.rQ6mk6cpVN4gS3Rv1OthT0-1702964165-1-ATgJf8Fb/ZDz0z6nPjpESV8cKy16u5V6v2a/k/8ONkyKfuxH0w5dG4wWvfhfQJzv48SQ9zwKgathif6IhbLoSfg=; path=/; expires=Tue, 19-Dec-23 06:06:05 GMT; domain=.avax.network; HttpOnly; Secure; SameSite=None
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  server: cloudflare
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","id":0,"result":"0xadfc37823e"}
+13:36:05.109 DEBUG [o.w.p.h.HttpService]  <-- END HTTP (48-byte body)
+13:36:05.544 DEBUG [o.w.p.h.HttpService]  --> POST https://api.avax.network/ext/bc/C/rpc
+13:36:05.544 DEBUG [o.w.p.h.HttpService]  Content-Type: application/json; charset=utf-8
+13:36:05.544 DEBUG [o.w.p.h.HttpService]  Content-Length: 2284
+13:36:05.544 DEBUG [o.w.p.h.HttpService]  
+13:36:05.544 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["0xf9044e2b85ba43b74000830493e0943758aa66cad9f2606f1f501c9cb31b94b713a6d580b903e4ab6c2b1000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000004ac062430c71ea3293dca4cff969b6fadf67f8b2000000000000000000000000000000000000000000000001fc3b8783d5e851ea000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000004065613030623063356130356462343735343037653561616630376435393139383439393165376662613533666236626164366366643666353133386365353838000000000000000000000000000000000000000000000000000000000000028ac0f4ea22d28257ff1bc9393be8da9a76e0519007fec0831ff4e26b4fd2c1a0cc5cc4d2564c86f9551396990856ada0b8548fdd659dda9fb5521514ee963d37191b95eeeaf153b35faf677f99b38f92ecbe05fe2d31de1b73fe47de8fcc76694e8d7a7e6d499a868a82dc7f99d04596f8384fb92cc48e94a0289e65ccfdda0b54841bf1e2bb951deee6150f7a33126828e5cfce3a73899dac8d628bc7ff6b7fdf258a27bb07bc63393c437a800f3b8e45c0c2d141c99d1f87f9dc9c4b4923fa1f32fb1cc4d148c385c26512a1a5a3a4dd8096a60c7ecda627ab88503cc6ba12b158492f0e0c8043faac09108ec89e3d3b51d802a46fc13474e1b5a789460d0c4e6bb4d51cd07bee8a89a939da7e4f383ecd48e3f04bfc08f736339f863e5d4b0abaa5d1253dc2af708a900ebe0b95bdadd4813eec34912a69b8f9ef30f4f9abb33a14a8ca1b8c17daf8649eb92b98ca210e6d20935682dcf8f5dcb8132cad179acab42f2a864451ea58c51697df7dac82dfdd0271e73e02faf77012a3e84347b4f91ba0c62b1c41600f6469eec2102d1d291592349738b1529f4a96ef701ea7b3430647dc21601cd0af06d315cd97ee61ab0e9a4aeca0b3917b36e651ce822b9635467d66c49f1c2694b509da06c89263cd92a4815b0a2d10a825c3d5dc651b88f3a06b89adee153c4457512365e5d9b62322c571ca129ea9507f214978b1e8d27c6dcd9fd8ab3a1c35cb312917fa16ba7aa85cbd34a201f4c7fd655d69f7864de71b76814eae30891adf5af61626a6680b1d9af19c3ec642bd4d888c14f5c3a54a1c27ad059faf471cdd3b28e1f5e248e0e6804789a0d643185a60d755b16a355d1fa73f1d02695b17026a6b212ad770cb612976ccb87fc29358f860ca50c8654387342b6de198ccc41c00000000000000000000000000000000000000000000830150f8a086f336e896d51d796b081a13be7f1767d7424113aecde834553eb716cef252e9a07f651336f26aa0b72f4367e24fc4ef1d71ba309361e9fe51fd686e3caaf47866"],"id":1}
+13:36:05.544 DEBUG [o.w.p.h.HttpService]  --> END POST (2284-byte body)
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  <-- 200 https://api.avax.network/ext/bc/C/rpc (626ms)
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  date: Tue, 19 Dec 2023 05:36:05 GMT
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  content-type: application/json
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  cf-ray: 837d49342d8866b6-AMS
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  cf-cache-status: DYNAMIC
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  cache-control: private, no-cache
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  set-cookie: api-session=1702964166.819.33.620556|ea6fe5debfaeb9a420bd8a2d86ef8cc1; Max-Age=172800; Path=/; Secure; HttpOnly; SameSite=None
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  strict-transport-security: max-age=0
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  vary: Origin, Accept-Encoding
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  access-control-allow-credentials: true
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  x-cache: MISS
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  x-execution-weight: errored
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  x-robots-tag: noindex
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  set-cookie: __cflb=02DiuGkhLNKExmHfnCWvsWTNjzm8aijt61jro7HvqKvH2; SameSite=Lax; path=/; expires=Wed, 20-Dec-23 05:36:05 GMT; HttpOnly
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  set-cookie: __cf_bm=eEEX.OEIPd1GHLx7LBXRtHiOFYOpgR5cJK46Kte0sec-1702964165-1-AaFBsSsaROl+65GPlLXygYclq/png4bg5o2xAKWXbouiDMCVM1y/zXtEldeep5AM9n+pnRD/MBp46JiBnozy4pk=; path=/; expires=Tue, 19-Dec-23 06:06:05 GMT; domain=.avax.network; HttpOnly; Secure; SameSite=None
+13:36:06.171 DEBUG [o.w.p.h.HttpService]  server: cloudflare
+13:36:06.172 DEBUG [o.w.p.h.HttpService]  
+13:36:06.172 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","id":1,"error":{"code":-32000,"message":"nonce too low: address 0xd87F2ad3EF011817319FD25454FC186CA71B3B56 current nonce (371) > tx nonce (43)"}}
+13:36:06.172 DEBUG [o.w.p.h.HttpService]  <-- END HTTP (162-byte body)
+13:36:06.308 DEBUG [o.a.h.c.p.RequestAddCookies]  CookieSpec selected: default
+13:36:06.314 DEBUG [o.a.h.c.p.RequestAuthCache]  Auth cache not set in the context
+13:36:06.315 DEBUG [o.a.h.i.c.PoolingHttpClientConnectionManager]  Connection request: [route: {s}->https://assets.nabox.io:443][total kept alive: 0; route allocated: 0 of 40; total allocated: 0 of 200]
+13:36:06.324 DEBUG [o.a.h.i.c.PoolingHttpClientConnectionManager]  Connection leased: [id: 0][route: {s}->https://assets.nabox.io:443][total kept alive: 0; route allocated: 1 of 40; total allocated: 1 of 200]
+13:36:06.325 DEBUG [o.a.h.i.e.MainClientExec]  Opening connection {s}->https://assets.nabox.io:443
+13:36:06.525 DEBUG [o.a.h.i.c.DefaultHttpClientConnectionOperator]  Connecting to assets.nabox.io/18.142.226.127:443
+13:36:06.525 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]  Connecting socket to assets.nabox.io/18.142.226.127:443 with timeout 10000
+13:36:06.527 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]  Enabled protocols: [TLSv1.3, TLSv1.2]
+13:36:06.527 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]  Enabled cipher suites:[TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, TLS_RSA_WITH_AES_256_GCM_SHA384, TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384, TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384, TLS_DHE_RSA_WITH_AES_256_GCM_SHA384, TLS_DHE_DSS_WITH_AES_256_GCM_SHA384, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, TLS_RSA_WITH_AES_128_GCM_SHA256, TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256, TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256, TLS_DHE_RSA_WITH_AES_128_GCM_SHA256, TLS_DHE_DSS_WITH_AES_128_GCM_SHA256, TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384, TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384, TLS_RSA_WITH_AES_256_CBC_SHA256, TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384, TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384, TLS_DHE_RSA_WITH_AES_256_CBC_SHA256, TLS_DHE_DSS_WITH_AES_256_CBC_SHA256, TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA, TLS_RSA_WITH_AES_256_CBC_SHA, TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA, TLS_ECDH_RSA_WITH_AES_256_CBC_SHA, TLS_DHE_RSA_WITH_AES_256_CBC_SHA, TLS_DHE_DSS_WITH_AES_256_CBC_SHA, TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, TLS_RSA_WITH_AES_128_CBC_SHA256, TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256, TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256, TLS_DHE_RSA_WITH_AES_128_CBC_SHA256, TLS_DHE_DSS_WITH_AES_128_CBC_SHA256, TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA, TLS_RSA_WITH_AES_128_CBC_SHA, TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA, TLS_ECDH_RSA_WITH_AES_128_CBC_SHA, TLS_DHE_RSA_WITH_AES_128_CBC_SHA, TLS_DHE_DSS_WITH_AES_128_CBC_SHA, TLS_EMPTY_RENEGOTIATION_INFO_SCSV]
+13:36:06.527 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]  Starting handshake
+13:36:07.897 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]  Secure session established
+13:36:07.897 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]   negotiated protocol: TLSv1.2
+13:36:07.897 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]   negotiated cipher suite: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+13:36:07.898 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]   peer principal: CN=assets.nabox.io
+13:36:07.898 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]   peer alternative names: [assets.nabox.io]
+13:36:07.898 DEBUG [o.a.h.c.s.SSLConnectionSocketFactory]   issuer principal: CN=R3, O=Let's Encrypt, C=US
+13:36:07.901 DEBUG [o.a.h.i.c.DefaultHttpClientConnectionOperator]  Connection established 127.0.0.1:55963<->18.142.226.127:443
+13:36:07.901 DEBUG [o.a.h.i.c.DefaultManagedHttpClientConnection]  http-outgoing-0: set socket timeout to 10000
+13:36:07.901 DEBUG [o.a.h.i.e.MainClientExec]  Executing request GET /api/chainapi/43114 HTTP/1.1
+13:36:07.901 DEBUG [o.a.h.i.e.MainClientExec]  Target auth state: UNCHALLENGED
+13:36:07.902 DEBUG [o.a.h.i.e.MainClientExec]  Proxy auth state: UNCHALLENGED
+13:36:07.903 DEBUG [o.a.h.headers]  http-outgoing-0 >> GET /api/chainapi/43114 HTTP/1.1
+13:36:07.903 DEBUG [o.a.h.headers]  http-outgoing-0 >> Host: assets.nabox.io
+13:36:07.903 DEBUG [o.a.h.headers]  http-outgoing-0 >> Connection: Keep-Alive
+13:36:07.903 DEBUG [o.a.h.headers]  http-outgoing-0 >> User-Agent: Apache-HttpClient/4.5.6 (Java/11.0.11)
+13:36:07.903 DEBUG [o.a.h.headers]  http-outgoing-0 >> Accept-Encoding: gzip,deflate
+13:36:07.903 DEBUG [o.a.h.wire]  http-outgoing-0 >> "GET /api/chainapi/43114 HTTP/1.1[\r][\n]"
+13:36:07.903 DEBUG [o.a.h.wire]  http-outgoing-0 >> "Host: assets.nabox.io[\r][\n]"
+13:36:07.903 DEBUG [o.a.h.wire]  http-outgoing-0 >> "Connection: Keep-Alive[\r][\n]"
+13:36:07.903 DEBUG [o.a.h.wire]  http-outgoing-0 >> "User-Agent: Apache-HttpClient/4.5.6 (Java/11.0.11)[\r][\n]"
+13:36:07.903 DEBUG [o.a.h.wire]  http-outgoing-0 >> "Accept-Encoding: gzip,deflate[\r][\n]"
+13:36:07.903 DEBUG [o.a.h.wire]  http-outgoing-0 >> "[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "HTTP/1.1 200 [\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "Server: nginx/1.23.0[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "Date: Tue, 19 Dec 2023 05:36:08 GMT[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "Content-Type: application/json[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "Transfer-Encoding: chunked[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "Connection: keep-alive[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "Vary: Origin[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "Vary: Access-Control-Request-Method[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "Vary: Access-Control-Request-Headers[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "X-Frame-Options: SAMEORIGIN[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "[\r][\n]"
+13:36:08.516 DEBUG [o.a.h.wire]  http-outgoing-0 << "9e[\r][\n]"
+13:36:08.517 DEBUG [o.a.h.wire]  http-outgoing-0 << "{"type":"EVM","name":"Avax","apiUrl":"https://api.avax.network/ext/bc/C/rpc","nativeId":43114,"index":0,"rpcVersion":0,"extend1":"","extend2":"","extend3":""}[\r][\n]"
+13:36:08.517 DEBUG [o.a.h.wire]  http-outgoing-0 << "0[\r][\n]"
+13:36:08.517 DEBUG [o.a.h.wire]  http-outgoing-0 << "[\r][\n]"
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << HTTP/1.1 200 
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << Server: nginx/1.23.0
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << Date: Tue, 19 Dec 2023 05:36:08 GMT
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << Content-Type: application/json
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << Transfer-Encoding: chunked
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << Connection: keep-alive
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << Vary: Origin
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << Vary: Access-Control-Request-Method
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << Vary: Access-Control-Request-Headers
+13:36:08.520 DEBUG [o.a.h.headers]  http-outgoing-0 << X-Frame-Options: SAMEORIGIN
+13:36:08.525 DEBUG [o.a.h.i.e.MainClientExec]  Connection can be kept alive indefinitely
+13:36:08.529 DEBUG [o.a.h.i.c.PoolingHttpClientConnectionManager]  Connection [id: 0][route: {s}->https://assets.nabox.io:443] can be kept alive indefinitely
+13:36:08.529 DEBUG [o.a.h.i.c.DefaultManagedHttpClientConnection]  http-outgoing-0: set socket timeout to 0
+13:36:08.529 DEBUG [o.a.h.i.c.PoolingHttpClientConnectionManager]  Connection released: [id: 0][route: {s}->https://assets.nabox.io:443][total kept alive: 1; route allocated: 1 of 40; total allocated: 1 of 200]
+13:43:12.793 DEBUG [o.w.p.h.HttpService]  --> POST https://api.avax.network/ext/bc/C/rpc
+13:43:12.794 DEBUG [o.w.p.h.HttpService]  Content-Type: application/json; charset=utf-8
+13:43:12.794 DEBUG [o.w.p.h.HttpService]  Content-Length: 60
+13:43:12.794 DEBUG [o.w.p.h.HttpService]  
+13:43:12.794 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":0}
+13:43:12.794 DEBUG [o.w.p.h.HttpService]  --> END POST (60-byte body)
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  <-- 200 https://api.avax.network/ext/bc/C/rpc (1185ms)
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  date: Tue, 19 Dec 2023 05:43:13 GMT
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  content-type: application/json
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  cf-ray: 837d53a7be10668e-AMS
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  cf-cache-status: DYNAMIC
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  cache-control: private, no-cache
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  set-cookie: api-session=1702964594.911.32.671858|ea6fe5debfaeb9a420bd8a2d86ef8cc1; Max-Age=172800; Path=/; Secure; HttpOnly; SameSite=None
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  strict-transport-security: max-age=0
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  vary: Origin, Accept-Encoding
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  access-control-allow-credentials: true
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  x-cache: MISS
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  x-execution-weight: cheap
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  x-robots-tag: noindex
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  set-cookie: __cflb=02DiuGkhLNKExmHfnCWvsWTNjzm8aijt6aEQou6togwdn; SameSite=Lax; path=/; expires=Wed, 20-Dec-23 05:43:13 GMT; HttpOnly
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  set-cookie: __cf_bm=nnRnBvxOSQkXyWnx_avx08aQLc_p0N3pkfNJnYTeXMo-1702964593-1-AWnEX97+rhqZyjZw2s/jUlmA5AdXoSiOMVtTPSO8Bwztx+Qq6J5ijaioaoJ+kzWLPj6r/T9/kIoMli2K9WGYcFM=; path=/; expires=Tue, 19-Dec-23 06:13:13 GMT; domain=.avax.network; HttpOnly; Secure; SameSite=None
+13:43:13.980 DEBUG [o.w.p.h.HttpService]  server: cloudflare
+13:43:13.981 DEBUG [o.w.p.h.HttpService]  
+13:43:13.981 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","id":0,"result":"0xa7620ab49e"}
+13:43:13.981 DEBUG [o.w.p.h.HttpService]  <-- END HTTP (48-byte body)
+13:43:14.432 DEBUG [o.w.p.h.HttpService]  --> POST https://api.avax.network/ext/bc/C/rpc
+13:43:14.432 DEBUG [o.w.p.h.HttpService]  Content-Type: application/json; charset=utf-8
+13:43:14.432 DEBUG [o.w.p.h.HttpService]  Content-Length: 2288
+13:43:14.432 DEBUG [o.w.p.h.HttpService]  
+13:43:14.432 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["0xf9045082017685ba43b74000830493e0943758aa66cad9f2606f1f501c9cb31b94b713a6d580b903e4ab6c2b1000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000004ac062430c71ea3293dca4cff969b6fadf67f8b2000000000000000000000000000000000000000000000001fc3b8783d5e851ea000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000004065613030623063356130356462343735343037653561616630376435393139383439393165376662613533666236626164366366643666353133386365353838000000000000000000000000000000000000000000000000000000000000028ac0f4ea22d28257ff1bc9393be8da9a76e0519007fec0831ff4e26b4fd2c1a0cc5cc4d2564c86f9551396990856ada0b8548fdd659dda9fb5521514ee963d37191b95eeeaf153b35faf677f99b38f92ecbe05fe2d31de1b73fe47de8fcc76694e8d7a7e6d499a868a82dc7f99d04596f8384fb92cc48e94a0289e65ccfdda0b54841bf1e2bb951deee6150f7a33126828e5cfce3a73899dac8d628bc7ff6b7fdf258a27bb07bc63393c437a800f3b8e45c0c2d141c99d1f87f9dc9c4b4923fa1f32fb1cc4d148c385c26512a1a5a3a4dd8096a60c7ecda627ab88503cc6ba12b158492f0e0c8043faac09108ec89e3d3b51d802a46fc13474e1b5a789460d0c4e6bb4d51cd07bee8a89a939da7e4f383ecd48e3f04bfc08f736339f863e5d4b0abaa5d1253dc2af708a900ebe0b95bdadd4813eec34912a69b8f9ef30f4f9abb33a14a8ca1b8c17daf8649eb92b98ca210e6d20935682dcf8f5dcb8132cad179acab42f2a864451ea58c51697df7dac82dfdd0271e73e02faf77012a3e84347b4f91ba0c62b1c41600f6469eec2102d1d291592349738b1529f4a96ef701ea7b3430647dc21601cd0af06d315cd97ee61ab0e9a4aeca0b3917b36e651ce822b9635467d66c49f1c2694b509da06c89263cd92a4815b0a2d10a825c3d5dc651b88f3a06b89adee153c4457512365e5d9b62322c571ca129ea9507f214978b1e8d27c6dcd9fd8ab3a1c35cb312917fa16ba7aa85cbd34a201f4c7fd655d69f7864de71b76814eae30891adf5af61626a6680b1d9af19c3ec642bd4d888c14f5c3a54a1c27ad059faf471cdd3b28e1f5e248e0e6804789a0d643185a60d755b16a355d1fa73f1d02695b17026a6b212ad770cb612976ccb87fc29358f860ca50c8654387342b6de198ccc41c00000000000000000000000000000000000000000000830150f7a0d2ebd2645e9bf98f76cbe08729aa53dcfb83f24b3b4efbcf8253ee279c66d371a00f4fdf496bac593c867a8b39a608887b702ec80e7b074804f4b090b7e55a923e"],"id":1}
+13:43:14.432 DEBUG [o.w.p.h.HttpService]  --> END POST (2288-byte body)
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  <-- 200 https://api.avax.network/ext/bc/C/rpc (417ms)
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  date: Tue, 19 Dec 2023 05:43:14 GMT
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  content-type: application/json
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  cf-ray: 837d53ad3b63668e-AMS
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  cf-cache-status: DYNAMIC
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  cache-control: private, no-cache
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  set-cookie: api-session=1702964595.792.32.694079|ea6fe5debfaeb9a420bd8a2d86ef8cc1; Max-Age=172800; Path=/; Secure; HttpOnly; SameSite=None
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  strict-transport-security: max-age=0
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  vary: Origin, Accept-Encoding
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  access-control-allow-credentials: true
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  x-cache: MISS
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  x-execution-weight: cheap
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  x-robots-tag: noindex
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  set-cookie: __cflb=02DiuGkhLNKExmHfnCWvsWTNjzm8aijt6ayEL6fYRxc8C; SameSite=Lax; path=/; expires=Wed, 20-Dec-23 05:43:14 GMT; HttpOnly
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  set-cookie: __cf_bm=Zg40kL1tyB1GcOz96t9CEwMoQiOrUOBG45_dQHzYHlM-1702964594-1-Af8I9mx4z3Z8eLDcMio3LdrTLda1X09qw3dlxS/+iK17ZvRXzv7cE9ie4X7mcOEleHCMIoJ+VvR1yT+aqNBLQaI=; path=/; expires=Tue, 19-Dec-23 06:13:14 GMT; domain=.avax.network; HttpOnly; Secure; SameSite=None
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  server: cloudflare
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","id":1,"result":"0x1daa4afd6e283ba09ebcc64a42f583acd641d97b806e97903828ec4961b1336d"}
+13:43:14.850 DEBUG [o.w.p.h.HttpService]  <-- END HTTP (102-byte body)
+13:49:04.892 DEBUG [o.w.p.h.HttpService]  --> POST https://api.avax.network/ext/bc/C/rpc
+13:49:04.892 DEBUG [o.w.p.h.HttpService]  Content-Type: application/json; charset=utf-8
+13:49:04.892 DEBUG [o.w.p.h.HttpService]  Content-Length: 60
+13:49:04.892 DEBUG [o.w.p.h.HttpService]  
+13:49:04.892 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":0}
+13:49:04.892 DEBUG [o.w.p.h.HttpService]  --> END POST (60-byte body)
+13:49:06.141 DEBUG [o.w.p.h.HttpService]  <-- 200 https://api.avax.network/ext/bc/C/rpc (1248ms)
+13:49:06.141 DEBUG [o.w.p.h.HttpService]  date: Tue, 19 Dec 2023 05:49:06 GMT
+13:49:06.141 DEBUG [o.w.p.h.HttpService]  content-type: application/json
+13:49:06.141 DEBUG [o.w.p.h.HttpService]  cf-ray: 837d5c40bd8d66fc-AMS
+13:49:06.141 DEBUG [o.w.p.h.HttpService]  cf-cache-status: DYNAMIC
+13:49:06.141 DEBUG [o.w.p.h.HttpService]  cache-control: private, no-cache
+13:49:06.141 DEBUG [o.w.p.h.HttpService]  set-cookie: api-session=1702964947.073.37.507922|ea6fe5debfaeb9a420bd8a2d86ef8cc1; Max-Age=172800; Path=/; Secure; HttpOnly; SameSite=None
+13:49:06.141 DEBUG [o.w.p.h.HttpService]  strict-transport-security: max-age=0
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  vary: Origin, Accept-Encoding
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  access-control-allow-credentials: true
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  x-cache: MISS
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  x-execution-weight: cheap
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  x-robots-tag: noindex
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  set-cookie: __cflb=02DiuGkhLNKExmHfnCWvsWTNjzm8aijt6Az73qPkYVHAC; SameSite=Lax; path=/; expires=Wed, 20-Dec-23 05:49:06 GMT; HttpOnly
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  set-cookie: __cf_bm=NG7n8qWLXGArQCiI1AW3mln1LKAij62EIOinFa7ulVE-1702964946-1-AUqWJWp+Npuwgjl8iIcOVdu08BGaqTgkhTRQvtIfIhYnmxMDsaQr3u9ca32ZJii2jQG73x3InyfJ7CiYpGu2w6k=; path=/; expires=Tue, 19-Dec-23 06:19:06 GMT; domain=.avax.network; HttpOnly; Secure; SameSite=None
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  server: cloudflare
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","id":0,"result":"0xa95b31987b"}
+13:49:06.142 DEBUG [o.w.p.h.HttpService]  <-- END HTTP (48-byte body)
+13:49:06.550 DEBUG [o.w.p.h.HttpService]  --> POST https://api.avax.network/ext/bc/C/rpc
+13:49:06.550 DEBUG [o.w.p.h.HttpService]  Content-Type: application/json; charset=utf-8
+13:49:06.550 DEBUG [o.w.p.h.HttpService]  Content-Length: 2288
+13:49:06.550 DEBUG [o.w.p.h.HttpService]  
+13:49:06.550 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["0xf9045082017385ba43b74000830493e0943758aa66cad9f2606f1f501c9cb31b94b713a6d580b903e4ab6c2b1000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000004ac062430c71ea3293dca4cff969b6fadf67f8b2000000000000000000000000000000000000000000000001fc3b8783d5e851ea000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000004065613030623063356130356462343735343037653561616630376435393139383439393165376662613533666236626164366366643666353133386365353838000000000000000000000000000000000000000000000000000000000000028ac0f4ea22d28257ff1bc9393be8da9a76e0519007fec0831ff4e26b4fd2c1a0cc5cc4d2564c86f9551396990856ada0b8548fdd659dda9fb5521514ee963d37191b95eeeaf153b35faf677f99b38f92ecbe05fe2d31de1b73fe47de8fcc76694e8d7a7e6d499a868a82dc7f99d04596f8384fb92cc48e94a0289e65ccfdda0b54841bf1e2bb951deee6150f7a33126828e5cfce3a73899dac8d628bc7ff6b7fdf258a27bb07bc63393c437a800f3b8e45c0c2d141c99d1f87f9dc9c4b4923fa1f32fb1cc4d148c385c26512a1a5a3a4dd8096a60c7ecda627ab88503cc6ba12b158492f0e0c8043faac09108ec89e3d3b51d802a46fc13474e1b5a789460d0c4e6bb4d51cd07bee8a89a939da7e4f383ecd48e3f04bfc08f736339f863e5d4b0abaa5d1253dc2af708a900ebe0b95bdadd4813eec34912a69b8f9ef30f4f9abb33a14a8ca1b8c17daf8649eb92b98ca210e6d20935682dcf8f5dcb8132cad179acab42f2a864451ea58c51697df7dac82dfdd0271e73e02faf77012a3e84347b4f91ba0c62b1c41600f6469eec2102d1d291592349738b1529f4a96ef701ea7b3430647dc21601cd0af06d315cd97ee61ab0e9a4aeca0b3917b36e651ce822b9635467d66c49f1c2694b509da06c89263cd92a4815b0a2d10a825c3d5dc651b88f3a06b89adee153c4457512365e5d9b62322c571ca129ea9507f214978b1e8d27c6dcd9fd8ab3a1c35cb312917fa16ba7aa85cbd34a201f4c7fd655d69f7864de71b76814eae30891adf5af61626a6680b1d9af19c3ec642bd4d888c14f5c3a54a1c27ad059faf471cdd3b28e1f5e248e0e6804789a0d643185a60d755b16a355d1fa73f1d02695b17026a6b212ad770cb612976ccb87fc29358f860ca50c8654387342b6de198ccc41c00000000000000000000000000000000000000000000830150f8a0eaeaab3548386ea1e7d0f0d8abe8db5e5de21f9ccf88b398eb4f3d31967f2e2da0615ebbfd9cd0d64078e4f3ecdd9905437b3015ea2bb4cc5c7e3458d31d686493"],"id":1}
+13:49:06.550 DEBUG [o.w.p.h.HttpService]  --> END POST (2288-byte body)
+13:49:06.965 DEBUG [o.w.p.h.HttpService]  <-- 200 https://api.avax.network/ext/bc/C/rpc (414ms)
+13:49:06.965 DEBUG [o.w.p.h.HttpService]  date: Tue, 19 Dec 2023 05:49:06 GMT
+13:49:06.965 DEBUG [o.w.p.h.HttpService]  content-type: application/json
+13:49:06.965 DEBUG [o.w.p.h.HttpService]  cf-ray: 837d5c45991266fc-AMS
+13:49:06.965 DEBUG [o.w.p.h.HttpService]  cf-cache-status: DYNAMIC
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  cache-control: private, no-cache
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  set-cookie: api-session=1702964947.847.37.269399|ea6fe5debfaeb9a420bd8a2d86ef8cc1; Max-Age=172800; Path=/; Secure; HttpOnly; SameSite=None
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  strict-transport-security: max-age=0
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  vary: Origin, Accept-Encoding
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  access-control-allow-credentials: true
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  x-cache: MISS
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  x-execution-weight: cheap
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  x-robots-tag: noindex
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  set-cookie: __cflb=02DiuGkhLNKExmHfnCWvsWTNjzm8aijt6Az73qPkYVHAC; SameSite=Lax; path=/; expires=Wed, 20-Dec-23 05:49:06 GMT; HttpOnly
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  set-cookie: __cf_bm=FIy3R9880U0RM.z5NBqTNFKE7GVveMpUTDNlBZfCk3U-1702964946-1-AY71SWz9G7opf7QIDMJebQeHOsEJocWDBY3dlfv1Cdzi01gZdOwMA/FW7ZP7I39T0BF1qx4TxEKyW9HO1HfAkHY=; path=/; expires=Tue, 19-Dec-23 06:19:06 GMT; domain=.avax.network; HttpOnly; Secure; SameSite=None
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  server: cloudflare
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  {"jsonrpc":"2.0","id":1,"result":"0x0a6341a1d250a1d027556669abd11a355f612672db50be4c50f4d4345e8ae946"}
+13:49:06.966 DEBUG [o.w.p.h.HttpService]  <-- END HTTP (102-byte body)

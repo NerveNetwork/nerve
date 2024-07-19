@@ -1,9 +1,12 @@
 package network.nerve.converter.rpc.call;
 
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
+import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.model.bo.WithdrawalUTXO;
 import network.nerve.converter.utils.LoggerUtil;
 
 import java.text.MessageFormat;
@@ -89,24 +92,6 @@ public class SwapCall extends BaseCall {
             return (boolean) result.get("value");
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_is_legal_stable");
-            LoggerUtil.LOG.error(msg, e);
-            return false;
-        }
-    }
-
-    public static boolean isLegalBTCAddr(boolean mainnet, String btcAddress) {
-        try {
-            Map<String, Object> params = new HashMap<>();
-            params.put(Constants.VERSION_KEY_STR, "1.0");
-            params.put("mainnet", mainnet);
-            params.put("address", btcAddress);
-            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_is_legal_btc_addr", params);
-            if (result == null || result.get("value") == null) {
-                return false;
-            }
-            return (boolean) result.get("value");
-        } catch (Exception e) {
-            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_is_legal_btc_addr");
             LoggerUtil.LOG.error(msg, e);
             return false;
         }
@@ -288,6 +273,123 @@ public class SwapCall extends BaseCall {
             }
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_update_swap_pair_fee_rate");
+            LoggerUtil.LOG.error(msg, e);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+    }
+
+    public static String signFchWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signer, String to,
+                                         long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, nerveChainId);
+
+            params.put("withdrawalUTXO", HexUtil.encode(new WithdrawalUTXOTxData(withdrawalUTXO).serialize()));
+            params.put("signer", signer);
+            params.put("to", to);
+            params.put("amount", amount);
+            params.put("feeRate", feeRate);
+            params.put("opReturn", opReturn);
+            params.put("m", m);
+            params.put("n", n);
+            params.put("useAllUTXO", useAllUTXO);
+            params.put("splitGranularity", splitGranularity);
+            String resultStr;
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_signFchWithdraw", params);
+            if (result == null || result.get("value") == null) {
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+            resultStr = (String) result.get("value");
+            return resultStr;
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_signFchWithdraw");
+            LoggerUtil.LOG.error(msg, e);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+    }
+
+    public static boolean verifyWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, nerveChainId);
+
+            params.put("withdrawalUTXO", HexUtil.encode(new WithdrawalUTXOTxData(withdrawalUTXO).serialize()));
+            params.put("signData", signData);
+            params.put("to", to);
+            params.put("amount", amount);
+            params.put("feeRate", feeRate);
+            params.put("opReturn", opReturn);
+            params.put("m", m);
+            params.put("n", n);
+            params.put("useAllUTXO", useAllUTXO);
+            params.put("splitGranularity", splitGranularity);
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_verifyFchWithdraw", params);
+            if (result == null || result.get("value") == null) {
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+            return (Boolean) result.get("value");
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_verifyFchWithdraw");
+            LoggerUtil.LOG.error(msg, e);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+    }
+
+    public static int verifyWithdrawCount(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String toAddress, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, nerveChainId);
+
+            params.put("withdrawalUTXO", HexUtil.encode(new WithdrawalUTXOTxData(withdrawalUTXO).serialize()));
+            params.put("signData", signatureData);
+            params.put("to", toAddress);
+            params.put("amount", amount);
+            params.put("feeRate", feeRate);
+            params.put("opReturn", opReturn);
+            params.put("m", m);
+            params.put("n", n);
+            params.put("useAllUTXO", useAllUTXO);
+            params.put("splitGranularity", splitGranularity);
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_verifyFchWithdrawCount", params);
+            if (result == null || result.get("value") == null) {
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+            return Integer.parseInt(result.get("value").toString());
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_verifyFchWithdrawCount");
+            LoggerUtil.LOG.error(msg, e);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+    }
+
+    public static String createMultiSignWithdrawTx(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, nerveChainId);
+
+            params.put("withdrawalUTXO", HexUtil.encode(new WithdrawalUTXOTxData(withdrawalUTXO).serialize()));
+            params.put("signData", signatureData);
+            params.put("to", to);
+            params.put("amount", amount);
+            params.put("feeRate", feeRate);
+            params.put("opReturn", opReturn);
+            params.put("m", m);
+            params.put("n", n);
+            params.put("useAllUTXO", useAllUTXO);
+            params.put("splitGranularity", splitGranularity);
+            String resultStr;
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_createFchMultiSignWithdrawTx", params);
+            if (result == null || result.get("value") == null) {
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+            resultStr = (String) result.get("value");
+            return resultStr;
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_createFchMultiSignWithdrawTx");
             LoggerUtil.LOG.error(msg, e);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }

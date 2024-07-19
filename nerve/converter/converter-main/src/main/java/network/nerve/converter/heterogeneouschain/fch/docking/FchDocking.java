@@ -24,17 +24,27 @@
 package network.nerve.converter.heterogeneouschain.fch.docking;
 
 import apipClass.TxInfo;
+import com.neemre.btcdcli4j.core.domain.RawTransaction;
+import io.nuls.base.data.Transaction;
+import io.nuls.core.constant.TxType;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.FormatValidUtils;
 import io.nuls.core.model.StringUtils;
 import keyTools.KeyTools;
+import network.nerve.converter.btc.txdata.CheckWithdrawalUsedUTXOData;
+import network.nerve.converter.btc.txdata.UsedUTXOData;
+import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IBitCoinApi;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.enums.AssetName;
+import network.nerve.converter.heterogeneouschain.btc.utils.BtcUtil;
 import network.nerve.converter.heterogeneouschain.fch.core.FchBitCoinApi;
 import network.nerve.converter.heterogeneouschain.fch.context.FchContext;
 import network.nerve.converter.heterogeneouschain.fch.core.FchWalletApi;
@@ -50,12 +60,18 @@ import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgMultiSignAddressHistoryStorageService;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.*;
+import org.bitcoinj.crypto.ECKey;
+import txTools.FchTool;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
 
@@ -67,7 +83,7 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     private HeterogeneousAssetInfo mainAsset;
     private FchContext context;
-    private FchBitCoinApi bitCoinApi;
+    private FchBitCoinApi fchBitCoinApi;
     private FchWalletApi walletApi;
     protected ConverterConfig converterConfig;
     protected HtgListener listener;
@@ -195,8 +211,7 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public void updateMultySignAddress(String multySignAddress) throws Exception {
-        logger().info("{}Update multiple contract addresses, old: {}, new: {}", context.getConfig().getSymbol(), context.MULTY_SIGN_ADDRESS(), multySignAddress);
-        multySignAddress = multySignAddress.toLowerCase();
+        logger().info("{} Update multiple contract addresses, old: {}, new: {}", context.getConfig().getSymbol(), context.MULTY_SIGN_ADDRESS(), multySignAddress);
         // Listening for multi signature address transactions
         listener.removeListeningAddress(context.MULTY_SIGN_ADDRESS());
         listener.addListeningAddress(multySignAddress);
@@ -204,6 +219,7 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
         context.SET_MULTY_SIGN_ADDRESS(multySignAddress);
         // Save the current multi signature address to the multi signature address history list
         htgMultiSignAddressHistoryStorageService.save(multySignAddress);
+        context.getConverterCoreApi().updateMultySignAddress(context.HTG_CHAIN_ID(), multySignAddress);
     }
 
     @Override
@@ -240,6 +256,79 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
         if (StringUtils.isNotBlank(nerveTxHash)) {
             logger().debug("Persisted state successfully nerveTxHash: {}", nerveTxHash);
             htgInvokeTxHelper.saveSuccessfulNerve(nerveTxHash);
+        }
+    }
+
+    @Override
+    public void txConfirmedCheck(String htgTxHash, Long nerveBlockHeight, String nerveTxHash, byte[] confirmTxRemark) throws Exception {
+        logger().info("NerveNetwork confirmation check {} btcSysTransaction Nerver hash: {}", context.getConfig().getSymbol(), nerveTxHash);
+        // Persisted state successfullynerveTx
+        if (StringUtils.isBlank(nerveTxHash)) {
+            return;
+        }
+        logger().debug("[{}] Persisted state successfully nerveTxHash: {}", context.getConfig().getSymbol(), nerveTxHash);
+        htgInvokeTxHelper.saveSuccessfulNerve(nerveTxHash);
+        Transaction nerveTx = context.getConverterCoreApi().getNerveTx(nerveTxHash);
+        //if (nerveTx.getType() == TxType.RECHARGE) {
+        //    this.rechargeWithdrawalFee(htgTxHash, nerveTx);
+        //}
+        // unlock unused utxo
+        this.checkUsedUTXO(nerveTx, confirmTxRemark);
+    }
+
+    private void checkUsedUTXO(Transaction nerveTx, byte[] confirmTxRemark) {
+
+        IConverterCoreApi coreApi = context.getConverterCoreApi();
+
+        try {
+            String nerveTxHash = nerveTx.getHash().toHex();
+            WithdrawalUTXOTxData data = fchBitCoinApi.takeWithdrawalUTXOs(nerveTxHash);
+            if (data == null) {
+                return;
+            }
+            WithdrawalUTXO withdrawalUTXO = new WithdrawalUTXO(data.getNerveTxHash(), data.getHtgChainId(), data.getCurrentMultiSignAddress(), data.getCurrentVirtualBankTotal(), data.getFeeRate(), data.getPubs(), data.getUtxoDataList());
+            if (confirmTxRemark == null && withdrawalUTXO == null) {
+                return;
+            }
+            List<UsedUTXOData> checkList = Collections.EMPTY_LIST;
+            // If it is a change transaction, check whether the address has been changed
+            if (nerveTx.getType() == TxType.CHANGE_VIRTUAL_BANK) {
+                List<byte[]> pubs = withdrawalUTXO.getPubs();
+                String multiSignAddress = FchUtil.genMultiP2sh(pubs, coreApi.getByzantineCount(pubs.size()), true).getFid();
+                if (!context.MULTY_SIGN_ADDRESS().equals(multiSignAddress)) {
+                    this.updateMultySignAddress(multiSignAddress);
+                    String[] pubArray = new String[pubs.size()];
+                    pubs.stream().map(key -> HexUtil.encode(key)).collect(Collectors.toList()).toArray(pubArray);
+                    htgMultiSignAddressHistoryStorageService.saveMultiSignAddressPubs(multiSignAddress, pubArray);
+                }
+                // change transaction, if an asset transfer transaction is sent, confirmTxRemark is missing here due to the change process.
+                // Need to check whether an asset transfer transaction has been sent
+                if (!HtgUtil.isEmptyList(withdrawalUTXO.getUtxoDataList())) {
+                    List<String> multiSignAddressPubs = htgMultiSignAddressHistoryStorageService.getMultiSignAddressPubs(withdrawalUTXO.getCurrentMultiSignAddress());
+                    Object[] baseInfo = FchUtil.makeChangeTxBaseInfo(context, withdrawalUTXO, multiSignAddressPubs);
+                    long amount = (long) baseInfo[1];
+                    // an asset transfer transaction has been sent
+                    if (amount > ConverterConstant.BTC_DUST_AMOUNT) {
+                        checkList = withdrawalUTXO.getUtxoDataList().stream().map(u -> new UsedUTXOData(u.getTxid(), u.getVout())).collect(Collectors.toList());
+                    }
+                }
+            } else {
+                if (confirmTxRemark == null) {
+                    checkList = Collections.EMPTY_LIST;
+                } else {
+                    try {
+                        CheckWithdrawalUsedUTXOData checkData = new CheckWithdrawalUsedUTXOData();
+                        checkData.parse(confirmTxRemark, 0);
+                        checkList = checkData.getUsedUTXODataList();
+                    } catch (Exception e) {
+                        logger().error(e);
+                    }
+
+                }
+            }
+            fchBitCoinApi.checkLockedUTXO(nerveTxHash, checkList);
+        } catch (Exception e) {
+            logger().error(e);
         }
     }
 
@@ -281,6 +370,9 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public HeterogeneousAssetInfo getAssetByAssetId(int assetId) {
+        if (assetId == 1) {
+            return mainAsset();
+        }
         throw new RuntimeException("Unsupport Function");
     }
 
@@ -311,14 +403,26 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public HeterogeneousTransactionInfo getWithdrawTransaction(String txHash) throws Exception {
-        //TODO pierre auto-generated method stub
-        return null;
+        return parseIxHelper.parseWithdrawalTransaction(txHash, false);
     }
 
     @Override
     public HeterogeneousConfirmedInfo getConfirmedTxInfo(String txHash) throws Exception {
-        //TODO pierre Withdraw tx
-        return null;
+        HeterogeneousConfirmedInfo info = new HeterogeneousConfirmedInfo();
+        TxInfo tx = walletApi.getTransactionByHash(txHash);
+        if (tx == null || tx.getHeight() <= 0) {
+            return null;
+        }
+        String btcFeeReceiverPub = context.getConverterCoreApi().getBtcFeeReceiverPub();
+        String btcFeeReceiver = FchTool.pubkeyToAddr(btcFeeReceiverPub);
+        List<HeterogeneousAddress> signers = new ArrayList<>();
+        signers.add(new HeterogeneousAddress(context.getConfig().getChainId(), btcFeeReceiver));
+        Long txTime = tx.getBlockTime();
+
+        info.setMultySignAddress(context.MULTY_SIGN_ADDRESS());
+        info.setTxTime(txTime);
+        info.setSigners(signers);
+        return info;
     }
 
     @Override
@@ -360,8 +464,8 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
             }
             logger().info("Re analyze recharge transactions: {}", htgTxHash);
             TxInfo tx = walletApi.getTransactionByHash(htgTxHash);
-            Long txTime = tx.getBlockTime();
-            htgAnalysisTxHelper.analysisTx(tx, txTime, tx.getHeight());
+            long txTime = tx.getBlockTime();
+            htgAnalysisTxHelper.analysisTx(tx, txTime, tx.getHeight(), tx.getBlockId());
             htgCommonHelper.addHash(htgTxHash);
             return true;
         } catch (Exception e) {
@@ -385,9 +489,9 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
             }
             logger().info("Re analyze transactions: {}", htgTxHash);
             TxInfo txInfo = walletApi.getTransactionByHash(htgTxHash);
-            Long txTime = txInfo.getBlockTime();
+            long txTime = txInfo.getBlockTime();
             htgUnconfirmedTxStorageService.deleteByTxHash(htgTxHash);
-            htgAnalysisTxHelper.analysisTx(txInfo, txTime, txInfo.getHeight());
+            htgAnalysisTxHelper.analysisTx(txInfo, txTime, txInfo.getHeight(), txInfo.getBlockId());
             htgCommonHelper.addHash(htgTxHash);
             return true;
         } catch (Exception e) {
@@ -530,7 +634,7 @@ public class FchDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public IBitCoinApi getBitCoinApi() {
-        return bitCoinApi;
+        return fchBitCoinApi;
     }
 
     @Override

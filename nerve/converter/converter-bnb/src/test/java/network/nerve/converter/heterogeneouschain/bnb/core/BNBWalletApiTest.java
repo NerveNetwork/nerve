@@ -778,8 +778,37 @@ public class BnbWalletApiTest extends Base {
         list.add("");
         list.add("");
         list.add("");
-        this.multySignContractAddress = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
+        this.multySignContractAddress = "0x75Ab1d50BEDBd32b6113941fcF5359787a4bBEf4";
         init();
+    }
+
+    @Test
+    public void signDataForMainAssetWithdrawTest() throws Exception {
+        setMainData();
+        String txKey = "6661024000000000000000000000000000000000000000000000000000000000";
+        // Recipient Address
+        String toAddress = "0x4aA04Ac1c34989cE6c36Fe7BEf9B1a2167bF59F5";
+        // Mint quantity
+        String value = "200";
+        int signCount = 5;
+        String signData = this.signDataForMainAssetWithdraw(txKey, toAddress, value, signCount);
+        System.out.println(String.format("BNB Withdrawal %s Pieces, %s Signatures, signData: %s", value, signCount, signData));
+    }
+
+    @Test
+    public void sendMainAssetWithdrawBySignDataTest() throws Exception {
+        setMainData();
+        //setMainProxy();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        String txKey = "6661024000000000000000000000000000000000000000000000000000000000";
+        // Recipient Address
+        String toAddress = "0x4aA04Ac1c34989cE6c36Fe7BEf9B1a2167bF59F5";
+        // quantity
+        String value = "200";
+        String signData = "cb61cc6a824fa9d322e4ff5dfb23a48733070c0b61958ba23a52d9561fb7c2af5c9825db54b6402a380e133703baae5f598d5a7ec668ff35aebf3a7b905425c11ba096547f9b3d0b44b1454506f155cb3aeaca7970144bbffdab4ef87a4e1a025f2aec9196c2b6a4eea5b7e1b6e4aa5279e67c86ac4e9357f08e708adfeaec0eac1bd8f2bca1f1463bdb7ca69fb57e23b827885f7148d7e4175bb8ba4ea83f7be6a116885b8ea01280eddea193eb27698eef72dc6beb44a00d8f8856e40ca4db970e1b281da6c076e5b69e2db0fedb5fc405de71e2500c0e968562e0b0934b59cd39ed3d1166f6a5e78e93ecb70ed969ccf624cf7b968c2a551f5752235bba4604d9881cb05a15c4378e7368479dd3897019c701e550270c5fe4b268fdb1bea4aed1cb9a01749b1bd9ef6f7899412d2c30e1585b62e97e94cf2579026ac2ba6f22bff3bf1c2a9919fbdccc741d47fae2e2249c0d96bdd949d6d4adb6306b1f3882ad7a3eec21ca2695336501624ae71fbd6c806b86d01c76bba2c52955e27d265ae234727e1bd5a7bf069cbe129bd85410c6adea0393f90e869ef5349e89768086573062ba343651fd747e908c36d1a5ba9434fd1f0884a94258546878c17f0563b7c36387d51bb5c87400795c27445fd71841bb2998db6eb7548d3c29ae70a229430b805d91fc0c7231ce6294eebd6b3ded8fa0f127eef9142e0bab0d75d8529080bee2c31bbc1b8e62bb1867acf134ec12f87c5ce4a4ac4063f0f7dcb257968ce987d906ce3fb01a4ffaa7d1a24d768d64346fbd28e8f20de9a864d6f212838549c342436c25db1b83f96b02d1f75987074db806137f31123c2304bcc28bb6114ae519ab603a97c617964009084275a223b01efd9a6c32e643ddc4372f028f99540c2cf1785948611b";
+
+        String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
+        System.out.println(String.format("Withdrawal %s Pieces, hash: %s", value, hash));
     }
 
     /**

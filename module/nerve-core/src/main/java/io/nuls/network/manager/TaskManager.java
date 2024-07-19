@@ -69,7 +69,7 @@ public class TaskManager extends BaseManager {
         connectTasks();
         scheduleGroupStatusMonitor();
         timeServiceThreadStart();
-        nwInfosThread();
+//        nwInfosThread();
         peerCacheMsgSendTask();
         RPCMsgSendTask();
         heartBeatThread();

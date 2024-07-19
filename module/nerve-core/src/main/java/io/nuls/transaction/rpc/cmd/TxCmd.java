@@ -451,6 +451,7 @@ public class TxCmd extends BaseCmd {
             } else {
 //                LOG.debug("getConfirmedTransaction success. txHash:{}", txHash);
                 resultMap.put("tx", RPCUtil.encode(tx.getTx().serialize()));
+                resultMap.put("blockHeight", tx.getBlockHeight() + "");
             }
             return success(resultMap);
         } catch (NulsException e) {

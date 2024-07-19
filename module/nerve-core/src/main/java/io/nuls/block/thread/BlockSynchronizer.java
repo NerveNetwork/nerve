@@ -228,7 +228,7 @@ public class BlockSynchronizer implements Runnable {
 
         if (downloaderParams.getNodes() == null || downloaderParams.getNodes().isEmpty()) {
             //There are no available consistent nodes on the network,The height of the nodes is inconsistent,Or the proportion of consistent nodes is insufficient
-//            logger.warn("There are no consistent nodes available on the network, availableNodes-" + availableNodes);
+            logger.warn("There are no consistent nodes available on the network, availableNodes-" + availableNodes);
             Thread.sleep(1000);
             return false;
         }

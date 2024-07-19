@@ -1,0 +1,22 @@
+13:45:14.452 DEBUG [c.n.b.c.c.BtcdClientImpl]  >> initialize(..): initiating the 'bitcoind' core wrapper
+13:45:14.467 WARN [c.n.b.c.c.ClientConfigurator]  -- checkHttpProvider(..): no preconfigured HTTP provider detected; reverting to library default settings
+13:45:15.220 DEBUG [c.n.b.c.j.c.JsonRpcClientImpl]  ** JsonRpcClientImpl(): initiating the JSON-RPC communication layer
+13:45:15.227 DEBUG [c.n.b.c.h.c.SimpleHttpClientImpl]  ** SimpleHttpClientImpl(): initiating the HTTP communication layer
+13:45:15.250 DEBUG [c.n.b.c.j.JsonMapper]  ** JsonMapper(): initiating & configuring external JSON processor (Jackson ObjectMapper)
+13:45:15.682 DEBUG [c.n.b.c.c.BtcdClientImpl]  >> initialize(..): initiating the 'bitcoind' core wrapper
+13:45:15.682 DEBUG [c.n.b.c.j.c.JsonRpcClientImpl]  ** JsonRpcClientImpl(): initiating the JSON-RPC communication layer
+13:45:15.682 DEBUG [c.n.b.c.h.c.SimpleHttpClientImpl]  ** SimpleHttpClientImpl(): initiating the HTTP communication layer
+13:45:15.682 DEBUG [c.n.b.c.j.JsonMapper]  ** JsonMapper(): initiating & configuring external JSON processor (Jackson ObjectMapper)
+13:45:15.694 DEBUG [c.n.b.c.c.BtcdClientImpl]  >> initialize(..): initiating the 'bitcoind' core wrapper
+13:45:15.694 WARN [c.n.b.c.c.ClientConfigurator]  -- checkHttpProvider(..): no preconfigured HTTP provider detected; reverting to library default settings
+13:45:15.696 DEBUG [c.n.b.c.j.c.JsonRpcClientImpl]  ** JsonRpcClientImpl(): initiating the JSON-RPC communication layer
+13:45:15.696 DEBUG [c.n.b.c.h.c.SimpleHttpClientImpl]  ** SimpleHttpClientImpl(): initiating the HTTP communication layer
+13:45:15.696 DEBUG [c.n.b.c.j.JsonMapper]  ** JsonMapper(): initiating & configuring external JSON processor (Jackson ObjectMapper)
+13:45:15.697 DEBUG [c.n.b.c.c.BtcdClientImpl]  >> initialize(..): initiating the 'bitcoind' core wrapper
+13:45:15.697 DEBUG [c.n.b.c.j.c.JsonRpcClientImpl]  ** JsonRpcClientImpl(): initiating the JSON-RPC communication layer
+13:45:15.697 DEBUG [c.n.b.c.h.c.SimpleHttpClientImpl]  ** SimpleHttpClientImpl(): initiating the HTTP communication layer
+13:45:15.697 DEBUG [c.n.b.c.j.JsonMapper]  ** JsonMapper(): initiating & configuring external JSON processor (Jackson ObjectMapper)
+13:45:16.440 DEBUG [o.a.h.i.c.PoolingHttpClientConnectionManager]  Connection manager is shutting down
+13:45:16.440 DEBUG [o.a.h.i.c.PoolingHttpClientConnectionManager]  Connection manager shut down
+13:45:16.440 DEBUG [o.a.h.i.c.PoolingHttpClientConnectionManager]  Connection manager is shutting down
+13:45:16.440 DEBUG [o.a.h.i.c.PoolingHttpClientConnectionManager]  Connection manager shut down

@@ -96,6 +96,16 @@ public class DataTest {
     }
 
     @Test
+    public void testCVComponentSignTableTx() throws Exception {
+        //ccfb73d0a36be1632ed32c1a7442b47ea203c3639fda62b8eda67d24865d88c9
+        //152c84dd7b7cbb3405bd2de26808e8719c9274b00ad3bdfe946dfc7a12c0e703
+        String hash = "152c84dd7b7cbb3405bd2de26808e8719c9274b00ad3bdfe946dfc7a12c0e703";
+        RocksDBService.init("/Users/pierreluo/Nuls/cvData240530");
+        ComponentSignByzantinePO model = ConverterDBUtil.getModel(ConverterDBConstant.DB_COMPONENT_SIGN + 5, stringToBytes(hash), ComponentSignByzantinePO.class);
+        System.out.println();
+    }
+
+    @Test
     public void testVirtualBankTableTx() throws Exception {
         RocksDBService.init("/Users/pierreluo/Nuls/cv0623");
         List<Entry<byte[], byte[]>> listEntry = RocksDBService.entryList(ConverterDBConstant.DB_VIRTUAL_BANK_PREFIX + 9);
@@ -167,6 +177,23 @@ public class DataTest {
             }
         }
     }
+
+    @Test
+    public void testCVAllHistoryVirtualBankTableTx() throws Exception {
+        RocksDBService.init("/Users/pierreluo/Nuls/cvData240530");
+
+        List<String> addrList = new ArrayList<>();
+        addrList.add("NERVEepb66oGcmJnrjX5AGzFjXJrLiErHMo1cn");
+        addrList.add("NERVEepb69pdDv3gZEZtJEmahzsHiQE6CK4xRi");
+        addrList.add("NERVEepb66GmaKLaqiFyRqsEuLNM1i1qRwTQ64");
+        addrList.add("NERVEepb6B3jKbVM8SKHsb92j22yEKwxa19akB");
+
+        for (String address : addrList) {
+            VirtualBankDirector model = ConverterDBUtil.getModel(ConverterDBConstant.DB_ALL_HISTORY_VIRTUAL_BANK_PREFIX + 9, stringToBytes(address), VirtualBankDirector.class);
+            System.out.println(JSONUtils.obj2json(model));
+        }
+    }
+
     @Test
     public void airdropDataTest() {
         List<String> list = new ArrayList<>();

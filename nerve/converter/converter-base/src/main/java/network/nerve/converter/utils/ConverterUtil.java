@@ -217,7 +217,11 @@ public class ConverterUtil {
             // order asc
             int compare = o1.getAmount().compareTo(o2.getAmount());
             if (compare == 0) {
-                return o1.getTxid().compareTo(o2.getTxid());
+                int compare1 = o1.getTxid().compareTo(o2.getTxid());
+                if (compare1 == 0) {
+                    return Integer.compare(o1.getVout(), o2.getVout());
+                }
+                return compare1;
             }
             return compare;
         }

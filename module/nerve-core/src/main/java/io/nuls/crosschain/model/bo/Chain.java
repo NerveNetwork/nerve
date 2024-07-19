@@ -34,7 +34,7 @@ public class Chain {
      * key:transactionHash
      * value:nodeId
      * */
-    private Map<NulsHash, List<NodeType>> otherHashNodeIdMap;
+    private Map<NulsHash, Set<NodeType>> otherHashNodeIdMap;
 
 
     /**
@@ -235,11 +235,11 @@ public class Chain {
         this.otherCtxMessageQueue = otherCtxMessageQueue;
     }
 
-    public Map<NulsHash, List<NodeType>> getOtherHashNodeIdMap() {
+    public Map<NulsHash, Set<NodeType>> getOtherHashNodeIdMap() {
         return otherHashNodeIdMap;
     }
 
-    public void setOtherHashNodeIdMap(Map<NulsHash, List<NodeType>> otherHashNodeIdMap) {
+    public void setOtherHashNodeIdMap(Map<NulsHash, Set<NodeType>> otherHashNodeIdMap) {
         this.otherHashNodeIdMap = otherHashNodeIdMap;
     }
 

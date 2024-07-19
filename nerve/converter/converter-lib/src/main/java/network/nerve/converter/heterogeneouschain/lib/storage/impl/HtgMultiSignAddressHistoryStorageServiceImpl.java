@@ -26,7 +26,9 @@ package network.nerve.converter.heterogeneouschain.lib.storage.impl;
 
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.ByteUtils;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.rockdb.manager.RocksDBManager;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.btc.txdata.*;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
@@ -35,9 +37,11 @@ import network.nerve.converter.heterogeneouschain.lib.storage.HtgMultiSignAddres
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.po.StringSetPo;
 import network.nerve.converter.utils.ConverterDBUtil;
+import org.rocksdb.RocksDBException;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 
@@ -62,6 +66,7 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
     private final String WITHDRAWL_UTXO_PREFIX;
     private final String WITHDRAWL_UTXO_REBUILD_PREFIX;
     private final String WITHDRAWL_UTXO_LOCKED_PREFIX;
+    private final byte[] SPLIT_GRANULARITY;
 
     private final HtgContext htgContext;
     public HtgMultiSignAddressHistoryStorageServiceImpl(HtgContext htgContext, String baseArea) {
@@ -78,6 +83,7 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
         this.WITHDRAWL_UTXO_PREFIX = htgChainId + "_WITHDRAWL_UTXO_PREFIX-";
         this.WITHDRAWL_UTXO_REBUILD_PREFIX = htgChainId + "_WITHDRAWL_UTXO_REBUILD_PREFIX-";
         this.WITHDRAWL_UTXO_LOCKED_PREFIX = htgChainId + "_WITHDRAWL_UTXO_LOCKED_PREFIX-";
+        this.SPLIT_GRANULARITY = stringToBytes(htgChainId + "_SPLIT_GRANULARITY");
     }
 
     private boolean merged = false;
@@ -319,6 +325,11 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
     }
 
     @Override
+    public List<byte[]> getNerveHashListByLockedUTXO(List<UTXOData> utxoList) throws Exception {
+        return RocksDBManager.getTable(baseArea()).multiGetAsList(utxoList.stream().map(u -> stringToBytes(WITHDRAWL_UTXO_LOCKED_PREFIX + u.getTxid() + "-" + u.getVout())).collect(Collectors.toList()));
+    }
+
+    @Override
     public WithdrawalUTXOTxData checkLockedUTXO(String nerveTxHash, List<UsedUTXOData> usedUTXOs) throws Exception {
         WithdrawalUTXOTxData withdrawalUTXOTxData = this.takeWithdrawalUTXOs(nerveTxHash);
         if (withdrawalUTXOTxData == null) {
@@ -369,5 +380,19 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
         WithdrawalUTXORebuildPO po = new WithdrawalUTXORebuildPO();
         po.parse(bytes, 0);
         return po;
+    }
+
+    @Override
+    public void saveSplitGranularity(long splitGranularity) throws Exception {
+        RocksDBService.put(baseArea(), SPLIT_GRANULARITY, ByteUtils.longToBytes(splitGranularity));
+    }
+
+    @Override
+    public long getCurrentSplitGranularity() {
+        byte[] bytes = RocksDBService.get(baseArea(), SPLIT_GRANULARITY);
+        if (bytes == null) {
+            return 0;
+        }
+        return ByteUtils.byteToLong(bytes);
     }
 }

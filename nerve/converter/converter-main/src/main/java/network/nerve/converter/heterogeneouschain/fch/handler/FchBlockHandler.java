@@ -61,12 +61,12 @@ public class FchBlockHandler implements Runnable, BeanInitial {
         try {
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 if (LoggerUtil.LOG.isDebugEnabled()) {
-                    LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
+                    LoggerUtil.LOG.debug("[{}] Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
                 }
                 return;
             }
             if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
-                htgContext.logger().info("Test network[{}]Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
+                htgContext.logger().info("Test network [{}] Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
@@ -79,13 +79,13 @@ public class FchBlockHandler implements Runnable, BeanInitial {
                     htgContext.logger().error(e);
                 }
                 if (LoggerUtil.LOG.isDebugEnabled()) {
-                    LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
+                    LoggerUtil.LOG.debug("[{}] Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
                 }
                 return;
             }
             clearDB = false;
             if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("[{}Block parsing task] - every other{}Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
+                LoggerUtil.LOG.debug("[{} Block parsing task] - every other {} Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
             }
             try {
                 htgCommonHelper.clearHash();
@@ -94,11 +94,11 @@ public class FchBlockHandler implements Runnable, BeanInitial {
                     htgContext.getConverterCoreApi().setFchToDogePrice(fchToDogePrice);
                 }
             } catch (Exception e) {
-                htgContext.logger().error("Clearing recharge transactionshashFailed to revalidate collection", e);
+                htgContext.logger().error("Clearing recharge transactions hash Failed to revalidate collection", e);
             }
             walletApi.checkApi();
             if (walletApi.isReSyncBlock()) {
-                htgContext.logger().info("[{}]Delete all local blocks from the network and wait for the next round of execution", htgContext.getConfig().getSymbol());
+                htgContext.logger().info("[{}] Delete all local blocks from the network and wait for the next round of execution", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteAllLocalBlockHeader();
                 walletApi.setReSyncBlock(false);
                 return;
@@ -106,7 +106,7 @@ public class FchBlockHandler implements Runnable, BeanInitial {
             // currentHTGThe latest blocks in the network
             BlockInfo bestBlock = walletApi.getBestBlock();
             if(bestBlock == null) {
-                htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
+                htgContext.logger().info("Unable to obtain {} Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                 return;
             }
             long blockHeightFromNet = bestBlock.getHeight();
@@ -133,10 +133,10 @@ public class FchBlockHandler implements Runnable, BeanInitial {
             // Verify if the latest block is correct
             int resultCode = checkNewestBlock(localMax);
             if (resultCode == 0) {
-                htgContext.logger().error("obtain{}Block failure", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("obtain {} Block failure", htgContext.getConfig().getSymbol());
                 return;
             } else if (resultCode == 1) {
-                htgContext.logger().error("{}Block fork", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("{} Block fork", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteByHeightAndUpdateMemory(localBlockHeight);
                 return;
             }
