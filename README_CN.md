@@ -2,7 +2,7 @@
 <h1 align="center">NerveNetwork </h1>
 <h4 align="center">Version 0.0.0 </h4>
 
-[English](README.md) | Chinese
+[English](README.md) | Chinese | [Japanese](README_JA.md)
 
 Welcome toNerveSource code library for！
 

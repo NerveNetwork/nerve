@@ -2,7 +2,7 @@
 <h1 align="center">NerveNetwork </h1>
 <h4 align="center">Version 0.0.0 </h4>
 
-English | [Chinese](README_CN.md)
+English | [Chinese](README_CN.md) | [Japanese](README_JA.md)
 
 Welcome to the official  implementation of the [NerveNetwork](http://nerve.network) blockchain!
 
