@@ -900,5 +900,27 @@
     "protocolVersion": 35,
     "priceKey": "ETH_PRICE",
     "filterAddresses": "0x4F50AB8Ae16d0643C9dad2cc9debbb0E9F714507"
+  },
+  {
+    "chainId": 203,
+    "chainIdOnHtgNetwork": 2002031,
+    "type": 1,
+    "symbol": "BCH",
+    "decimals": 8,
+    "commonRpcAddress": "https://bchtest.nerve.network/,nerve,fc85006ba5ae16c",
+    "mainRpcAddress": "https://bchtest.nerve.network/,nerve,fc85006ba5ae16c",
+    "orderRpcAddresses": "https://bchtest.nerve.network/,nerve,fc85006ba5ae16c",
+    "standbyRpcAddresses": "https://bchtest.nerve.network/,nerve,fc85006ba5ae16c",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 1,
+    "txBlockConfirmationsOfWithdraw": 0,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "blockQueuePeriod": 30,
+    "confirmTxQueuePeriod": 10,
+    "waitingTxQueuePeriod": 10,
+    "protocolVersion": 37,
+    "priceKey": "BCH_PRICE",
+    "filterAddresses": "0x4F50AB8Ae16d0643C9dad2cc9debbb0E9F714507"
   }
 ]

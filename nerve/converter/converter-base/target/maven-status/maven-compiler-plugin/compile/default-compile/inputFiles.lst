@@ -6,6 +6,7 @@
 /Users/wangzhijian/workspace/nerve-network/nerve/converter/converter-base/src/main/java/network/nerve/converter/model/bo/ConfigBean.java
 /Users/wangzhijian/workspace/nerve-network/nerve/converter/converter-base/src/main/java/network/nerve/converter/btc/txdata/WithdrawalUTXOTxData.java
 /Users/wangzhijian/workspace/nerve-network/nerve/converter/converter-base/src/main/java/network/nerve/converter/model/bo/HeterogeneousAccount.java
+/Users/wangzhijian/workspace/nerve-network/nerve/converter/converter-base/src/main/java/network/nerve/converter/model/bo/NerveAssetInfo.java
 /Users/wangzhijian/workspace/nerve-network/nerve/converter/converter-base/src/main/java/network/nerve/converter/core/api/interfaces/IBitCoinApi.java
 /Users/wangzhijian/workspace/nerve-network/nerve/converter/converter-base/src/main/java/network/nerve/converter/btc/txdata/CheckWithdrawalUsedUTXOData.java
 /Users/wangzhijian/workspace/nerve-network/nerve/converter/converter-base/src/main/java/network/nerve/converter/core/api/interfaces/IConverterCoreApi.java

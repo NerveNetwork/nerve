@@ -545,8 +545,7 @@ public class PulseWalletApiTest extends Base {
 
     @Test
     public void allContractManagerSet() throws Exception {
-        setMainData();
-        //setLocalTest();
+        setLocalNewTest();
         boolean queryBalance = false;
         System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(multySignContractAddress);

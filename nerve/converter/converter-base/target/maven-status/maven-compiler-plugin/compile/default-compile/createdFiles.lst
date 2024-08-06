@@ -27,6 +27,7 @@ network/nerve/converter/btc/txdata/WithdrawalUTXOTxData.class
 network/nerve/converter/btc/txdata/WithdrawalUTXORebuildPO.class
 network/nerve/converter/model/HeterogeneousSign.class
 network/nerve/converter/enums/AssetName.class
+network/nerve/converter/model/bo/NerveAssetInfo.class
 network/nerve/converter/utils/ConverterUtil$2.class
 network/nerve/converter/model/bo/HeterogeneousChangePendingInfo.class
 network/nerve/converter/config/ConverterConfig.class

@@ -26,6 +26,7 @@ package network.nerve.converter.heterogeneouschain.btc.helper;
 import com.neemre.btcdcli4j.core.domain.RawInput;
 import com.neemre.btcdcli4j.core.domain.RawOutput;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
+import com.neemre.btcdcli4j.core.domain.TxOutInfo;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
@@ -34,32 +35,34 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.btc.model.BtcUnconfirmedTxPo;
-import network.nerve.converter.btc.txdata.CheckWithdrawalUsedUTXOData;
-import network.nerve.converter.btc.txdata.RechargeData;
-import network.nerve.converter.btc.txdata.UTXOData;
-import network.nerve.converter.btc.txdata.UsedUTXOData;
+import network.nerve.converter.btc.txdata.*;
 import network.nerve.converter.config.ConverterContext;
+import network.nerve.converter.core.api.interfaces.IBitCoinApi;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.core.BitCoinLibWalletApi;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.helper.IBitCoinLibParseTxHelper;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.utils.BitCoinLibUtil;
 import network.nerve.converter.heterogeneouschain.btc.context.BtcContext;
-import network.nerve.converter.heterogeneouschain.btc.core.BtcWalletApi;
-import network.nerve.converter.heterogeneouschain.btc.utils.BtcUtil;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author: PierreLuo
  * @date: 2023/12/26
  */
-public class BtcParseTxHelper implements BeanInitial {
+public class BtcParseTxHelper implements IBitCoinLibParseTxHelper, BeanInitial {
 
-    private BtcWalletApi walletApi;
+    private IBitCoinApi bitCoinApi;
+    private BitCoinLibWalletApi walletApi;
     private HtgListener htgListener;
     private BtcContext htgContext;
 
@@ -67,7 +70,25 @@ public class BtcParseTxHelper implements BeanInitial {
         return htgContext.logger();
     }
 
-    public HeterogeneousTransactionInfo parseDepositTransaction(RawTransaction txInfo, Long blockHeight, boolean validate) throws Exception {
+    @Override
+    public boolean isCompletedTransaction(String nerveTxHash) {
+        WithdrawalUTXOTxData utxoTxData = bitCoinApi.takeWithdrawalUTXOs(nerveTxHash);
+        if (utxoTxData == null) {
+            return false;
+        }
+        List<UTXOData> utxoDataList = utxoTxData.getUtxoDataList();
+        if (HtgUtil.isEmptyList(utxoDataList)) {
+            return true;
+        }
+        Collections.sort(utxoDataList, ConverterUtil.BITCOIN_SYS_COMPARATOR);
+        UTXOData utxoData = utxoDataList.get(0);
+        TxOutInfo txOutInfo = walletApi.getTxOutInfo(utxoData.getTxid(), utxoData.getVout());
+        return txOutInfo == null;
+    }
+
+    @Override
+    public HeterogeneousTransactionInfo parseDepositTransaction(Object txInfoObj, Long blockHeight, boolean validate) throws Exception {
+        RawTransaction txInfo = (RawTransaction) txInfoObj;
         if (txInfo == null) {
             logger().warn("Transaction does not exist");
             return null;
@@ -179,7 +200,9 @@ public class BtcParseTxHelper implements BeanInitial {
         return po;
     }
 
-    public HeterogeneousTransactionInfo parseWithdrawalTransaction(RawTransaction txInfo, Long blockHeight, boolean validate) throws Exception {
+    @Override
+    public HeterogeneousTransactionInfo parseWithdrawalTransaction(Object txInfoObj, Long blockHeight, boolean validate) throws Exception {
+        RawTransaction txInfo = (RawTransaction) txInfoObj;
         if (txInfo == null) {
             logger().warn("Transaction does not exist");
             return null;
@@ -196,7 +219,7 @@ public class BtcParseTxHelper implements BeanInitial {
         List<UsedUTXOData> usedUTXOList = new ArrayList<>();
         List<RawInput> inputList = txInfo.getVIn();
         for (RawInput input : inputList) {
-            String inputAddress = BtcUtil.takeAddressWithP2WSH(input, htgContext.getConverterCoreApi().isNerveMainnet());
+            String inputAddress = BitCoinLibUtil.takeMultiSignAddressWithP2WSH(input, htgContext.getConverterCoreApi().isNerveMainnet());
             if (htgListener.isListeningAddress(inputAddress)) {
                 multiAddr = inputAddress;
                 usedUTXOList.add(new UsedUTXOData(input.getTxId(), input.getVOut()));
@@ -295,18 +318,20 @@ public class BtcParseTxHelper implements BeanInitial {
         po.setIfContractAsset(false);
         po.setNerveTxHash(nerveTxHash);
         String btcFeeReceiverPub = htgContext.getConverterCoreApi().getBtcFeeReceiverPub();
-        String btcFeeReceiver = BtcUtil.getBtcLegacyAddress(btcFeeReceiverPub, htgContext.getConverterCoreApi().isNerveMainnet());
+        String btcFeeReceiver = BitCoinLibUtil.getBtcLegacyAddress(btcFeeReceiverPub, htgContext.getConverterCoreApi().isNerveMainnet());
         List<HeterogeneousAddress> signers = new ArrayList<>();
         signers.add(new HeterogeneousAddress(htgContext.getConfig().getChainId(), btcFeeReceiver));
         po.setSigners(signers);
         return po;
     }
 
+    @Override
     public HeterogeneousTransactionInfo parseDepositTransaction(String txHash, boolean validate) throws Exception {
         RawTransaction txInfo = walletApi.getTransactionByHash(txHash);
         return this.parseDepositTransaction(txInfo, null, validate);
     }
 
+    @Override
     public HeterogeneousTransactionInfo parseWithdrawalTransaction(String txHash, boolean validate) throws Exception {
         RawTransaction txInfo = walletApi.getTransactionByHash(txHash);
         return this.parseWithdrawalTransaction(txInfo, null, validate);

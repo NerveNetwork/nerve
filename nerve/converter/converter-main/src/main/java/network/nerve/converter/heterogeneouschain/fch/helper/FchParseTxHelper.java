@@ -24,6 +24,7 @@
 package network.nerve.converter.heterogeneouschain.fch.helper;
 
 import apipClass.TxInfo;
+import com.neemre.btcdcli4j.core.domain.TxOutInfo;
 import fchClass.Cash;
 import fchClass.CashMark;
 import io.nuls.base.basic.AddressTool;
@@ -35,11 +36,11 @@ import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import keyTools.KeyTools;
 import network.nerve.converter.btc.model.BtcUnconfirmedTxPo;
-import network.nerve.converter.btc.txdata.CheckWithdrawalUsedUTXOData;
-import network.nerve.converter.btc.txdata.RechargeData;
-import network.nerve.converter.btc.txdata.UsedUTXOData;
+import network.nerve.converter.btc.txdata.*;
 import network.nerve.converter.config.ConverterContext;
+import network.nerve.converter.core.api.interfaces.IBitCoinApi;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.helper.IBitCoinLibParseTxHelper;
 import network.nerve.converter.heterogeneouschain.fch.context.FchContext;
 import network.nerve.converter.heterogeneouschain.fch.core.FchWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
@@ -47,9 +48,11 @@ import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,8 +61,9 @@ import java.util.stream.Collectors;
  * @author: PierreLuo
  * @date: 2023/12/26
  */
-public class FchParseTxHelper implements BeanInitial {
+public class FchParseTxHelper implements IBitCoinLibParseTxHelper, BeanInitial {
 
+    private IBitCoinApi bitCoinApi;
     private FchWalletApi walletApi;
     private HtgListener htgListener;
     private FchContext htgContext;
@@ -68,7 +72,28 @@ public class FchParseTxHelper implements BeanInitial {
         return htgContext.logger();
     }
 
-    public HeterogeneousTransactionInfo parseDepositTransaction(TxInfo txInfo, boolean validate) throws Exception {
+    @Override
+    public boolean isCompletedTransaction(String nerveTxHash) {
+        WithdrawalUTXOTxData utxoTxData = bitCoinApi.takeWithdrawalUTXOs(nerveTxHash);
+        if (utxoTxData == null) {
+            return false;
+        }
+        List<UTXOData> utxoDataList = utxoTxData.getUtxoDataList();
+        if (HtgUtil.isEmptyList(utxoDataList)) {
+            return true;
+        }
+        Collections.sort(utxoDataList, ConverterUtil.BITCOIN_SYS_COMPARATOR);
+        UTXOData utxoData = utxoDataList.get(0);
+        Cash cash = walletApi.getUTXOByTxIdIndex(utxoData.getTxid(), utxoData.getVout());
+        if (cash == null) {
+            throw new RuntimeException(String.format("Unkown Cash, txid: {}, vout: {}", utxoData.getTxid(), utxoData.getVout()));
+        }
+        return StringUtils.isNotBlank(cash.getSpendTxId());
+    }
+
+    @Override
+    public HeterogeneousTransactionInfo parseDepositTransaction(Object txInfoObj, Long blockHeight, boolean validate) throws Exception {
+        TxInfo txInfo = (TxInfo) txInfoObj;
         if (txInfo == null) {
             logger().warn("Transaction does not exist");
             return null;
@@ -172,7 +197,9 @@ public class FchParseTxHelper implements BeanInitial {
         return po;
     }
 
-    public HeterogeneousTransactionInfo parseWithdrawalTransaction(TxInfo txInfo, boolean validate) throws Exception {
+    @Override
+    public HeterogeneousTransactionInfo parseWithdrawalTransaction(Object txInfoObj, Long blockHeight, boolean validate) throws Exception {
+        TxInfo txInfo = (TxInfo) txInfoObj;
         if (txInfo == null) {
             logger().warn("Transaction does not exist");
             return null;
@@ -302,13 +329,15 @@ public class FchParseTxHelper implements BeanInitial {
         return po;
     }
 
+    @Override
     public HeterogeneousTransactionInfo parseDepositTransaction(String txHash, boolean validate) throws Exception {
         TxInfo txInfo = walletApi.getTransactionByHash(txHash);
-        return this.parseDepositTransaction(txInfo, validate);
+        return this.parseDepositTransaction(txInfo, null, validate);
     }
 
+    @Override
     public HeterogeneousTransactionInfo parseWithdrawalTransaction(String txHash, boolean validate) throws Exception {
         TxInfo txInfo = walletApi.getTransactionByHash(txHash);
-        return this.parseWithdrawalTransaction(txInfo, validate);
+        return this.parseWithdrawalTransaction(txInfo, null, validate);
     }
 }

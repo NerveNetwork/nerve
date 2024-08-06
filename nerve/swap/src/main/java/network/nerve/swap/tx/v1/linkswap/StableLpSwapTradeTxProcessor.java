@@ -138,7 +138,7 @@ public class StableLpSwapTradeTxProcessor implements TransactionProcessor {
                 }
                 for (int i = 0; i < pathLength; i++) {
                     NerveToken token = path[i];
-                    LedgerAssetDTO asset = ledgerAssetCache.getLedgerAsset(chainId, token);
+                    LedgerAssetDTO asset = ledgerAssetCache.getLedgerAsset(chainId, token, blockHeader.getHeight());
                     if (asset == null) {
                         throw new NulsException(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
                     }

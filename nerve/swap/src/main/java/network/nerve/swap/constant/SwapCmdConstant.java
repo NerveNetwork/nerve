@@ -75,6 +75,10 @@ public interface SwapCmdConstant {
     String VERIFY_FCH_WITHDRAW = "sw_verifyFchWithdraw";
     String VERIFY_FCH_WITHDRAW_COUNT = "sw_verifyFchWithdrawCount";
     String CREATE_FCH_MULTISIGN_WITHDRAW_TX = "sw_createFchMultiSignWithdrawTx";
+    String SIGN_BCH_WITHDRAW = "sw_signBchWithdraw";
+    String VERIFY_BCH_WITHDRAW = "sw_verifyBchWithdraw";
+    String VERIFY_BCH_WITHDRAW_COUNT = "sw_verifyBchWithdrawCount";
+    String CREATE_BCH_MULTISIGN_WITHDRAW_TX = "sw_createBchMultiSignWithdrawTx";
 
     String CREATE_FARM = "sw_createFarm";
     String FARM_STAKE = "sw_farmstake";

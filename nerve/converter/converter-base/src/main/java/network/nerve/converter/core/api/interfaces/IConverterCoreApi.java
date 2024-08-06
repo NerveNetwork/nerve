@@ -183,6 +183,7 @@ public interface IConverterCoreApi {
     boolean isProtocol34();
     boolean isProtocol35();
     boolean isProtocol36();
+    boolean isProtocol37();
 
     /**
      * Add task
@@ -247,6 +248,8 @@ public interface IConverterCoreApi {
 
     String getInitialFchPubKeyList();
 
+    String getInitialBchPubKeyList();
+
     HeterogeneousAssetInfo getHeterogeneousAssetByNerveAsset(int htgChainId, int nerveAssetChainId, int nerveAssetId);
 
     String signBtcWithdrawByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData, Long splitGranularity) throws NulsException;
@@ -263,6 +266,8 @@ public interface IConverterCoreApi {
 
     String signFchWithdrawByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData, Long splitGranularity) throws NulsException;
     String signFchChangeByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData) throws NulsException;
+    String signBchWithdrawByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData, Long splitGranularity) throws NulsException;
+    String signBchChangeByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO txData) throws NulsException;
 
     NerveAssetInfo getHtgMainAsset(int htgChainId);
 

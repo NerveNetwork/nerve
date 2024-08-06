@@ -511,7 +511,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 this.clearDB(htgTxHash);
                 isReOfferQueue = false;
                 htgResendHelper.clear(nerveTxHash);
-                logger().info("[{}][{}]transaction[{}]Confirmed exceeding{}Height, Remove queue, nerveheight: {}, nerver hash: {}", symbol, po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+                logger().info("[{}] [{}] transaction [{}] Confirmed exceeding {} Height, Remove queue, nerveheight: {}, nerver hash: {}", symbol, po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
             // supplementpoMemory data,poPrint logs for easy viewing of data
             po.setDelete(txPo.isDelete());
@@ -524,12 +524,12 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 break;
             case FAILED:
                 if (!htgResendHelper.canResend(nerveTxHash)) {
-                    logger().warn("[{}]Nervetransaction[{}]Resend over{}Second, discard transaction", symbol, nerveTxHash, RESEND_TIME);
+                    logger().warn("[{}] Nerve transaction [{}] Resend over {} Second, discard transaction", symbol, nerveTxHash, RESEND_TIME);
                     htgResendHelper.clear(htgTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
-                logger().info("Failed{}transaction[{}]Check if the current node can send transactions", symbol, htgTxHash);
+                logger().info("Failed {} transaction [{}] Check if the current node can send transactions", symbol, htgTxHash);
                 // Check if your order is eligible for trading
                 HtgWaitingTxPo waitingTxPo = htgInvokeTxHelper.findEthWaitingTxPo(nerveTxHash);
                 // Check if there are any three roundswaitingTxPoOtherwise, remove thisFAILEDtask
@@ -538,12 +538,12 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 }
                 // querynerveCorresponding to the transactionethWhether the transaction was successful
                 if (htgInvokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
-                    logger().info("[{}]Nerve tx stayNERVENetwork confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
+                    logger().info("[{}]Nerve tx stay NERVE Network confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (waitingTxPo == null) {
-                    logger().info("[{}]Check three rounds without any issueswaitingTxPoRemove thisFAILEDtask, htgTxHash: {}", symbol, htgTxHash);
+                    logger().info("[{}]Check three rounds without any issues waitingTxPo Remove this FAILED task, htgTxHash: {}", symbol, htgTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
@@ -552,7 +552,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     return !isReOfferQueue;
                 }
                 // Failed transactions, not handled by the current node, from the queue andDBRemove from middle
-                logger().info("Failed{}transaction[{}]The current node is not in the next order and will not be processed by the current node. Remove the queue", symbol, htgTxHash);
+                logger().info("Failed {} transaction [{}] The current node is not in the next order and will not be processed by the current node. Remove the queue", symbol, htgTxHash);
                 this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             case COMPLETED:

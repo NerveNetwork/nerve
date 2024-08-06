@@ -42,7 +42,7 @@ public class OtherCtxMessageHandler implements Runnable {
                     continue;
                 }
                 int fromChainId = untreatedMessage.getChainId();
-                chain.getLogger().debug("Start processing other chain nodes：{}Cross chain transactions sent,Hash:{}", untreatedMessage.getNodeId(), otherHex);
+                chain.getLogger().info("Start processing other chain nodes：{} Cross chain transactions sent,Hash: {}", untreatedMessage.getNodeId(), otherHex);
                 boolean handleResult = MessageUtil.handleOtherChainCtx(messageBody.getCtx(), chain, fromChainId);
                 if (handleResult) {
                     chain.getOtherHashNodeIdMap().remove(otherHash);

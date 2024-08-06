@@ -47,8 +47,10 @@ import network.nerve.swap.rpc.call.AccountCall;
 import network.nerve.swap.service.SwapService;
 import network.nerve.swap.storage.SwapExecuteResultStorageService;
 import network.nerve.swap.utils.SwapUtils;
+import network.nerve.swap.utils.bch.BchUtxoUtil;
 import network.nerve.swap.utils.fch.BtcSignData;
 import network.nerve.swap.utils.fch.FchUtil;
+import network.nerve.swap.utils.fch.UTXOData;
 import network.nerve.swap.utils.fch.WithdrawalUTXOTxData;
 import org.bitcoinj.core.ECKey;
 
@@ -1516,6 +1518,286 @@ public class SwapCmd extends BaseCmd {
                     feeRate,
                     useAllUTXO,
                     splitGranularity);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", signedTx);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+
+    @CmdAnnotation(cmd = SIGN_BCH_WITHDRAW, version = 1.0, description = "SIGN_BCH_WITHDRAW")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "withdrawalUTXO", parameterType = "String", parameterDes = "utxo info"),
+            @Parameter(parameterName = "signer", parameterType = "String", parameterDes = "signer"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "to"),
+            @Parameter(parameterName = "amount", parameterType = "long", parameterDes = "amount"),
+            @Parameter(parameterName = "feeRate", parameterType = "long", parameterDes = "feeRate"),
+            @Parameter(parameterName = "opReturn", parameterType = "String", parameterDes = "opReturn"),
+            @Parameter(parameterName = "m", parameterType = "int", parameterDes = "m"),
+            @Parameter(parameterName = "n", parameterType = "int", parameterDes = "n"),
+            @Parameter(parameterName = "useAllUTXO", parameterType = "boolean", parameterDes = "useAllUTXO"),
+            @Parameter(parameterName = "splitGranularity", parameterType = "long", parameterDes = "splitGranularity"),
+            @Parameter(parameterName = "mainnet", parameterType = "boolean", parameterDes = "mainnet"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response signBchWithdraw(Map<String, Object> params) {
+        try {
+
+            Integer chainId = (Integer) params.get("chainId");
+            String withdrawalUTXO = (String) params.get("withdrawalUTXO");
+            String signer = (String) params.get("signer");
+            String to = (String) params.get("to");
+            Long amount = Long.parseLong(params.get("amount").toString());
+            Long feeRate = Long.parseLong(params.get("feeRate").toString());
+            String opReturn = (String) params.get("opReturn");
+            Integer m = (Integer) params.get("m");
+            Integer n = (Integer) params.get("n");
+            Boolean useAllUTXO = (Boolean) params.get("useAllUTXO");
+            Long splitGranularity = null;
+            Object obj = params.get("splitGranularity");
+            if (obj != null) {
+                splitGranularity = Long.parseLong(obj.toString());
+            }
+            Boolean mainnet = (Boolean) params.get("mainnet");
+
+            WithdrawalUTXOTxData utxoTxData = new WithdrawalUTXOTxData();
+            utxoTxData.parse(HexUtil.decode(withdrawalUTXO), 0);
+            List<ECKey> pubEcKeys = utxoTxData.getPubs().stream().map(b -> ECKey.fromPublicOnly(b)).collect(Collectors.toList());
+            List<UTXOData> inputs = utxoTxData.getUtxoDataList();
+
+
+            String prikey = AccountCall.getAccountPrikey(chainId, signer, SwapContext.PASSWORD);
+            ECKey privKey = ECKey.fromPrivate(HexUtil.decode(prikey));
+            byte[] signData = BchUtxoUtil.createMultiSigTxByOne(
+                    privKey,
+                    pubEcKeys,
+                    inputs,
+                    to,
+                    amount,
+                    opReturn,
+                    m, n,
+                    feeRate,
+                    useAllUTXO,
+                    splitGranularity,
+                    mainnet);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", HexUtil.encode(signData));
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = VERIFY_BCH_WITHDRAW, version = 1.0, description = "VERIFY_BCH_WITHDRAW")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "withdrawalUTXO", parameterType = "String", parameterDes = "utxo info"),
+            @Parameter(parameterName = "signData", parameterType = "String", parameterDes = "signData"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "to"),
+            @Parameter(parameterName = "amount", parameterType = "long", parameterDes = "amount"),
+            @Parameter(parameterName = "feeRate", parameterType = "long", parameterDes = "feeRate"),
+            @Parameter(parameterName = "opReturn", parameterType = "String", parameterDes = "opReturn"),
+            @Parameter(parameterName = "m", parameterType = "int", parameterDes = "m"),
+            @Parameter(parameterName = "n", parameterType = "int", parameterDes = "n"),
+            @Parameter(parameterName = "useAllUTXO", parameterType = "boolean", parameterDes = "useAllUTXO"),
+            @Parameter(parameterName = "splitGranularity", parameterType = "long", parameterDes = "splitGranularity"),
+            @Parameter(parameterName = "mainnet", parameterType = "boolean", parameterDes = "mainnet"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response verifyBchWithdraw(Map<String, Object> params) {
+        try {
+
+            Integer chainId = (Integer) params.get("chainId");
+            String withdrawalUTXO = (String) params.get("withdrawalUTXO");
+            String signData = (String) params.get("signData");
+            String to = (String) params.get("to");
+            Long amount = Long.parseLong(params.get("amount").toString());
+            Long feeRate = Long.parseLong(params.get("feeRate").toString());
+            String opReturn = (String) params.get("opReturn");
+            Integer m = (Integer) params.get("m");
+            Integer n = (Integer) params.get("n");
+            Boolean useAllUTXO = (Boolean) params.get("useAllUTXO");
+            Long splitGranularity = null;
+            Object obj = params.get("splitGranularity");
+            if (obj != null) {
+                splitGranularity = Long.parseLong(obj.toString());
+            }
+            Boolean mainnet = (Boolean) params.get("mainnet");
+
+            WithdrawalUTXOTxData utxoTxData = new WithdrawalUTXOTxData();
+            utxoTxData.parse(HexUtil.decode(withdrawalUTXO), 0);
+            List<ECKey> pubEcKeys = utxoTxData.getPubs().stream().map(b -> ECKey.fromPublicOnly(b)).collect(Collectors.toList());
+            List<UTXOData> inputs = utxoTxData.getUtxoDataList();
+
+            BtcSignData bchSignData = new BtcSignData();
+            bchSignData.parse(HexUtil.decode(signData), 0);
+
+            boolean verified = BchUtxoUtil.verifyMultiSigTxByOne(
+                    ECKey.fromPublicOnly(bchSignData.getPubkey()),
+                    bchSignData.getSignatures(),
+                    pubEcKeys,
+                    inputs,
+                    to,
+                    amount,
+                    opReturn,
+                    m, n,
+                    feeRate,
+                    useAllUTXO,
+                    splitGranularity,
+                    mainnet);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", verified);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = VERIFY_BCH_WITHDRAW_COUNT, version = 1.0, description = "VERIFY_BCH_WITHDRAW_COUNT")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "withdrawalUTXO", parameterType = "String", parameterDes = "utxo info"),
+            @Parameter(parameterName = "signData", parameterType = "String", parameterDes = "signData"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "to"),
+            @Parameter(parameterName = "amount", parameterType = "long", parameterDes = "amount"),
+            @Parameter(parameterName = "feeRate", parameterType = "long", parameterDes = "feeRate"),
+            @Parameter(parameterName = "opReturn", parameterType = "String", parameterDes = "opReturn"),
+            @Parameter(parameterName = "m", parameterType = "int", parameterDes = "m"),
+            @Parameter(parameterName = "n", parameterType = "int", parameterDes = "n"),
+            @Parameter(parameterName = "useAllUTXO", parameterType = "boolean", parameterDes = "useAllUTXO"),
+            @Parameter(parameterName = "splitGranularity", parameterType = "long", parameterDes = "splitGranularity"),
+            @Parameter(parameterName = "mainnet", parameterType = "boolean", parameterDes = "mainnet"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response verifyBchWithdrawCount(Map<String, Object> params) {
+        try {
+
+            Integer chainId = (Integer) params.get("chainId");
+            String withdrawalUTXO = (String) params.get("withdrawalUTXO");
+            String signatureData = (String) params.get("signData");
+            String to = (String) params.get("to");
+            Long amount = Long.parseLong(params.get("amount").toString());
+            Long feeRate = Long.parseLong(params.get("feeRate").toString());
+            String opReturn = (String) params.get("opReturn");
+            Integer m = (Integer) params.get("m");
+            Integer n = (Integer) params.get("n");
+            Boolean useAllUTXO = (Boolean) params.get("useAllUTXO");
+            Long splitGranularity = null;
+            Object obj = params.get("splitGranularity");
+            if (obj != null) {
+                splitGranularity = Long.parseLong(obj.toString());
+            }
+            Boolean mainnet = (Boolean) params.get("mainnet");
+
+            WithdrawalUTXOTxData utxoTxData = new WithdrawalUTXOTxData();
+            utxoTxData.parse(HexUtil.decode(withdrawalUTXO), 0);
+            List<ECKey> pubEcKeys = utxoTxData.getPubs().stream().map(b -> ECKey.fromPublicOnly(b)).collect(Collectors.toList());
+            List<UTXOData> inputs = utxoTxData.getUtxoDataList();
+
+            Map<String, List<byte[]>> signatures = new HashMap<>();
+            String[] signDatas = signatureData.split(",");
+            for (String signData : signDatas) {
+                BtcSignData signDataObj = new BtcSignData();
+                signDataObj.parse(HexUtil.decode(signData.trim()), 0);
+                signatures.put(HexUtil.encode(signDataObj.getPubkey()), signDataObj.getSignatures());
+            }
+
+            int verifiedCount = BchUtxoUtil.verifyMultiSignCount(
+                    signatures,
+                    pubEcKeys,
+                    inputs,
+                    to,
+                    amount,
+                    opReturn,
+                    m, n,
+                    feeRate,
+                    useAllUTXO,
+                    splitGranularity,
+                    mainnet);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", verifiedCount);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = CREATE_BCH_MULTISIGN_WITHDRAW_TX, version = 1.0, description = "CREATE_BCH_MULTISIGN_WITHDRAW_TX")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "withdrawalUTXO", parameterType = "String", parameterDes = "utxo info"),
+            @Parameter(parameterName = "signData", parameterType = "String", parameterDes = "signData"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "to"),
+            @Parameter(parameterName = "amount", parameterType = "long", parameterDes = "amount"),
+            @Parameter(parameterName = "feeRate", parameterType = "long", parameterDes = "feeRate"),
+            @Parameter(parameterName = "opReturn", parameterType = "String", parameterDes = "opReturn"),
+            @Parameter(parameterName = "m", parameterType = "int", parameterDes = "m"),
+            @Parameter(parameterName = "n", parameterType = "int", parameterDes = "n"),
+            @Parameter(parameterName = "useAllUTXO", parameterType = "boolean", parameterDes = "useAllUTXO"),
+            @Parameter(parameterName = "splitGranularity", parameterType = "long", parameterDes = "splitGranularity"),
+            @Parameter(parameterName = "mainnet", parameterType = "boolean", parameterDes = "mainnet"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    }))
+    public Response createBchMultiSignWithdrawTx(Map<String, Object> params) {
+        try {
+
+            Integer chainId = (Integer) params.get("chainId");
+            String withdrawalUTXO = (String) params.get("withdrawalUTXO");
+            String signatureData = (String) params.get("signData");
+            String to = (String) params.get("to");
+            Long amount = Long.parseLong(params.get("amount").toString());
+            Long feeRate = Long.parseLong(params.get("feeRate").toString());
+            String opReturn = (String) params.get("opReturn");
+            Integer m = (Integer) params.get("m");
+            Integer n = (Integer) params.get("n");
+            Boolean useAllUTXO = (Boolean) params.get("useAllUTXO");
+            Long splitGranularity = null;
+            Object obj = params.get("splitGranularity");
+            if (obj != null) {
+                splitGranularity = Long.parseLong(obj.toString());
+            }
+            Boolean mainnet = (Boolean) params.get("mainnet");
+
+            WithdrawalUTXOTxData utxoTxData = new WithdrawalUTXOTxData();
+            utxoTxData.parse(HexUtil.decode(withdrawalUTXO), 0);
+            List<ECKey> pubEcKeys = utxoTxData.getPubs().stream().map(b -> ECKey.fromPublicOnly(b)).collect(Collectors.toList());
+            List<UTXOData> inputs = utxoTxData.getUtxoDataList();
+
+            Map<String, List<byte[]>> signatures = new HashMap<>();
+            String[] signDatas = signatureData.split(",");
+            for (String signData : signDatas) {
+                BtcSignData signDataObj = new BtcSignData();
+                signDataObj.parse(HexUtil.decode(signData.trim()), 0);
+                signatures.put(HexUtil.encode(signDataObj.getPubkey()), signDataObj.getSignatures());
+            }
+
+            String signedTx = BchUtxoUtil.createMultiSigTxByMulti(
+                    signatures,
+                    pubEcKeys,
+                    inputs,
+                    to,
+                    amount,
+                    opReturn,
+                    m, n,
+                    feeRate,
+                    useAllUTXO,
+                    splitGranularity,
+                    mainnet);
             Map<String, Object> resultData = new HashMap<>();
             resultData.put("value", signedTx);
             return success(resultData);

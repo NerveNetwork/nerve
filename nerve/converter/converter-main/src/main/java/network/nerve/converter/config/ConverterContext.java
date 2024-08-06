@@ -191,6 +191,7 @@ public class ConverterContext {
     public static long PROTOCOL_1_34_0 = 0L;
     public static long PROTOCOL_1_35_0 = 0L;
     public static long PROTOCOL_1_36_0 = 0L;
+    public static long PROTOCOL_1_37_0 = 0L;
     /**
      * 0=local,1=signatrue-machine
      */

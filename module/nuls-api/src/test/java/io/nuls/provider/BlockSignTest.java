@@ -163,8 +163,8 @@ public class BlockSignTest {
         String url = "https://api.nerve.network/jsonrpc";
         //long start = 55029898;
         //long end = 55029915;
-        long start = 59047530;
-        long end = 59047548;
+        long start = 62113799;
+        long end = 62113815;
         for (long i = start; i <= end; i++) {
             String post = (String) post(url + "",
                     Map.of("jsonrpc", "2.0",

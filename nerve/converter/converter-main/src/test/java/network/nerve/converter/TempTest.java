@@ -28,7 +28,11 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterContext;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.core.BitCoinLibWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgBlockHandler;
+import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
+import network.nerve.converter.heterogeneouschain.trx.docking.TrxDocking;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import org.junit.Test;
 
@@ -46,6 +50,15 @@ import java.util.stream.Collectors;
 public class TempTest {
     int rpcVersion = -1;
     String apiUrl = null;
+
+    @Test
+    public void testBeanMap() throws Exception {
+        BeanMap map = new BeanMap();
+        map.add(BitCoinLibWalletApi.class);
+        map.add(HtgBlockHandler.class);
+        map.add(TrxDocking.class);
+        map.beanMap.forEach((k,v) -> System.out.println(k + "===" + v));
+    }
 
     @Test
     public void listFilterTest() throws Exception {

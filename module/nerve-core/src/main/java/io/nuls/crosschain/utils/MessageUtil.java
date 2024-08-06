@@ -181,6 +181,7 @@ public class MessageUtil {
         signByzantineInChain(chain, ctx, signature, packAddressList, realHash);
         NetWorkCall.broadcast(chainId, messageBody, excludeNodes, CommandConstant.BROAD_CTX_SIGN_MESSAGE, false);
         chain.getLogger().info("Broadcast newly received cross chain transaction signatures to other nodes linked to them,Hash:{},autograph:{}\n\n", nativeHex, signHex);
+        chain.getLogger().info("\nxxooxx: {}\n", HexUtil.encode(ctx.serialize()));
     }
 
     /**

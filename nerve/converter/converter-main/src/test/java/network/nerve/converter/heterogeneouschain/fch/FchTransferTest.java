@@ -33,6 +33,7 @@ import apipClient.FreeGetAPIs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import fcTools.ParseTools;
 import fchClass.Cash;
 import fchClass.OpReturn;
 import fchClass.P2SH;
@@ -40,6 +41,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.crypto.Sha256Hash;
 import io.nuls.core.io.IoUtils;
+import io.nuls.core.model.ByteUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.parse.SerializeUtils;
 import io.nuls.v2.model.Account;
@@ -97,7 +99,7 @@ public class FchTransferTest {
     String fromPriKey;
     String multisigAddress;
     //byte[] sessionKey = HexUtil.decode("17fd649617d838b514ba8338caf050c4753a51d1a471c11e1ee743329828dd8a");
-    byte[] sessionKey = HexUtil.decode("47a75483f8800d0c36f6e11c7502b7b6f7522713d800790d665b89736f776cbc");
+    byte[] sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
 
     @Before
     public void before() {
@@ -159,12 +161,11 @@ public class FchTransferTest {
     public void testCalcFeeMultiSignWithSplitGranularity() {
         // long fromTotal, long transfer, long feeRate, Long splitGranularity, int inputNum, int opReturnBytesLen, int m, int n
         long size = FchUtil.calcFeeMultiSignWithSplitGranularity(
-                60000000, 2000000, 1, 8000000L, 1, 64, 3, 4);
+                45995890, 12000000, 1, 0L, 1, 64, 2, 3);
         System.out.println(size);
         // int inputNum, int outputNum, int opReturnBytesLen, int m, int n
-        size = FchUtil.calcFeeMultiSign(1, 8, 64, 3, 4);
+        size = FchUtil.calcFeeMultiSign(1, 1, 64, 2, 3);
         System.out.println(size);
-        System.out.println("27bf08c066cf6fe0d081d66376f4b8fafeb8fad6b85b97e1642117192228a746".getBytes(StandardCharsets.UTF_8).length);
     }
     @Test
     public void addrTest() throws Exception {
@@ -530,6 +531,7 @@ public class FchTransferTest {
         // 1059.99998000
         // 1059.99986000
         //    0.00001
+        sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
         ApipClient apipClient = BlockchainAPIs.blockByIdsPost(urlHead, new String[]{"000000000000024ae054ab1eaeb529d5f1fed6f86f084e4dc8d696c3f84335d3"}, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);
         System.out.println("blockDetailData:\n" + apipClient.getResponseBodyStr());
     }
@@ -573,11 +575,22 @@ public class FchTransferTest {
 
     @Test
     public void UTXOInfoTest() {
-        //String cashIdSpent = "b7893dc7e90a64e6372433f50fdba3f878eeab9fccac14fcae32e1068577b4dd";
-        //String cashIdOpReturn = "d94a05e8e7133e2311a9ca326c00895f6067fd04140dc4eaa056e81e752d4009";
-        //String cashIdUnspent = "a29115a84dfea4c6845998a5913b924878569fb9c41f755f6626a73cbbd47df5";
-        //String[] cashes = new String[]{cashIdSpent, cashIdOpReturn, cashIdUnspent};
-        String[] cashes = new String[]{"0df8c11e343b1000f7795527bf8318f644f8d29b11630281840edf7006b7412a"};
+        // a29115a84dfea4c6845998a5913b924878569fb9c41f755f6626a73cbbd47df5 = sha256x2(birthTxId:08c71a038b51f0832f0edadc21e22652fedc30128ac5e3232fc659c31b91a58b, birthIndex:2)
+        String cashIdSpent = "b7893dc7e90a64e6372433f50fdba3f878eeab9fccac14fcae32e1068577b4dd";
+        String cashIdOpReturn = "d94a05e8e7133e2311a9ca326c00895f6067fd04140dc4eaa056e81e752d4009";
+        String cashIdUnspent = "a29115a84dfea4c6845998a5913b924878569fb9c41f755f6626a73cbbd47df5";
+        String[] cashes = new String[]{cashIdSpent, cashIdOpReturn, cashIdUnspent};
+        //String[] cashes = new String[]{"0df8c11e343b1000f7795527bf8318f644f8d29b11630281840edf7006b7412a"};
+        ApipClient client = BlockchainAPIs.cashByIdsPost(urlHead, cashes, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);
+        System.out.println("utxo info:\n" + client.getResponseBodyStr());
+    }
+
+    @Test
+    public void CashInfoByTxidVoutTest() {
+        String txid = "50e5f5bff70714b2c3f120f3e226111e8a3db3577f27d1c93cbe5979b4ca2814";
+        int vout = 0;
+        String cashId = ParseTools.calcTxoId(txid, vout);
+        String[] cashes = new String[]{cashId};
         ApipClient client = BlockchainAPIs.cashByIdsPost(urlHead, cashes, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);
         System.out.println("utxo info:\n" + client.getResponseBodyStr());
     }

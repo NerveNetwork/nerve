@@ -74,6 +74,10 @@ public class FarmCreateHandlerTest {
                 }
                 return getLedgerAsset(chainId, token.getChainId(), token.getAssetId());
             }
+            @Override
+            public LedgerAssetDTO getLedgerAsset(int chainId, NerveToken token, long height) {
+                return getLedgerAsset(chainId,token);
+            }
         });
         handler.getHelper().setStorageService(new FarmStorageService() {
 

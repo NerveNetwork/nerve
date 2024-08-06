@@ -35,4 +35,6 @@ public interface LedgerAssetCache {
     LedgerAssetDTO getLedgerAsset(int chainId, int assetChainId, int assetId);
 
     LedgerAssetDTO getLedgerAsset(int chainId, NerveToken token);
+
+    LedgerAssetDTO getLedgerAsset(int chainId, NerveToken token, long height);
 }

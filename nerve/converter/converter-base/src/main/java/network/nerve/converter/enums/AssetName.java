@@ -72,6 +72,7 @@ public enum AssetName {
 
     BTC(201, 8),
     FCH(202, 8),
+    BCHUTXO(203, 8),
 
     MODE(138, 18),
     BLAST(139, 18),

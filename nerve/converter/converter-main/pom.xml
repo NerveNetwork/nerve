@@ -238,7 +238,7 @@
         <dependency>
             <groupId>com.github.bitsoex.btcd-cli4j-NERVE</groupId>
             <artifactId>btcd-cli4j-core</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.4</version>
         </dependency>
 
         <dependency>

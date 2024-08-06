@@ -105,7 +105,16 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
     private String initVirtualBankPubKeyList;
     private String initBtcPubKeyList;
     private String initFchPubKeyList;
+    private String initBchPubKeyList;
     private String bitcoinSysWithdrawalFeePubKey;
+
+    public String getInitBchPubKeyList() {
+        return initBchPubKeyList;
+    }
+
+    public void setInitBchPubKeyList(String initBchPubKeyList) {
+        this.initBchPubKeyList = initBchPubKeyList;
+    }
 
     public String getBitcoinSysWithdrawalFeePubKey() {
         return bitcoinSysWithdrawalFeePubKey;

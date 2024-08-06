@@ -21,6 +21,7 @@ import network.nerve.converter.heterogeneouschain.arbitrum.context.ArbitrumConte
 import network.nerve.converter.heterogeneouschain.avax.context.AvaxContext;
 import network.nerve.converter.heterogeneouschain.basechain.context.BaseChainContext;
 import network.nerve.converter.heterogeneouschain.bch.context.BchContext;
+import network.nerve.converter.heterogeneouschain.bchutxo.context.BchUtxoContext;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
 import network.nerve.converter.heterogeneouschain.brise.context.BriseContext;
 import network.nerve.converter.heterogeneouschain.btc.context.BtcContext;
@@ -448,6 +449,7 @@ public class TxSendTest {
     MantaContext mantaContext = new MantaContext();
     FchContext fchContext = new FchContext();
     BtcContext btcContext = new BtcContext();
+    BchUtxoContext bchUtxoContext = new BchUtxoContext();
     X1Context x1Context = new X1Context();
     ZetaContext zetaContext = new ZetaContext();
     KromaContext kromaContext = new KromaContext();
@@ -622,6 +624,7 @@ public class TxSendTest {
         this.balanceInfoPrint("asset PLS", new NerveAssetInfo(5, 2), address, 18);
         this.balanceInfoPrint("asset FCH", new NerveAssetInfo(5, 3), address, 8);
         this.balanceInfoPrint("asset BTC", new NerveAssetInfo(5, 4), address, 8);
+        this.balanceInfoPrint("asset BCH", new NerveAssetInfo(5, 5), address, 8);
         //this.balanceInfoPrint("asset Mode-ETH", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("asset Blast-ETH", new NerveAssetInfo(5, 4), address, 18);
         //this.balanceInfoPrint("asset Merlin-BTC", new NerveAssetInfo(5, 5), address, 18);
@@ -820,6 +823,19 @@ public class TxSendTest {
     }
 
     @Test
+    public void withdrawalBCHUTXO() throws Exception {
+        int htgChainId = bchUtxoContext.HTG_CHAIN_ID();
+        String from = address31;
+        String to = "bchtest:qqla4yswdp3f903jfdpc6egfzglvmrs7nussfx247n";
+        // Main assets quantity
+        BigInteger value = new BigDecimal("0.00013").movePointRight(8).toBigInteger();
+        //BigInteger value = BigInteger.valueOf(2222220);
+        BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
+        NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
     public void withdrawalMintETH() throws Exception {
         int htgChainId = mintContext.HTG_CHAIN_ID();
         String from = address31;
@@ -910,8 +926,8 @@ public class TxSendTest {
         String to = "mmLahgkWGHQSKszCDcZXPooWoRuYhQPpCF";
         // Main assets quantity
         //BigInteger value = new BigDecimal("0.00001129").movePointRight(8).toBigInteger();
-        BigInteger value = BigInteger.valueOf(810);
-        BigInteger fee = new BigInteger(Long.valueOf(339_1000_0000L).toString());
+        BigInteger value = BigInteger.valueOf(1810);
+        BigInteger fee = new BigInteger(Long.valueOf(39_1000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
@@ -1764,6 +1780,7 @@ public class TxSendTest {
         //regHeterogeneousMainAsset(blastContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(merlinContext.HTG_CHAIN_ID());
         regHeterogeneousMainAsset(btcContext.HTG_CHAIN_ID());
+        regHeterogeneousMainAsset(bchUtxoContext.HTG_CHAIN_ID());
     }
 
     @Test
@@ -2175,8 +2192,8 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put("chainId", 5);
-        params.put("heterogeneousChainId", 202);
-        params.put("heterogeneousTxHash", "3d46cd0194303bab8f4a6d5a3de1a71f62d9bf0d7005f316c37b82dcf748eff9");
+        params.put("heterogeneousChainId", 203);
+        params.put("heterogeneousTxHash", "1f7d65252e79a75d098b623eb34f8be8cef8a5f2b5ee99585b3f8b0750c63c00");
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, ConverterCmdConstant.CHECK_RETRY_HTG_TX, params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
     }

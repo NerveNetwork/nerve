@@ -155,7 +155,7 @@ public class WithdrawalUTXOFeePaymentProcessor implements TransactionProcessor {
                     nerveInner = txData.isNerveInner();
                 }
                 docking.getBitCoinApi().recordFeePayment(txData.getBlockHeight(), txData.getBlockHash(), htgTxHash, txData.getFee(), txData.isRecharge(), nerveInner);
-                chain.getLogger().info("[commit] withdrawal UTXO fee payment transactions hash: {}, htgTxHash hash: {}", tx.getHash().toHex(), htgTxHash);
+                chain.getLogger().info("[commit] withdrawal UTXO fee payment transactions hash: {}, htgChainId: {}, htgTxHash hash: {}", tx.getHash().toHex(), txData.getHtgChainId(), htgTxHash);
             }
             return true;
         } catch (Exception e) {

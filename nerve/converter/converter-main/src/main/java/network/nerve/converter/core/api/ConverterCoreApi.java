@@ -131,7 +131,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
             108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH,
             119 ENULS, 120 KAVA, 121 ETHW, 122 REI, 123 ZK, 124 EOS, 125 ZKpolygon, 126 Linea,
             127 Celo, 128 ETC, 129 Base, 130 Scroll, 131 Brise, 132 Janus, 133 Manta, 134 XLayer(OKB), 135 ZETA,
-            138 Mode-ETH, 139 Blast-ETH, 140 Merlin-BTC, 141 PLS, 142 Mint-ETH
+            137 SHM(shardeum), 138 Mode-ETH, 139 Blast-ETH, 140 Merlin-BTC, 141 PLS, 142 Mint-ETH
             201 BTC, 202 FCH
          */
         skippedTestNetworks = new HashSet<>();
@@ -151,6 +151,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
         skippedTestNetworks.add(129);
         skippedTestNetworks.add(130);
         skippedTestNetworks.add(132);
+        skippedTestNetworks.add(137);
 
         l1FeeChainSet.add(115);
         l1FeeChainSet.add(129);
@@ -212,6 +213,32 @@ public class ConverterCoreApi implements IConverterCoreApi {
         if (nerveChain.getChainId() == 5) {
             skipTransactions.add("ccfb73d0a36be1632ed32c1a7442b47ea203c3639fda62b8eda67d24865d88c9");
             skipTransactions.add("152c84dd7b7cbb3405bd2de26808e8719c9274b00ad3bdfe946dfc7a12c0e703");
+            skipTransactions.add("e514b105e301eab8a5b8aa121c82d4484ccbd3f4603b2e3f3cdd01bfde399ed9");
+
+            skipTransactions.add("5d9be4f3b45ec5d52e8f5900480f7b4a53e60d10618b69eafbbb2da559100d98");
+            skipTransactions.add("f7881764a1f06e36220828457c1c98041c2df76b39b53151831e7adc078e5eb3");
+            skipTransactions.add("9ef3de66cd5027875995cb43ae65b281171895050eec5965b48b3abdc6001afd");
+            skipTransactions.add("4a37a948ab7d5cbd5471aa323b9dcd08ac85b0e9a9a471e16007dabe95aae03c");
+            skipTransactions.add("f0af7f815e5dd1557a5995c4c02690dbcf1b7ba39f855fe549b12ea3e59773a0");
+            skipTransactions.add("20274818af7b16fa695ab5be4c0602fb94682d29e4329b06950a8b56f1d4ce23");
+            skipTransactions.add("c18de4aaf845eaed3ce8171470d2e0691091947e9b9095ed50cae21add69d2ee");
+            skipTransactions.add("a642cbf0112521641004e449e3f59f6c9499e4403aab91567cef016924afcd9c");
+            skipTransactions.add("dae7d91cd94eba12700881a2a5512ab78e4bf9cf828058e84414ff7918dff87c");
+            skipTransactions.add("db4805bb9756f21e1e6005ed61dde54dfcd58e0ca83ffcd6577fdfd9892b0d2c");
+            skipTransactions.add("a1e385687dcbe6eac48a858ec54becdca083bb3779ef752ca15beb153210ba80");
+            skipTransactions.add("04871e1f85054d4607bcf5aa5fc262c872881430a72c33606125610608bc6a6a");
+            skipTransactions.add("260252723a2fa279794e872fb1fd802ce0b4b00e1615bdc59c6ff445e31e4a81");
+            skipTransactions.add("087e4914ca5559629b33f00d4a7d033f65f3a088b313a8c1ffec664fac028580");
+            skipTransactions.add("803ca71943236c43e0910c11af153bb8bf8b3ce11e0053e54bba5e89b8f0db09");
+            skipTransactions.add("babf7b552b2aa890fa731766b3ece24675effb43269d5af9b1ef729bd227d4fb");
+            skipTransactions.add("0075b7d55697c00e45c2f5effe0676a0fa6b6031ffd9f5943c510f632a29e60c");
+            skipTransactions.add("9ef389678f76e807067f47277dbc4d16bd6cd894f4320757731d66e51c6b52a0");
+            skipTransactions.add("ee61441a2470e0c3320849b6b0a70e229c176bf862c4a4bc6b169ae5ef735d56");
+            skipTransactions.add("aed0f7604b64f911846dd1943897e97044604ab0f924c59e63bd74d84a405dc1");
+            skipTransactions.add("7972319f32280ccb8baf199b2f92c9bf28365d16c8a6a61eba8e7ad1a61576ba");
+            skipTransactions.add("e2d90a76bed32bbbdedc9957e189eb023b3f28d92cf4b574829d479fc69e5de3");
+            skipTransactions.add("964ca5440bff2de68700a965321bab010cc74a19c6f7b07d8b1afe5133e5ad97");
+
         }
         initSeedPackerOrder(nerveChain);
     }
@@ -498,7 +525,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
         if (assetName == AssetName.FCH) {
             return getFchUsdtPrice();
         }
-        //TODO pierre test code
+        //TODO pierre test eth
         //if (assetName == AssetName.ETH) {
         //    key = "ETH_PRICE";
         //}
@@ -614,6 +641,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean isProtocol36() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_36_0;
+    }
+
+    @Override
+    public boolean isProtocol37() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_37_0;
     }
 
     private void loadHtgMainAsset() {
@@ -942,7 +974,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
                 ethGasPrice = heterogeneousDockingManager.getHeterogeneousDocking(101).currentGasPrice();
             } else {
                 ethGasPrice = heterogeneousDockingManager.getHeterogeneousDocking(118).currentGasPrice();
-                //TODO pierre test
+                //TODO pierre test eth
                 //ethGasPrice = new BigDecimal("0.127838726").movePointRight(9).toBigInteger();
             }
             return HeterogeneousUtil.getL1Fee(htgChainId, ethGasPrice);
@@ -998,6 +1030,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public String getInitialFchPubKeyList() {
         return converterConfig.getInitFchPubKeyList();
+    }
+
+    @Override
+    public String getInitialBchPubKeyList() {
+        return converterConfig.getInitBchPubKeyList();
     }
 
     @Override
@@ -1166,6 +1203,71 @@ public class ConverterCoreApi implements IConverterCoreApi {
         int m = this.getByzantineCount(n);
         Map<String, Object> extend = new HashMap<>();
         extend.put("method", "cvFchSignChange");
+        extend.put("nativeId", nativeId);
+        extend.put("signerPubkey", signerPubkey);
+        extend.put("txKey", txKey);
+        extend.put("toAddress", toAddress);
+        extend.put("value", String.valueOf(value));
+        extend.put("m", String.valueOf(m));
+        extend.put("n", String.valueOf(n));
+        extend.put("mainnet", this.isNerveMainnet());
+        extend.put("otherSigMacUrl", true);
+        try {
+            extend.put("txData", HexUtil.encode(txData.serialize()));
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.IO_ERROR, e);
+        }
+        String hex = AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
+        return Numeric.cleanHexPrefix(hex);
+    }
+
+    @Override
+    public String signBchWithdrawByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO data, Long splitGranularity) throws NulsException {
+        WithdrawalUTXOTxData txData = new WithdrawalUTXOTxData(
+                data.getNerveTxHash(),
+                htgChainId,
+                data.getCurrentMultiSignAddress(),
+                data.getCurrenVirtualBankTotal(),
+                data.getFeeRate(),
+                data.getPubs(),
+                data.getUtxoDataList());
+        int n = data.getPubs().size();
+        int m = this.getByzantineCount(n);
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvBchSignWithdraw");
+        extend.put("nativeId", nativeId);
+        extend.put("signerPubkey", signerPubkey);
+        extend.put("txKey", txKey);
+        extend.put("toAddress", toAddress);
+        extend.put("value", String.valueOf(value));
+        extend.put("m", String.valueOf(m));
+        extend.put("n", String.valueOf(n));
+        extend.put("mainnet", this.isNerveMainnet());
+        extend.put("otherSigMacUrl", true);
+        extend.put("splitGranularity", splitGranularity == null ? 0 : splitGranularity);
+        try {
+            extend.put("txData", HexUtil.encode(txData.serialize()));
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.IO_ERROR, e);
+        }
+        String hex = AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
+        return Numeric.cleanHexPrefix(hex);
+    }
+
+    @Override
+    public String signBchChangeByMachine(long nativeId, int htgChainId, String signerPubkey, String txKey, String toAddress, long value, WithdrawalUTXO data) throws NulsException {
+        WithdrawalUTXOTxData txData = new WithdrawalUTXOTxData(
+                data.getNerveTxHash(),
+                htgChainId,
+                data.getCurrentMultiSignAddress(),
+                data.getCurrenVirtualBankTotal(),
+                data.getFeeRate(),
+                data.getPubs(),
+                data.getUtxoDataList());
+        int n = data.getPubs().size();
+        int m = this.getByzantineCount(n);
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvBchSignChange");
         extend.put("nativeId", nativeId);
         extend.put("signerPubkey", signerPubkey);
         extend.put("txKey", txKey);

@@ -32,111 +32,57 @@ import apipClient.BlockchainAPIs;
 import apipClient.FreeGetAPIs;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.neemre.btcdcli4j.core.client.BtcdClient;
+import com.neemre.btcdcli4j.core.domain.BlockHeader;
+import fcTools.ParseTools;
 import fchClass.Cash;
 import fchClass.OpReturn;
 import fchClass.P2SH;
+import fchClass.TxMark;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterConfig;
-import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.core.IBitCoinLibWalletApi;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.model.BitCoinLibBlockHeader;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.model.BitCoinLibBlockInfo;
 import network.nerve.converter.heterogeneouschain.fch.context.FchContext;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import txTools.FchTool;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 /**
  * @author: PierreLuo
  * @date: 2023/12/26
  */
-public class FchWalletApi implements BeanInitial {
+public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
     private ConverterConfig converterConfig;
     private FchContext htgContext;
 
     private String rpc = "https://cid.cash/APIP";
     private String via = "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD";
-    private byte[] sessionKey = HexUtil.decode("47a75483f8800d0c36f6e11c7502b7b6f7522713d800790d665b89736f776cbc");
+    private byte[] sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
     private ReentrantLock checkLock = new ReentrantLock();
     private int rpcVersion = -1;
     private boolean reSyncBlock = false;
     private volatile boolean urlFromThirdPartyForce = false;
 
-    private String symbol() {
+    public String symbol() {
         return htgContext.getConfig().getSymbol();
     }
 
-    private NulsLogger getLog() {
+    public NulsLogger getLog() {
         return htgContext.logger();
-    }
-
-    public void init(String rpcAddress) throws NulsException {
-        this.rpc = rpcAddress;
-    }
-
-    public void checkApi() throws NulsException {
-        checkLock.lock();
-        try {
-            do {
-                // Force updates from third-party systemsrpc
-                Map<Long, Map> rpcCheckMap = htgContext.getConverterCoreApi().HTG_RPC_CHECK_MAP();
-                Map<String, Object> resultMap = rpcCheckMap.get(htgContext.getConfig().getChainIdOnHtgNetwork());
-                if (resultMap == null) {
-                    //getLog().warn("Empty resultMap! {} rpc check from third party, version: {}", symbol(), rpcVersion);
-                    break;
-                }
-                Integer _version = (Integer) resultMap.get("rpcVersion");
-                if (_version == null) {
-                    //getLog().warn("Empty rpcVersion! {} rpc check from third party, version: {}", symbol(), rpcVersion);
-                    break;
-                }
-                if (this.rpcVersion == -1) {
-                    this.rpcVersion = _version.intValue();
-                    getLog().info("initialization {} rpc check from third party, version: {}", symbol(), rpcVersion);
-                    break;
-                }
-                if (this.rpcVersion == _version.intValue()) {
-                    //getLog().info("Same version {} rpc check from third party, version: {}", symbol(), rpcVersion);
-                    break;
-                }
-                if (_version.intValue() > this.rpcVersion) {
-                    // findversionChange, switchrpc
-                    Integer _index = (Integer) resultMap.get("index");
-                    if (_index == null) {
-                        getLog().warn("Empty index! {} rpc check from third party, version: {}", symbol(), rpcVersion);
-                        break;
-                    }
-                    String apiUrl = (String) resultMap.get("extend" + (_index + 1));
-                    if (StringUtils.isBlank(apiUrl)) {
-                        getLog().warn("Empty apiUrl! {} rpc check from third party, version: {}", symbol(), rpcVersion);
-                        break;
-                    }
-                    getLog().info("Checked that changes are neededRPCservice {} rpc check from third party, version: {}, url: {}", symbol(), _version.intValue(), apiUrl);
-                    this.changeApi(apiUrl);
-                    this.rpcVersion = _version.intValue();
-                    this.urlFromThirdPartyForce = true;
-                    this.reSyncBlock = true;
-                    return;
-                }
-            } while (false);
-
-            if (this.urlFromThirdPartyForce) {
-                getLog().info("[{}]Mandatory emergency responseAPI(ThirdParty)During the use period, no longer based onbank orderswitchAPI", symbol());
-                return;
-            }
-
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            checkLock.unlock();
-        }
     }
 
     public boolean isReSyncBlock() {
@@ -147,7 +93,46 @@ public class FchWalletApi implements BeanInitial {
         this.reSyncBlock = reSyncBlock;
     }
 
-    private void changeApi(String rpc) throws NulsException {
+    public HtgContext getHtgContext() {
+        return htgContext;
+    }
+
+    public ReentrantLock getCheckLock() {
+        return checkLock;
+    }
+
+    public int getRpcVersion() {
+        return rpcVersion;
+    }
+
+    public void setRpcVersion(int rpcVersion) {
+        this.rpcVersion = rpcVersion;
+    }
+
+    public boolean isUrlFromThirdPartyForce() {
+        return urlFromThirdPartyForce;
+    }
+
+    public void setUrlFromThirdPartyForce(boolean urlFromThirdPartyForce) {
+        this.urlFromThirdPartyForce = urlFromThirdPartyForce;
+    }
+
+    public void init(String rpcAddress) throws NulsException {
+        this.rpc = rpcAddress;
+    }
+
+    @Override
+    public long getFeeRate() {
+        return 1;
+    }
+
+    @Override
+    public long getBestBlockHeight() {
+        BlockInfo bestBlock = this.getBestBlock();
+        return bestBlock.getHeight();
+    }
+
+    public void changeApi(String rpc) throws NulsException {
         // switchapi
         String[] info = rpc.split(",");
         if (info.length == 1) {
@@ -242,6 +227,49 @@ public class FchWalletApi implements BeanInitial {
         return opReturn == null ? null : opReturn.getOpReturn();
     }
 
+    @Override
+    public BitCoinLibBlockHeader getBitCoinLibBlockHeaderByHeight(long height) {
+        BlockInfo blockInfo = this.getBlockByHeight(height);
+        if (blockInfo == null) {
+            return null;
+        }
+        return new BitCoinLibBlockHeader(
+                blockInfo.getHeight(),
+                blockInfo.getTime(),
+                blockInfo.getBlockId(),
+                blockInfo.getPreId()
+        );
+    }
+
+    @Override
+    public BitCoinLibBlockInfo getBitCoinLibBlockByHeight(Long height) {
+        BlockInfo blockInfo = this.getBlockByHeight(height);
+        if (blockInfo == null) {
+            return null;
+        }
+        ArrayList<TxMark> txList = blockInfo.getTxList();
+        List<TxInfo> txInfoList = this.getTxInfoList(txList.stream().map(tx -> tx.getTxId()).collect(Collectors.toList()));
+        return new BitCoinLibBlockInfo(
+                new BitCoinLibBlockHeader(
+                        blockInfo.getHeight(),
+                        blockInfo.getTime(),
+                        blockInfo.getBlockId(),
+                        blockInfo.getPreId()), txInfoList);
+    }
+
+    @Override
+    public BtcdClient getClient() {
+        return null;
+    }
+
+    @Override
+    public void priceMaintain() {
+        BigDecimal fchToDogePrice = this.getPrice();
+        if (fchToDogePrice.compareTo(BigDecimal.ZERO) > 0) {
+            htgContext.getConverterCoreApi().setFchToDogePrice(fchToDogePrice);
+        }
+    }
+
     public BlockInfo getBestBlock() {
         ApipClient apipClient = FreeGetAPIs.getBestBlock(rpc);
         Object data = apipClient.getResponseBody().getData();
@@ -296,6 +324,23 @@ public class FchWalletApi implements BeanInitial {
         }
         return ApipDataGetter.getCashMap(data);
     }
+
+    public Cash getUTXOByTxIdIndex(String txid, int vout) {
+        String cashId = ParseTools.calcTxoId(txid, vout);
+        String[] cashes = new String[]{cashId};
+        ApipClient client = BlockchainAPIs.cashByIdsPost(rpc, cashes, via, sessionKey);
+        Object data = checkApiBalance(client.getResponseBody());
+        if (data == null) {
+            return null;
+        }
+        Map<String, Cash> cashMap = ApipDataGetter.getCashMap(data);
+        if (cashMap == null) {
+            return null;
+        }
+        return cashMap.get(cashId);
+    }
+
+
 
     public String createMultisigAddress(List<byte[]> pubs, int minSign) {
         if (HtgUtil.isEmptyList(pubs)) {

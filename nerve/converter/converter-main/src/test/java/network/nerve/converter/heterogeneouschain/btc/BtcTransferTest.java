@@ -44,10 +44,10 @@ import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.heterogeneouschain.base.BeanUtilTest;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.core.BitCoinLibWalletApi;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.model.BtcSignData;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.utils.BitCoinLibUtil;
 import network.nerve.converter.heterogeneouschain.btc.context.BtcContext;
-import network.nerve.converter.heterogeneouschain.btc.core.BtcWalletApi;
-import network.nerve.converter.heterogeneouschain.btc.model.BtcSignData;
-import network.nerve.converter.heterogeneouschain.btc.utils.BtcUtil;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
 import network.nerve.converter.model.bo.Chain;
@@ -84,7 +84,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static network.nerve.converter.heterogeneouschain.btc.utils.BtcUtil.*;
+import static network.nerve.converter.heterogeneouschain.bitcoinlib.utils.BitCoinLibUtil.*;
 import static org.bitcoinj.base.BitcoinNetwork.MAINNET;
 import static org.bitcoinj.base.BitcoinNetwork.TESTNET;
 import static org.bitcoinj.core.TransactionInput.NO_SEQUENCE;
@@ -190,7 +190,7 @@ public class BtcTransferTest {
         password = "9o7fSmXPBfPQoQSbnBB";
         auth_scheme = "Basic";
         initRpc();
-        btcWalletApi = new BtcWalletApi();
+        btcWalletApi = new BitCoinLibWalletApi();
         btcWalletApi.init("https://btctest.nerve.network,Nerve,9o7fSmXPBfPQoQSbnBB");
 
         ConverterCoreApi coreApi = new ConverterCoreApi();
@@ -219,7 +219,7 @@ public class BtcTransferTest {
         password = "9o7fSmXPBfPQoQSbnBB";
         auth_scheme = "Basic";
         initRpc();
-        btcWalletApi = new BtcWalletApi();
+        btcWalletApi = new BitCoinLibWalletApi();
         btcWalletApi.init("https://btctest.nerve.network,Nerve,9o7fSmXPBfPQoQSbnBB");
         ConverterCoreApi coreApi = new ConverterCoreApi();
         Chain chain = new Chain();
@@ -239,7 +239,7 @@ public class BtcTransferTest {
         password = "9o7fSmXPBCM4F6cAJsfPQoQSbnBB";
         auth_scheme = "Basic";
         initRpc();
-        btcWalletApi = new BtcWalletApi();
+        btcWalletApi = new BitCoinLibWalletApi();
         btcWalletApi.init("https://btc.nerve.network,Nerve,9o7fSmXPBCM4F6cAJsfPQoQSbnBB");
         ConverterCoreApi coreApi = new ConverterCoreApi();
         Chain chain = new Chain();
@@ -251,7 +251,7 @@ public class BtcTransferTest {
         mainnet = true;
     }
 
-    private BtcWalletApi btcWalletApi;
+    private BitCoinLibWalletApi btcWalletApi;
 
     @Before
     public void before() throws Exception {
@@ -358,9 +358,9 @@ public class BtcTransferTest {
         System.out.println("tx: " + new BigInteger(1, tweakX));
         System.out.println("ty: " + new BigInteger(1, tweakY));
         System.out.println("t pub: " + HexUtil.encode(tKey.getPubKey()));
-        BigInteger[] addRe = BtcUtil.add(new BigInteger(1, x), new BigInteger(1, y), BigInteger.ONE,
+        BigInteger[] addRe = BitCoinLibUtil.add(new BigInteger(1, x), new BigInteger(1, y), BigInteger.ONE,
                 new BigInteger(1, tweakX), new BigInteger(1, tweakY), BigInteger.ONE);
-        BigInteger[] toAffineRe = BtcUtil.toAffine(addRe[0], addRe[1], addRe[2], null);
+        BigInteger[] toAffineRe = BitCoinLibUtil.toAffine(addRe[0], addRe[1], addRe[2], null);
         String outKey = toAffineRe[0].toString(16);
         System.out.println("tweak pub: " + outKey);
         //String internalKey = "cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115";
@@ -567,7 +567,7 @@ public class BtcTransferTest {
         List<ECKey> pubKeys = new ArrayList<>(pubEcKeys);
         Collections.sort(pubKeys, ECKey.PUBKEY_COMPARATOR);
 
-        Script redeemScript = ScriptBuilder.createMultiSigOutputScript(BtcUtil.getByzantineCount(pubKeys.size()), pubKeys);
+        Script redeemScript = ScriptBuilder.createMultiSigOutputScript(BitCoinLibUtil.getByzantineCount(pubKeys.size()), pubKeys);
         Script scriptPubKey = ScriptBuilder.createP2WSHOutputScript(redeemScript);
         Address address = scriptPubKey.getToAddress(network);
         System.out.println(address.toString());
@@ -602,7 +602,7 @@ public class BtcTransferTest {
         Transaction tx = makeNativeSegwitMultiSignTx(priEcKeys, pubEcKeys, 1000, to,
                 utxos,
                 opReturns,
-                BtcUtil.getByzantineCount(pubEcKeys.size()), pubEcKeys.size(),
+                BitCoinLibUtil.getByzantineCount(pubEcKeys.size()), pubEcKeys.size(),
                 feeRate,
                 mainnet,
                 false
@@ -617,7 +617,7 @@ public class BtcTransferTest {
         String to = multisigAddress;
         String nerveTo = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
         //String nerveTo = "TNVTdTSPSShZokMfXRo82TP2Kq6Fc2nhMNmF7";
-        Long amount = 50000l;
+        Long amount = 20000l;
 
         List<UTXOData> accountUTXOs = btcWalletApi.getAccountUTXOs(from);
         List<UTXO> utxos = new ArrayList<>();
@@ -671,6 +671,19 @@ public class BtcTransferTest {
         RawTransaction tx = btcWalletApi.getTransactionByHash(hash);
         long txFee = calcTxFee(tx, btcWalletApi);
         System.out.println(txFee);
+    }
+
+    @Test
+    public void testCalcFeeMultiSignWithSplitGranularity() {
+        // long fromTotal, long transfer, long feeRate, Long splitGranularity, int inputNum, int opReturnBytesLen, int m, int n
+        long size = BitCoinLibUtil.calcFeeMultiSignSizeP2WSHWithSplitGranularity(
+                2537, 1810, 1, 0L, 1, new int[]{32}, 2, 3);
+        System.out.println(size);
+        // int inputNum, int outputNum, int opReturnBytesLen, int m, int n
+        size = BitCoinLibUtil.calcFeeMultiSignSizeP2WSH(1, 1, new int[]{32}, 2, 3);
+        System.out.println(size);
+        size = BitCoinLibUtil.calcFeeMultiSignSizeP2WSH(1, 0, new int[]{32}, 2, 3);
+        System.out.println(size);
     }
 
     @Test
@@ -1513,10 +1526,10 @@ public class BtcTransferTest {
         // take pubkeys of all managers
         List<ECKey> newPubEcKeys = w.getPubs().stream().map(p -> ECKey.fromPublicOnly(p)).collect(Collectors.toList());
         List<ECKey> oldPubEcKeys = oldPubs.stream().map(p -> ECKey.fromPublicOnly(HexUtil.decode(p))).collect(Collectors.toList());
-        String toAddress = BtcUtil.getNativeSegwitMultiSignAddress(10, newPubEcKeys, mainnet);
+        String toAddress = BitCoinLibUtil.getNativeSegwitMultiSignAddress(10, newPubEcKeys, mainnet);
         // calc the min number of signatures
         int n = oldPubEcKeys.size(), m = 10;
-        long fee = BtcUtil.calcFeeMultiSignSizeP2WSH(UTXOList.size(), 1, new int[0], m, n) * w.getFeeRate();
+        long fee = BitCoinLibUtil.calcFeeMultiSignSizeP2WSH(UTXOList.size(), 1, new int[0], m, n) * w.getFeeRate();
         long totalMoney = 0;
         for (int k = 0; k < UTXOList.size(); k++) {
             totalMoney += UTXOList.get(k).getAmount().longValue();
@@ -1570,7 +1583,7 @@ public class BtcTransferTest {
         String toAddress = "bc1q7l4q8kqekyur4ak3tf4s2rr9rp4nhz6axejxjwrc3f28ywm4tl8smz5dpd";
         // calc the min number of signatures
         int n = newPubEcKeys.size(), m = 10;
-        long fee = BtcUtil.calcFeeMultiSignSizeP2WSH(UTXOList.size(), 1, new int[HexUtil.decode(nerveTxHash).length], m, n) * w.getFeeRate();
+        long fee = BitCoinLibUtil.calcFeeMultiSignSizeP2WSH(UTXOList.size(), 1, new int[HexUtil.decode(nerveTxHash).length], m, n) * w.getFeeRate();
         long totalMoney = 0;
         for (int k = 0; k < UTXOList.size(); k++) {
             totalMoney += UTXOList.get(k).getAmount().longValue();
@@ -1605,7 +1618,7 @@ public class BtcTransferTest {
         List<String> signDataList = new ArrayList<>();
         for (String priStr : priList) {
             ECKey pri = ECKey.fromPrivate(HexUtil.decode(priStr));
-            List<String> signatures = BtcUtil.createNativeSegwitMultiSignByOne(
+            List<String> signatures = BitCoinLibUtil.createNativeSegwitMultiSignByOne(
                     pri,
                     currentPubs,
                     amount,
@@ -1647,7 +1660,7 @@ public class BtcTransferTest {
             signDataObj.parse(HexUtil.decode(signData.trim()), 0);
             signatures.put(HexUtil.encode(signDataObj.getPubkey()), signDataObj.getSignatures().stream().map(s -> HexUtil.encode(s)).collect(Collectors.toList()));
         }
-        Transaction tx = BtcUtil.createNativeSegwitMultiSignTx(
+        Transaction tx = BitCoinLibUtil.createNativeSegwitMultiSignTx(
                 signatures,
                 currentPubs,
                 amount,
@@ -1749,10 +1762,10 @@ public class BtcTransferTest {
         // take pubkeys of all managers
         List<ECKey> newPubEcKeys = w.getPubs().stream().map(p -> ECKey.fromPublicOnly(p)).collect(Collectors.toList());
         List<ECKey> oldPubEcKeys = oldPubs.stream().map(p -> ECKey.fromPublicOnly(HexUtil.decode(p))).collect(Collectors.toList());
-        String toAddress = BtcUtil.getNativeSegwitMultiSignAddress(BtcUtil.getByzantineCount(newPubEcKeys.size()), newPubEcKeys, mainnet);
+        String toAddress = BitCoinLibUtil.getNativeSegwitMultiSignAddress(BitCoinLibUtil.getByzantineCount(newPubEcKeys.size()), newPubEcKeys, mainnet);
         // calc the min number of signatures
-        int n = oldPubEcKeys.size(), m = BtcUtil.getByzantineCount(n);
-        long size = BtcUtil.calcFeeMultiSignSize(UTXOList.size(), 1, new int[0], m, n);
+        int n = oldPubEcKeys.size(), m = BitCoinLibUtil.getByzantineCount(n);
+        long size = BitCoinLibUtil.calcFeeMultiSignSize(UTXOList.size(), 1, new int[0], m, n);
         long fee = size * w.getFeeRate();
         System.out.println(String.format("Calc Fee: %s, Size: %s", fee, size));
         long totalMoney = 0;
@@ -1793,7 +1806,7 @@ public class BtcTransferTest {
         List<String> signDataList = new ArrayList<>();
         for (String priStr : priList) {
             ECKey pri = ECKey.fromPrivate(HexUtil.decode(priStr));
-            List<String> signatures = BtcUtil.createMultiSigTxByOne(
+            List<String> signatures = BitCoinLibUtil.createMultiSigTxByOne(
                     pri,
                     currentPubs,
                     amount,
@@ -1836,7 +1849,7 @@ public class BtcTransferTest {
             BtcSignData signDataObj = new BtcSignData();
             signDataObj.parse(HexUtil.decode(signData.trim()), 0);
             ECKey pub = ECKey.fromPublicOnly(signDataObj.getPubkey());
-            boolean verify = BtcUtil.verifyMultiSigTxByOne(
+            boolean verify = BitCoinLibUtil.verifyMultiSigTxByOne(
                     pub,
                     signDataObj.getSignatures().stream().map(s -> HexUtil.encode(s)).collect(Collectors.toList()),
                     currentPubs,
@@ -1881,7 +1894,7 @@ public class BtcTransferTest {
             signDataObj.parse(HexUtil.decode(signData.trim()), 0);
             signatures.put(HexUtil.encode(signDataObj.getPubkey()), signDataObj.getSignatures().stream().map(s -> HexUtil.encode(s)).collect(Collectors.toList()));
         }
-        Transaction tx = BtcUtil.createMultiSigTxByMulti(
+        Transaction tx = BitCoinLibUtil.createMultiSigTxByMulti(
                 signatures,
                 currentPubs,
                 amount,
@@ -1930,7 +1943,7 @@ public class BtcTransferTest {
                 utxoDataList);
         String signerPubkey = "03b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd9";
         int n = txData.getPubs().size();
-        int m = BtcUtil.getByzantineCount(n);
+        int m = BitCoinLibUtil.getByzantineCount(n);
         Map<String, Object> extend = new HashMap<>();
         extend.put("method", "cvBitcoinSignWithdraw");
         extend.put("nativeId", 2002010);
@@ -2003,11 +2016,11 @@ public class BtcTransferTest {
         }
         System.out.println();
         for (String pubkey : pubList) {
-            System.out.println(pubkey + ": " + BtcUtil.getBtcLegacyAddress(pubkey, true));
+            System.out.println(pubkey + ": " + BitCoinLibUtil.getBtcLegacyAddress(pubkey, true));
         }
         System.out.println();
         for (String pubkey : pubList) {
-            System.out.println(pubkey + ": " + BtcUtil.getBtcLegacyAddress(pubkey, false));
+            System.out.println(pubkey + ": " + BitCoinLibUtil.getBtcLegacyAddress(pubkey, false));
         }
         System.out.println();
     }

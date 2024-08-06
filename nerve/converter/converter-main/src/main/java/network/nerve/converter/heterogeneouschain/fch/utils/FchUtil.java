@@ -204,15 +204,15 @@ public class FchUtil {
     }
 
     public static boolean verifyWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
-        return SwapCall.verifyWithdraw(nerveChainId, withdrawalUTXO, signData, to, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity);
+        return SwapCall.verifyFchWithdraw(nerveChainId, withdrawalUTXO, signData, to, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity);
     }
 
     public static int verifyWithdrawCount(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String toAddress, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
-        return SwapCall.verifyWithdrawCount(nerveChainId, withdrawalUTXO, signatureData, toAddress, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity);
+        return SwapCall.verifyFchWithdrawCount(nerveChainId, withdrawalUTXO, signatureData, toAddress, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity);
     }
 
     public static String createMultiSignWithdrawTx(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
-        return SwapCall.createMultiSignWithdrawTx(nerveChainId, withdrawalUTXO, signatureData, to, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity);
+        return SwapCall.createFchMultiSignWithdrawTx(nerveChainId, withdrawalUTXO, signatureData, to, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity);
     }
 
     public static Object[] makeChangeTxBaseInfo (HtgContext htgContext, WithdrawalUTXO withdrawlUTXO, List<String> currentMultiSignAddressPubs) {

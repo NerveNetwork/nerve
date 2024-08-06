@@ -127,9 +127,9 @@ public class TxCmd extends BaseCmd {
             String txStr = (String) params.get("tx");
             //taketxStrConvert toTransactionobject
             Transaction transaction = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
-            if (transaction.getType() == TxType.SWAP_TRADE_SWAP_STABLE_REMOVE_LP) {
-                TimeUnit.SECONDS.sleep(2);//TODO pending remove
-            }
+            //if (transaction.getType() == TxType.SWAP_TRADE_SWAP_STABLE_REMOVE_LP) {
+            //    TimeUnit.SECONDS.sleep(2);
+            //}
             //Put the transaction into the local transaction queue to be verified
             txService.newTx(chain, transaction);
             Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_4);

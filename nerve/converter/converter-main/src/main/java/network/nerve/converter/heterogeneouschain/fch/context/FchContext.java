@@ -47,6 +47,6 @@ public class FchContext extends HtgContextNew implements Serializable {
 
     @Override
     public BigInteger initialGas() {
-        return BigInteger.ZERO;
+        return BigInteger.ONE;
     }
 }

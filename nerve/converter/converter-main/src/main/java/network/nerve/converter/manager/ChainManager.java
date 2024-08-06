@@ -255,7 +255,12 @@ public class ChainManager {
             String address = addressInfo[1];
             for(HeterogeneousCfg cfg : list) {
                 if(cfg.getChainId() == chainId && cfg.getType() == 1) {
-                    cfg.setMultySignAddress(addressToLowerCase(address));
+                    if (chainId < 200) {
+                        address = addressToLowerCase(address);
+                    } else if (chainId == 203) {
+                        address = (converterConfig.isHeterogeneousMainNet() ? "bitcoincash:" : "bchtest:") + address;
+                    }
+                    cfg.setMultySignAddress(address);
                     break;
                 }
             }

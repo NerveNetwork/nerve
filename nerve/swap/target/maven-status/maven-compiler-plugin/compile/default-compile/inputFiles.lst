@@ -23,6 +23,7 @@
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/help/SwapHelper.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/help/impl/stable/PersistenceStablePair.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/business/TradePairBus.java
+/Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/utils/fch/WithdrawalUTXOTxData.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/dto/AccountWhitelistDTO.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/tx/v1/helpers/FarmUpdateTxHelper.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/po/stable/StableSwapPairBalancesPo.java
@@ -81,6 +82,7 @@
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/tx/SwapSystemDealTransaction.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/storage/FarmUserInfoStorageService.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/bo/LatestBasicBlock.java
+/Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/utils/fch/UTXOData.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/po/stable/StableSwapPairPo.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/ValidaterResult.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/cache/impl/FarmCacheImpl.java
@@ -90,6 +92,7 @@
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/tx/v1/stable/CreateStablePairTxProcessor.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/dto/stable/StableAddLiquidityDTO.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/help/impl/stable/AbstractStablePair.java
+/Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/utils/fch/BtcSignData.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/business/SwapTradeBus.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/po/FarmPoolPO.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/bo/StableCoin.java
@@ -125,6 +128,7 @@
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/tx/SystemBaseTransaction.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/context/SwapContext.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/model/business/linkswap/StableLpSwapTradeBus.java
+/Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/utils/fch/FchUtil.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/utils/RouteImpactVOSort.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/handler/impl/stable/StableSwapTradeHandler.java
 /Users/wangzhijian/workspace/nerve-network/nerve/swap/src/main/java/network/nerve/swap/handler/impl/FarmUpdateHandler.java

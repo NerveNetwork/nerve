@@ -23,15 +23,25 @@
  */
 package network.nerve.converter.heterogeneouschain.lib.management;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import io.nuls.core.basic.ModuleConfig;
+import network.nerve.converter.model.bo.ConfigBean;
+
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * @author: PierreLuo
  * @date: 2021-03-22
  */
 public class BeanMap {
+    private static Set<Class> unmark = new HashSet<>();
+    static {
+        unmark.add(Runnable.class);
+        unmark.add(BeanInitial.class);
+        unmark.add(Serializable.class);
+        unmark.add(ModuleConfig.class);
+    }
+
     public Map<String, Object> beanMap = new HashMap<>();
 
     public void add(String name, Object obj) throws Exception {
@@ -40,14 +50,7 @@ public class BeanMap {
 
     public void add(Class clazz) throws Exception {
         Object obj = clazz.getDeclaredConstructor().newInstance();
-        Class temp = clazz;
-        while (true) {
-            if (temp == Object.class || temp == null) {
-                break;
-            }
-            beanMap.put(temp.getName(), obj);
-            temp = temp.getSuperclass();
-        }
+        this.add(clazz, obj);
     }
 
     public void add(Class clazz, Object obj) throws Exception {
@@ -57,6 +60,13 @@ public class BeanMap {
                 break;
             }
             beanMap.put(temp.getName(), obj);
+            Class[] interfaces = temp.getInterfaces();
+            for (Class itf : interfaces) {
+                if (unmark.contains(itf)) {
+                    continue;
+                }
+                beanMap.put(itf.getName(), obj);
+            }
             temp = temp.getSuperclass();
         }
     }

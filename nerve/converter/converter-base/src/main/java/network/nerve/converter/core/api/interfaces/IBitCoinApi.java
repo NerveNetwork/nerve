@@ -43,7 +43,7 @@ public interface IBitCoinApi {
 
     long getFeeRate();
 
-    boolean isEnoughFeeOfWithdraw(String nerveTxHash, AssetName feeAssetName, BigDecimal fee);
+    boolean isEnoughFeeOfWithdraw(String nerveTxHash, AssetName feeAssetName, BigDecimal fee, BigInteger transfer);
 
     String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException;
 
@@ -81,7 +81,7 @@ public interface IBitCoinApi {
 
     long convertMainAssetByFee(AssetName feeAssetName, BigDecimal fee);
 
-    Map<String, String> getMinimumFeeOfWithdrawal(String nerveTxHash);
+    Map<String, String> getMinimumFeeOfWithdrawal(String nerveTxHash) throws NulsException;
 
     void recordFeePaymentByNerveInner(String nerveTxHash);
 

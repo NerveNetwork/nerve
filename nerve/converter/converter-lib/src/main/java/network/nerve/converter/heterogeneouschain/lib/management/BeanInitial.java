@@ -24,6 +24,8 @@
 package network.nerve.converter.heterogeneouschain.lib.management;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: PierreLuo
@@ -33,14 +35,27 @@ public interface BeanInitial {
 
     default void init(BeanMap beanMap) {
         try {
-            Field[] declaredFields = this.getClass().getDeclaredFields();
-            for (Field field : declaredFields) {
-                field.setAccessible(true);
-                Object obj = beanMap.get(field.getType());
-                if (obj == null) {
-                    continue;
+            Class<?> aClass = this.getClass();
+            List<Field[]> declaredFields = new ArrayList<>();
+            declaredFields.add(aClass.getDeclaredFields());
+
+            while (true) {
+                Class<?> superclass = aClass.getSuperclass();
+                if (superclass == Object.class) {
+                    break;
                 }
-                field.set(this, obj);
+                aClass = superclass;
+                declaredFields.add(aClass.getDeclaredFields());
+            }
+            for (Field[] fields : declaredFields) {
+                for (Field field : fields) {
+                    field.setAccessible(true);
+                    Object obj = beanMap.get(field.getType());
+                    if (obj == null) {
+                        continue;
+                    }
+                    field.set(this, obj);
+                }
             }
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);

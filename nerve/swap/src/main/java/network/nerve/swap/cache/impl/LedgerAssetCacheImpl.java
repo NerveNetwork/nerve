@@ -68,9 +68,23 @@ public class LedgerAssetCacheImpl implements LedgerAssetCache {
             return null;
         }
     }
+
     @Override
     public LedgerAssetDTO getLedgerAsset(int chainId, int assetChainId, int assetId) {
         return getAssetFromCache(chainId, assetChainId, assetId);
+    }
+
+    @Override
+    public LedgerAssetDTO getLedgerAsset(int chainId, NerveToken token, long height) {
+        LedgerAssetDTO asset = getLedgerAsset(chainId, token);
+        if (null == asset && height >= 55671490 && height <= 56671490) {
+            if (token.getAssetId() == 146 && token.getChainId() == 1) {
+                asset = new LedgerAssetDTO(1, 146, "NABOX", "NABOX", 18);
+            } else if (token.getChainId() == 9 && token.getAssetId() == 195) {
+                asset = new LedgerAssetDTO(9, 195, "USDT", "USDT", 18);
+            }
+        }
+        return asset;
     }
 
     @Override

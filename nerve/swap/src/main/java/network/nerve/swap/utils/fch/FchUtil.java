@@ -49,9 +49,9 @@ public class FchUtil {
         long priceInSatoshi = 1L;
         long length = 0L;
         if (opReturnBytesLen == 0) {
-            length = 10L + 141L * (long)inputNum + 34L * (long)(outputNum + 1);
+            length = 10L + 141L * (long) inputNum + 34L * (long) (outputNum + 1);
         } else {
-            length = 10L + 141L * (long)inputNum + 34L * (long)(outputNum + 1) + (long)(opReturnBytesLen + VarInt.sizeOf((long)opReturnBytesLen) + 1 + VarInt.sizeOf((long)(opReturnBytesLen + VarInt.sizeOf((long)opReturnBytesLen) + 1)) + 8);
+            length = 10L + 141L * (long) inputNum + 34L * (long) (outputNum + 1) + (long) (opReturnBytesLen + VarInt.sizeOf((long) opReturnBytesLen) + 1 + VarInt.sizeOf((long) (opReturnBytesLen + VarInt.sizeOf((long) opReturnBytesLen) + 1)) + 8);
         }
 
         return priceInSatoshi * length;
@@ -95,8 +95,8 @@ public class FchUtil {
 
     public static long calcFeeMultiSign(int inputNum, int outputNum, int opReturnBytesLen, int m, int n) {
 
-        long op_mLen =1;
-        long op_nLen =1;
+        long op_mLen = 1;
+        long op_nLen = 1;
         long pubKeyLen = 33;
         long pubKeyLenLen = 1;
         long op_checkmultisigLen = 1;
@@ -106,7 +106,7 @@ public class FchUtil {
 
         long op_pushDataLen = 1;
         long sigHashLen = 1;
-        long signLen=64;
+        long signLen = 64;
         long signLenLen = 1;
         long zeroByteLen = 1;
 
@@ -126,13 +126,13 @@ public class FchUtil {
         if (opReturnBytesLen != 0)
             opReturnLen = calcOpReturnLen(opReturnBytesLen);
 
-        long outputValueLen=8;
+        long outputValueLen = 8;
         long unlockScriptLen = 25; //If sending to multiSignAddr, it will be 23.
-        long unlockScriptLenLen =1;
+        long unlockScriptLenLen = 1;
         long outPutLen = outputValueLen + unlockScriptLenLen + unlockScriptLen;
 
-        long inputCountLen=1;
-        long outputCountLen=1;
+        long inputCountLen = 1;
+        long outputCountLen = 1;
         long txVerLen = 4;
         long nLockTimeLen = 4;
         long txFixedLen = inputCountLen + outputCountLen + txVerLen + nLockTimeLen;
@@ -321,7 +321,7 @@ public class FchUtil {
 
             for (Cash usingUtxo : usingUtxos) {
                 Cash input = usingUtxo;
-                TransactionOutPoint outPoint = new TransactionOutPoint(FchMainNetwork.MAINNETWORK, (long)input.getBirthIndex(), Sha256Hash.wrap(input.getBirthTxId()));
+                TransactionOutPoint outPoint = new TransactionOutPoint(FchMainNetwork.MAINNETWORK, (long) input.getBirthIndex(), Sha256Hash.wrap(input.getBirthTxId()));
                 TransactionInput unsignedInput = new TransactionInput(new fcTools.FchMainNetwork(), transaction, new byte[0], outPoint, Coin.valueOf(input.getValue()));
                 transaction.addInput(unsignedInput);
             }
@@ -474,7 +474,43 @@ public class FchUtil {
         Object[] rawTxBase = createMultiSignRawTxBase(pubEcKeys, inputs, to, amount, opReturn, m, n, feeRate, useAllUTXO, splitGranularity);
         byte[] unsignedTx = (byte[]) rawTxBase[0];
         P2SH p2sh = (P2SH) rawTxBase[1];
-        return FchTool.buildSchnorrMultiSignTx(unsignedTx, signatures, p2sh);
+        //return FchTool.buildSchnorrMultiSignTx(unsignedTx, signatures, p2sh);
+
+        //List<ECKey> _pubKeys = new ArrayList<>(pubEcKeys);
+        //Collections.sort(_pubKeys, ECKey.PUBKEY_COMPARATOR);
+
+        Transaction transaction = new Transaction(FchMainNetwork.MAINNETWORK, unsignedTx);
+
+        List<TransactionInput> spendTxInputs = transaction.getInputs();
+        for (int i = 0; i < spendTxInputs.size(); ++i) {
+            TransactionInput input = spendTxInputs.get(i);
+            List<byte[]> sigListByTx = new ArrayList<>();
+            String[] fids = p2sh.getFids();
+            int fidsLength = fids.length;
+            int valid = 0;
+            for (int k = 0; k < fidsLength; ++k) {
+                if (valid == m) {
+                    break;
+                }
+                String fid = fids[k];
+                List<byte[]> signList = signatures.get(fid);
+                if (signList == null || signList.isEmpty() || signList.size() < spendTxInputs.size()) {
+                    continue;
+                }
+                byte[] sig = signList.get(i);
+                sigListByTx.add(sig);
+                valid++;
+            }
+            if (valid < m) {
+                throw new RuntimeException("WITHDRAWAL_NOT_ENOUGH_SIGNATURE");
+            }
+
+            Script inputScript = FchTool.createSchnorrMultiSigInputScriptBytes(sigListByTx, javaTools.HexUtil.decode(p2sh.getRedeemScript()));
+            input.setScriptSig(inputScript);
+        }
+
+        byte[] signResult = transaction.bitcoinSerialize();
+        return Utils.HEX.encode(signResult);
     }
 
     public static int getByzantineCount(int count) {
