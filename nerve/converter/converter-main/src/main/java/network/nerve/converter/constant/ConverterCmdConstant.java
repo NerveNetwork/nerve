@@ -93,5 +93,6 @@ public interface ConverterCmdConstant {
     String GET_WITHDRAWAL_UTXO_INFO = "cv_getWithdrawalUTXOInfo";
     String CHECK_PAUSE_IN = "cv_checkPauseIn";
     String CHECK_PAUSE_OUT = "cv_checkPauseOut";
+    String GET_CROSS_OUT_TX_FEE = "cv_getCrossOutTxFee";
 
 }

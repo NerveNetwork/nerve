@@ -268,19 +268,19 @@ public class BchUtxoUtil {
         return new Object[]{oldPubEcKeys, totalMoney - fee, toAddress, m, n};
     }
 
-    public static String signWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signer, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws NulsException {
+    public static String signWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signer, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws Exception {
         return SwapCall.signBchWithdraw(nerveChainId, withdrawalUTXO, signer, to, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity, mainnet);
     }
 
-    public static boolean verifyWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws NulsException {
+    public static boolean verifyWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws Exception {
         return SwapCall.verifyBchWithdraw(nerveChainId, withdrawalUTXO, signData, to, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity, mainnet);
     }
 
-    public static int verifyWithdrawCount(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String toAddress, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws NulsException {
+    public static int verifyWithdrawCount(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String toAddress, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws Exception {
         return SwapCall.verifyBchWithdrawCount(nerveChainId, withdrawalUTXO, signatureData, toAddress, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity, mainnet);
     }
 
-    public static String createMultiSignWithdrawTx(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws NulsException {
+    public static String createMultiSignWithdrawTx(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws Exception {
         return SwapCall.createBchMultiSignWithdrawTx(nerveChainId, withdrawalUTXO, signatureData, to, amount, feeRate, opReturn, m, n, useAllUTXO, splitGranularity, mainnet);
     }
 }

@@ -284,9 +284,9 @@ public class BitCoinApi extends BitCoinLibApi {
     @Override
     public String signManagerChanges(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount) throws NulsException {
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
-        if (coreApi.checkChangeP35(nerveTxHash)) {
-            return nerveTxHash;
-        }
+        //if (coreApi.checkChangeP35(nerveTxHash)) {
+        //    return nerveTxHash;
+        //}
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
@@ -373,9 +373,9 @@ public class BitCoinApi extends BitCoinLibApi {
 
     @Override
     public Boolean verifySignManagerChanges(String signAddress, String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signature) throws NulsException {
-        if (htgContext.getConverterCoreApi().checkChangeP35(nerveTxHash)) {
-            return true;
-        }
+        //if (htgContext.getConverterCoreApi().checkChangeP35(nerveTxHash)) {
+        //    return true;
+        //}
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
@@ -411,9 +411,9 @@ public class BitCoinApi extends BitCoinLibApi {
 
     @Override
     public boolean validateManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData) throws NulsException {
-        if (htgContext.getConverterCoreApi().checkChangeP35(nerveTxHash)) {
-            return true;
-        }
+        //if (htgContext.getConverterCoreApi().checkChangeP35(nerveTxHash)) {
+        //    return true;
+        //}
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);

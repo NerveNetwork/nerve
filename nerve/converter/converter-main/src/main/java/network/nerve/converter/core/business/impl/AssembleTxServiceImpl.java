@@ -170,7 +170,11 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         message.setHeterogeneousHashList(heterogeneousHashList);
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-        chain.getLogger().debug(tx.format(ConfirmedChangeVirtualBankTxData.class));
+        if (chain.getLatestBasicBlock().getHeight() % 100 == 0) {
+            chain.getLogger().info(tx.format(ConfirmedChangeVirtualBankTxData.class));    
+        } else {
+            chain.getLogger().debug(tx.format(ConfirmedChangeVirtualBankTxData.class));
+        }
         return tx;
     }
 
@@ -608,7 +612,10 @@ public class AssembleTxServiceImpl implements AssembleTxService {
      */
     private void saveWaitingProcess(Chain chain, Transaction tx) {
         // Save intxStorageService
-        txStorageService.save(chain, new TransactionPO(tx));
+        TransactionPO po = txStorageService.get(chain, tx.getHash());
+        if (po == null) {
+            txStorageService.save(chain, new TransactionPO(tx));
+        }
         // If the signature set to be processed There is a signature list for this transaction in the Then take it out and put it in the processing queue
         List<UntreatedMessage> listMsg = chain.getFutureMessageMap().get(tx.getHash());
         if (null != listMsg) {

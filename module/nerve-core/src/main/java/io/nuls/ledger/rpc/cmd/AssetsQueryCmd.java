@@ -25,6 +25,8 @@
  */
 package io.nuls.ledger.rpc.cmd;
 
+import io.nuls.block.manager.ContextManager;
+import io.nuls.block.model.ChainContext;
 import io.nuls.core.rpc.model.NerveCoreCmd;
 import io.nuls.common.NerveCoreConfig;
 import io.nuls.core.core.annotation.Autowired;
@@ -99,6 +101,20 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
             } else {
                 // Obtain registered cross chain assets
                 asset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, assetId);
+            }
+            ChainContext context = ContextManager.getContext(chainId);
+            if (context == null) {
+                return failed("error chain ID");
+            }
+            if ((chainId == 9 && context.getLatestHeight() >= 64024518) || (chainId == 5 && context.getLatestHeight() >= 49708120)) {
+                if ((assetChainId == 9 && assetId == 160) || (assetChainId == 5 && assetId == 34)) {
+                    asset.setSymbol("POL");
+                }
+            } else
+            if ((chainId == 9 && context.getLatestHeight() >= 66566655) || (chainId == 5 && context.getLatestHeight() >= 52289715)) {
+                if ((assetChainId == 9 && assetId == 448) || (assetChainId == 5 && assetId == 118)) {
+                    asset.setSymbol("KAIA");
+                }
             }
             rtMap = asset.toMap();
         } catch (Exception e) {

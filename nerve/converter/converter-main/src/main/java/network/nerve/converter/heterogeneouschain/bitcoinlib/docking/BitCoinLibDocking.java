@@ -203,11 +203,12 @@ public abstract class BitCoinLibDocking implements IHeterogeneousChainDocking, B
 
     @Override
     public BigDecimal getBalance(String address) {
-        BigDecimal balance = walletApi().getBalance(address);
-        if (balance.compareTo(BigDecimal.ZERO) == 0) {
-            return balance;
-        }
-        return balance.movePointLeft(context().ASSET_NAME().decimals());
+        return BigDecimal.ZERO;
+        //BigDecimal balance = walletApi().getBalance(address);
+        //if (balance.compareTo(BigDecimal.ZERO) == 0) {
+        //    return balance;
+        //}
+        //return balance.movePointLeft(context().ASSET_NAME().decimals());
     }
 
     @Override
@@ -445,12 +446,12 @@ public abstract class BitCoinLibDocking implements IHeterogeneousChainDocking, B
     }
 
     @Override
-    public boolean validateManagerChangesTxII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
+    public boolean validateManagerChangesTxII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws Exception {
         return this.getBitCoinApi().validateManagerChangesTx(txHash, addAddresses, removeAddresses, orginTxCount, signatureData);
     }
 
     @Override
-    public String createOrSignManagerChangesTxII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
+    public String createOrSignManagerChangesTxII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws Exception {
         return this.getBitCoinApi().createOrSignManagerChangesTx(txHash, addAddresses, removeAddresses, orginTxCount, signatureData, false);
     }
 
@@ -465,7 +466,7 @@ public abstract class BitCoinLibDocking implements IHeterogeneousChainDocking, B
     }
 
     @Override
-    public String signManagerChangesII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount) throws NulsException {
+    public String signManagerChangesII(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount) throws Exception {
         return this.getBitCoinApi().signManagerChanges(txHash, addAddresses, removeAddresses, orginTxCount);
     }
 
@@ -480,7 +481,7 @@ public abstract class BitCoinLibDocking implements IHeterogeneousChainDocking, B
     }
 
     @Override
-    public Boolean verifySignManagerChangesII(String signAddress, String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signed) throws NulsException {
+    public Boolean verifySignManagerChangesII(String signAddress, String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signed) throws Exception {
         return this.getBitCoinApi().verifySignManagerChanges(signAddress, txHash, addAddresses, removeAddresses, orginTxCount, signed);
     }
 

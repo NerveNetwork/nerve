@@ -162,9 +162,6 @@ public class CroContext extends HtgContext implements Serializable {
         if (ethGasPrice == null) {
             return;
         }
-        if (ethGasPrice.compareTo(GWEI_1) < 0) {
-            return;
-        }
         HTG_GAS_PRICE = ethGasPrice;
     }
 

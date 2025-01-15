@@ -1103,6 +1103,73 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         this.register.shutdownConfirm();
     }
 
+    @Override
+    public BigInteger getCrossOutTxFee(AssetName assetName, boolean isToken) {
+        int hAssetId = isToken ? 2 : 1;
+        BigInteger _l1Fee = htgContext.getConverterCoreApi().getL1Fee(htgContext.HTG_CHAIN_ID());
+        if (_l1Fee.compareTo(BigInteger.ZERO) == 0) {
+            // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
+            if (assetName == htgContext.ASSET_NAME()) {
+                BigDecimal amountCalc = HtgUtil.calcMainAssetOfWithdrawProtocol15(new BigDecimal(htgContext.getEthGasPrice()), hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
+                int decimals = htgContext.getConfig().getDecimals();
+                String symbol = htgContext.getConfig().getSymbol();
+                logger().info("[{}] Currently withdrawal fees, required by the network GasPrice: {} Gwei, Total required {}: {}",
+                        htgContext.getConfig().getSymbol(),
+                        new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
+                        symbol,
+                        amountCalc.movePointLeft(decimals).toPlainString()
+                );
+                return amountCalc.toBigInteger();
+            } else {
+                String otherSymbol = assetName.toString();
+                IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+                BigDecimal otherMainAssetUSD = coreApi.getUsdtPriceByAsset(assetName);
+                BigDecimal htgUSD = coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME());
+                BigDecimal otherMainAssetAmountCalc = HtgUtil.calcOtherMainAssetOfWithdraw(assetName, otherMainAssetUSD, new BigDecimal(htgContext.getEthGasPrice()), htgUSD, hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
+                logger().info("[{}] Currently withdrawal fees, required by the network GasPrice: {} Gwei, Total required {}: {}",
+                        htgContext.getConfig().getSymbol(),
+                        new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
+                        otherSymbol,
+                        otherMainAssetAmountCalc.movePointLeft(assetName.decimals()).toPlainString());
+                return otherMainAssetAmountCalc.toBigInteger();
+            }
+        } else {
+            IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+            BigDecimal ethUsdPrice = coreApi.getUsdtPriceByAsset(AssetName.ETH);
+            BigDecimal l2UsdPrice = coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME());
+            // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
+            if (assetName == htgContext.ASSET_NAME()) {
+                int decimals = assetName.decimals();
+                // L2 fee
+                BigDecimal l2Fee = new BigDecimal(htgContext.getEthGasPrice()).multiply(new BigDecimal(htgContext.GAS_LIMIT_OF_WITHDRAW()));
+                // L1 fee
+                BigDecimal l1Fee = new BigDecimal(_l1Fee);
+                BigDecimal totalFee = l1Fee.add(l2Fee);
+                String symbolNative = htgContext.getConfig().getSymbol();
+                logger().info("[{}] The withdrawal fee is for the current network needs {}: {}",
+                        symbolNative,
+                        symbolNative,
+                        totalFee.movePointLeft(decimals).toPlainString());
+                return totalFee.toBigInteger();
+            } else {
+                BigDecimal payAssetUsdPrice = coreApi.getUsdtPriceByAsset(assetName);
+                int decimalsPaid = assetName.decimals();
+                String symbolPaid = assetName.toString();
+                int decimalsNative = htgContext.ASSET_NAME().decimals();
+                // L2 fee
+                BigDecimal l2FeeOfPaid = l2UsdPrice.multiply(new BigDecimal(htgContext.getEthGasPrice())).multiply(new BigDecimal(htgContext.GAS_LIMIT_OF_WITHDRAW())).movePointRight(decimalsPaid).movePointLeft(decimalsNative).divide(payAssetUsdPrice, 0, RoundingMode.UP);
+                // L1 fee
+                BigDecimal l1FeeOfPaid = ethUsdPrice.multiply(new BigDecimal(_l1Fee)).movePointRight(decimalsPaid).movePointLeft(decimalsNative).divide(payAssetUsdPrice, 0, RoundingMode.UP);
+                BigDecimal totalFeeOfPaid = l1FeeOfPaid.add(l2FeeOfPaid);
+                logger().info("[{}] The withdrawal fee is for the current network needs {}: {}",
+                        htgContext.getConfig().getSymbol(),
+                        symbolPaid,
+                        totalFeeOfPaid.movePointLeft(decimalsPaid).toPlainString());
+                return totalFeeOfPaid.toBigInteger();
+            }
+        }
+    }
+
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         if (htgContext.getConverterCoreApi().isProtocol22()) {
             // protocol22: Support cross chain assets with different accuracies

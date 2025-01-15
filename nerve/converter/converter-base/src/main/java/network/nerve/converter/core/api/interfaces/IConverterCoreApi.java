@@ -184,6 +184,7 @@ public interface IConverterCoreApi {
     boolean isProtocol35();
     boolean isProtocol36();
     boolean isProtocol37();
+    boolean isProtocol38();
 
     /**
      * Add task
@@ -274,4 +275,6 @@ public interface IConverterCoreApi {
     String getBlockHashByHeight(long height);
 
     void updateSplitGranularity(int htgChainId, long splitGranularity) throws Exception;
+
+    BigInteger getCrossOutTxFee(String txHash) throws NulsException;
 }

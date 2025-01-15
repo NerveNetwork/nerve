@@ -818,8 +818,9 @@ public class ArbitrumWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
+        setMain();
         // Directly callingerc20contract
-        String directTxHash = "0xaf084fbdebe990a477513c43cd4928dd5eab7767f67f8fefdabac81f6edf3e38";
+        String directTxHash = "0x5adaa583e69a6fc0ad9e2ab085c34feae7dbb01a877003834e434c0dbee8c043";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(JSONUtils.obj2PrettyJson(tx));
     }

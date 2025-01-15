@@ -112,6 +112,7 @@ public class HeterogeneousAssetHelper {
         // docking get utxos
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
         List<UTXOData> utxos = docking.getBitCoinApi().getUTXOs(docking.getCurrentMultySignAddress());
+        chain.getLogger().info("hash: {}, addr: {}, utxo size: {}", txHash, docking.getCurrentMultySignAddress(), utxos.size());
         utxos.sort(ConverterUtil.BITCOIN_SYS_COMPARATOR);
         BigInteger feeRate = BigInteger.valueOf(docking.getBitCoinApi().getFeeRate());
         BigInteger spend = amount;
@@ -119,6 +120,7 @@ public class HeterogeneousAssetHelper {
 
         List<UTXOData> needUtxos = new ArrayList<>();
         for (UTXOData utxo : utxos) {
+            chain.getLogger().info("utxo data: {}", utxo);
             // check utxo locked
             boolean lockedUTXO = docking.getBitCoinApi().isLockedUTXO(utxo.getTxid(), utxo.getVout());
             if (lockedUTXO) {

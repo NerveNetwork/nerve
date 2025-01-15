@@ -120,7 +120,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
                 BigInteger currentGasPrice = htgWalletApi.getCurrentGasPrice();
                 if (currentGasPrice != null) {
-                    htgContext.logger().debug("current {} Network based Price: {} Gwei.", symbol, new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+                    htgContext.logger().info("current {} Network based Price: {} Gwei.", symbol, new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
                     htgContext.setEthGasPrice(currentGasPrice);
                 }
             } catch (Exception e) {

@@ -233,7 +233,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
             count = new AtomicInteger(0);
             countHash.put(nerveTxHash, count);
         }
-        logger().info("Collect heterogeneous chain change confirmation, NerveTxHash: {}", nerveTxHash);
+        logger().info("Collect heterogeneous chain change confirmation, NerveTxHash: {}, hChainId: {}, time: {}", nerveTxHash, bank.getHeterogeneousChainId(), bank.getEffectiveTime());
         HeterogeneousConfirmedChangeVBPo vbPo = heterogeneousConfirmedChangeVBStorageService.findByTxHash(nerveTxHash);
         if (vbPo == null) {
             vbPo = new HeterogeneousConfirmedChangeVBPo();
@@ -241,6 +241,11 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
             vbPo.setHgCollection(new HashSet<>());
         }
         Set<HeterogeneousConfirmedVirtualBank> vbSet = vbPo.getHgCollection();
+        List<HeterogeneousConfirmedVirtualBank> vbList = new ArrayList<>(vbSet);
+        VirtualBankUtil.sortListByChainId(vbList);
+        for (HeterogeneousConfirmedVirtualBank vb : vbList) {
+            logger().info("Signed H chainId: {}, time: {}", vb.getHeterogeneousChainId(), vb.getEffectiveTime());
+        }
         int hChainSize = heterogeneousDockingManager.getAllHeterogeneousDocking().size();
         // Check for duplicate additions
         if (!vbSet.add(bank)) {

@@ -106,7 +106,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                         ConverterContext.HTG_RPC_CHECK_MAP = map;
                     }
                 } while (false);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 chain.getLogger().error(e.getMessage(), e);
             }
 
@@ -135,7 +135,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                     // Parallel query of heterogeneous chain balances
                     VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager, this.logPrint, converterCoreApi);
                 } while (false);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 chain.getLogger().error(e.getMessage(), e);
             }*/
             try {
@@ -189,7 +189,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                     // Parallel query of heterogeneous chain balances
                     VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager, this.logPrint, converterCoreApi);
                 } while (false);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 chain.getLogger().error(e.getMessage(), e);
             }
 
@@ -208,12 +208,12 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 chain.getLogger().error(e.getMessage(), e);
             }
 
             this.logPrint++;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             chain.getLogger().error(e);
         }
     }
@@ -256,7 +256,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                             resultAssetInfo = assetInfo;
                             break;
                         }
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         //skip it
                     }
                 }
@@ -270,7 +270,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                 chain.getLogger().debug("Asset: {}-{}, Found registration chain: {}", assetChainId, assetId, resultChainId);
             }
             return resultAssetInfo;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             chain.getLogger().error("Asset: {}-{}, Query registration chain error: {}", assetChainId, assetId, e.getMessage());
             return null;
         }

@@ -71,39 +71,39 @@ public class BitCoinLibWaitingTxInvokeDataHandler implements Runnable, BeanIniti
                 return;
             }
             if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
-                htgContext.logger().info("Test network[{}]Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
+                htgContext.logger().info("Test network [{}] Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!converterCoreApi.isVirtualBankByCurrentNode()) {
-                LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", symbol);
+                LoggerUtil.LOG.debug("[{}] Non virtual bank member, skip this task", symbol);
                 return;
             }
             if (!htgContext.isAvailableRPC()) {
-                htgContext.logger().error("[{}]networkRPCUnavailable, pause this task", symbol);
+                htgContext.logger().error("[{}] network RPC Unavailable, pause this task", symbol);
                 return;
             }
-            LoggerUtil.LOG.debug("[{}Transaction call data waiting task] - every other{}Execute once per second.", symbol, htgContext.getConfig().getWaitingTxQueuePeriod());
+            int size = queue.size();
+            htgContext.logger().info("[{} Transaction call data waiting task] - every other {} Execute once per second, queue size: {}", symbol, htgContext.getConfig().getWaitingTxQueuePeriod(), size);
             // Persistence tasks loaded while waiting for application restart
             htgContext.INIT_WAITING_TX_QUEUE_LATCH().await();
-            int size = queue.size();
             for (int i = 0; i < size; i++) {
                 po = queue.poll();
                 if (po == null) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("[{}]removeemptyobject", symbol);
+                        logger().debug("[{}] remove empty object", symbol);
                     }
                     continue;
                 }
                 String nerveTxHash = po.getNerveTxHash();
                 // querynerveIs the transaction an issue left by the board of directors? Transaction
                 if (converterCoreApi.skippedTransaction(nerveTxHash)) {
-                    logger().info("[{}][Transaction call data waiting queue] Historical legacy problem data, Remove transaction, hash:{}", symbol, nerveTxHash);
+                    logger().info("[{}] [Transaction call data waiting queue] Historical legacy problem data, Remove transaction, hash:{}", symbol, nerveTxHash);
                     this.clearDB(nerveTxHash);
                     continue;
                 }
                 // querynerveCorresponding to the transactionethWhether the transaction was successful
                 if (invokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
-                    logger().info("[{}]Nerve tx stay NERVE Network confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
+                    logger().info("[{}] Nerve tx stay NERVE Network confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
                     this.clearDB(nerveTxHash);
                     continue;
                 }
@@ -162,6 +162,7 @@ public class BitCoinLibWaitingTxInvokeDataHandler implements Runnable, BeanIniti
                 // Incomplete, put back in queue
                 queue.offer(po);
             }
+            htgContext.logger().info("[{} Transaction call data waiting task done]", symbol);
         } catch (Exception e) {
             logger().error("waiting tx error", e);
             if (po != null) {

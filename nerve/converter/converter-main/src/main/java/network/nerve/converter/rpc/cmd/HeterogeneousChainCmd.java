@@ -124,7 +124,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
                 return failed(ConverterErrorCode.DATA_NOT_FOUND);
             }
             HeterogeneousAssetInfo assetInfo = assetInfos.get(0);
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(assetInfo.getChainId());
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneous asset");
             }
@@ -158,6 +158,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
     )
     public Response getAssetInfoListById(Map params) {
         List<Map<String, Object>> resultList = new ArrayList<>();
+        int size = 0;
         try {
             Integer chainId = Integer.parseInt(params.get("chainId").toString());
             Integer assetId = Integer.parseInt(params.get("assetId").toString());
@@ -165,6 +166,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (assetInfos == null || assetInfos.isEmpty()) {
                 return failed(ConverterErrorCode.DATA_NOT_FOUND);
             }
+            size = null == assetInfos ? 0 : assetInfos.size();
             for (HeterogeneousAssetInfo assetInfo : assetInfos) {
                 Map<String, Object> rtMap = new HashMap<>(16);
                 if (assetInfo.getChainId() == 101) {
@@ -172,9 +174,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
                         continue;
                     }
                 }
-                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(assetInfo.getChainId());
                 if (docking == null) {
-                    return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneous asset");
+                    continue;
                 }
                 rtMap.put("symbol", assetInfo.getSymbol());
                 rtMap.put("decimals", assetInfo.getDecimals());
@@ -186,6 +188,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
                 resultList.add(rtMap);
             }
         } catch (Exception e) {
+            LoggerUtil.LOG.error("Size: " + size, e);
             return failed(e.getMessage());
         }
         return success(resultList);
@@ -208,7 +211,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
         try {
             Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
             String contractAddress = addressToLowerCase(params.get("contractAddress").toString());
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
@@ -244,7 +247,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
         try {
             Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
             Integer heterogeneousAssetId = Integer.parseInt(params.get("heterogeneousAssetId").toString());
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
@@ -253,6 +256,13 @@ public class HeterogeneousChainCmd extends BaseCmd {
             rtMap.put("chainId", nerveAssetInfo.getAssetChainId());
             rtMap.put("assetId", nerveAssetInfo.getAssetId());
             rtMap.put("symbol", assetInfo.getSymbol());
+            int chainId = nerveAssetInfo.getAssetChainId();
+            int assetId = nerveAssetInfo.getAssetId();
+            if ((chainId == 9 && assetId == 160) || (chainId == 5 && assetId == 34)) {
+                rtMap.put("symbol", "POL");
+            } else if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
+                rtMap.put("symbol", "KAIA");
+            }
             if (heterogeneousChainId == 119 && heterogeneousAssetId == 1) {
                 rtMap.put("decimals", 8);
             } else {
@@ -305,7 +315,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
             }
@@ -434,7 +444,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (chainId == 5 && heterogeneousChainId == 101) {
                 heterogeneousChainId = 118;
             }
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
@@ -1034,7 +1044,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (heterogeneousChainId == 101 && !heterogeneousDockingManager.existHeterogeneousDocking(heterogeneousChainId)) {
                 heterogeneousChainId = 118;
             }
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneousChainId");
             }
@@ -1602,7 +1612,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (heterogeneousChainId < 201) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
@@ -1632,7 +1642,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (StringUtils.isBlank(htgTxHash)) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid htgTxHash");
             }
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
@@ -1660,7 +1670,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (StringUtils.isBlank(htgTxHash)) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid htgTxHash");
             }
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
@@ -1692,7 +1702,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (StringUtils.isBlank(nerveTxHash)) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid txHash");
             }
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
@@ -1853,7 +1863,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (StringUtils.isBlank(nerveTxHash)) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid txHash");
             }
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
             }
@@ -1957,6 +1967,50 @@ public class HeterogeneousChainCmd extends BaseCmd {
             boolean pause = converterCoreApi.isPauseInHeterogeneousAsset(assetInfo.getChainId(), assetInfo.getAssetId());
             Map<String, Object> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
             map.put("value", pause);
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_CROSS_OUT_TX_FEE, version = 1.0, description = "GET_CROSS_OUT_TX_FEE")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    })
+    )
+    public Response getCrossOutTxFee(Map params) {
+        Chain chain = null;
+        try {
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("txHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            String txHash = (String) params.get("txHash");
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+
+            BigInteger value = converterCoreApi.getCrossOutTxFee(txHash);
+            Map<String, Object> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", value.toString());
             return success(map);
         } catch (NulsRuntimeException e) {
             errorLogProcess(chain, e);

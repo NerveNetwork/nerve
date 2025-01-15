@@ -190,6 +190,7 @@ public class FchParseTxHelper implements IBitCoinLibParseTxHelper, BeanInitial {
         po.setTxType(HeterogeneousChainTxType.DEPOSIT);
         po.setTxHash(htgTxHash);
         po.setBlockHeight(txInfo.getHeight());
+        po.setBlockHash(txInfo.getBlockId());
         po.setTxTime(txInfo.getBlockTime());
         po.setDecimals(htgContext.ASSET_NAME().decimals());
         po.setIfContractAsset(false);

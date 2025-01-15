@@ -356,6 +356,13 @@ public class BchUtxoTransferTest {
     }
 
     @Test
+    public void testAddrByPub() throws Exception {
+        String pub = "0347ede10670ddbbfea359242673169528d184f8ef2e586c15d686aa49dddc555f";
+        System.out.println(BchUtxoUtil.getBchAddress(pub, false));
+        System.out.println(BchUtxoUtil.getBchAddress(pub, true));
+    }
+
+    @Test
     public void testP2SHAddrFromSignatureScript() {
         // txid: 6de72a9876a521102796d7b1dbfb4beeef31c0c01f7bbca718ae5c0b5fe11160, from 'bchtest:pp3fu5lfl0er99f37yk0ezfvjcspps57r5txs83q6w' to 'bchtest:qqla4yswdp3f903jfdpc6egfzglvmrs7nussfx247n'
         String hex = "00483045022100b3ad10c06aee064504429346204f8e84b1ac4c790669975d8d5d887eee8e7800022007f6c261fab0c379e9f2c3c77ca1ca1abb9df0431bc9c6682d8b096db4041d2e41473044022035d89e937a270b9071c61bf10b63f1224fa78acd0d3bedb81f762b69fda8c3f202203b2393e4055f50672eb938060d405fde859db4b6c50415b8585929d6290cf385414c695221024173f84acb3de56b3ef99894fa3b9a1fe4c48c1bdc39163c37c274cd0334ba752102c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded2103b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd953ae";

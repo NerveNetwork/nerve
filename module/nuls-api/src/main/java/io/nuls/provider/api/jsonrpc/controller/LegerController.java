@@ -40,6 +40,84 @@ public class LegerController {
         if (result.isFailed()) {
             return rpcResult.setError(new RpcResultError(result.getStatus(), result.getMessage(), null));
         }
+        if ((chainId == 9 && assetId == 160) || (chainId == 5 && assetId == 34)) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "POL");
+                data.put("assetName", "POL");
+            }
+        } else
+
+        //MATIC_KIRA_LP
+        //NERVE  |  ID: 9-769
+        if (chainId == 9 && assetId == 769) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "POL_KIRA_LP");
+                data.put("assetName", "POL_KIRA_LP");
+            }
+        } else
+        //MATIC_XBNCH_LP
+        //NERVE  |  ID: 9-664
+        if (chainId == 9 && assetId == 664) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "POL_XBNCH_LP");
+                data.put("assetName", "POL_XBNCH_LP");
+            }
+        } else
+        //NULS_MATIC_LP
+        //NERVE  |  ID: 9-348
+        if (chainId == 9 && assetId == 348) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "NULS_POL_LP");
+                data.put("assetName", "NULS_POL_LP");
+            }
+        } else
+        //NVT_MATIC_LP
+        //NERVE  |  ID: 9-424
+        if (chainId == 9 && assetId == 424) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "NVT_POL_LP");
+                data.put("assetName", "NVT_POL_LP");
+            }
+        } else
+        if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "KAIA");
+                data.put("assetName", "KAIA");
+            }
+        } else
+        //FTM_KLAY_LP
+        //NERVE  |  ID: 9-657
+        if (chainId == 9 && assetId == 657) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "FTM_KAIA_LP");
+                data.put("assetName", "FTM_KAIA_LP");
+            }
+        } else
+        //NULS_KLAY_LP
+        //NERVE  |  ID: 9-502
+        if (chainId == 9 && assetId == 502) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "NULS_KAIA_LP");
+                data.put("assetName", "NULS_KAIA_LP");
+            }
+        } else
+        //NVT_KLAY_LP
+        //NERVE  |  ID: 9-649
+        if (chainId == 9 && assetId == 649) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "NVT_KAIA_LP");
+                data.put("assetName", "NVT_KAIA_LP");
+            }
+        }
         return rpcResult.setResult(result.getData());
     }
 
@@ -78,6 +156,15 @@ public class LegerController {
         Result result = legderTools.getHeterogeneousChainAssetInfo(heterogeneousChainId, contractAddress);
         if (result.getData() == null) {
             return RpcResult.success(null);
+        }
+        Map data = (Map) result.getData();
+        int chainId = (int) data.get("chainId");
+        int assetId = (int) data.get("assetId");
+        if ((chainId == 9 && assetId == 160) || (chainId == 5 && assetId == 34)) {
+            data.put("symbol", "POL");
+        } else
+        if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
+            data.put("symbol", "KAIA");
         }
         return RpcResult.success(result.getData());
     }

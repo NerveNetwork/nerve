@@ -38,6 +38,7 @@ import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.core.api.ConverterCoreApi;
@@ -119,6 +120,7 @@ public class ChainManager {
             chain.getLogger().debug("Chain:{} init success..", chainId);
             ProtocolLoader.load(chainId);
             if(chainId == converterConfig.getChainId()) {
+                ConverterContext.MAIN_CHAIN_LOGGER = chain.getLogger();
                 converterCoreApi.setNerveChain(chain);
                 //TODO pierre test
                 //converterCoreApi.setCurrentHeterogeneousVersionII();

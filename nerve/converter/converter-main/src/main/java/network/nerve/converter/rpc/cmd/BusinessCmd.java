@@ -286,6 +286,10 @@ public class BusinessCmd extends BaseCmd {
                 for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
                     if (addr.getChainId() == 101) {
                         addr.setSymbol("ETH");
+                    } else if (addr.getChainId() == 106) {
+                        addr.setSymbol("POL");
+                    } else if (addr.getChainId() == 116) {
+                        addr.setSymbol("KAIA");
                     } else {
                         IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
                         String chainSymbol = heterogeneousDocking.getChainSymbol();
@@ -317,6 +321,15 @@ public class BusinessCmd extends BaseCmd {
                 for (VirtualBankDirectorDTO dto : list) {
                     VirtualBankDirectorDTO cacheDto = cacheMap.get(dto.getSignAddress());
                     if (cacheDto != null) {
+                        List<HeterogeneousAddressDTO> heterogeneousAddresses = cacheDto.getHeterogeneousAddresses();
+                        for (HeterogeneousAddressDTO addressDTO : heterogeneousAddresses) {
+                            if (addressDTO.getChainId() == 106) {
+                                addressDTO.setSymbol("POL");
+                            } else
+                            if (addressDTO.getChainId() == 116) {
+                                addressDTO.setSymbol("KAIA");
+                            }
+                        }
                         dto.setHeterogeneousAddresses(cacheDto.getHeterogeneousAddresses());
                     }
                 }

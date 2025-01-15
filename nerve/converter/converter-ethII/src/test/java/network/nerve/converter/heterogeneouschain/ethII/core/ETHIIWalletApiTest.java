@@ -4,7 +4,9 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.nuls.base.basic.AddressTool;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.enums.AssetName;
@@ -21,6 +23,7 @@ import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import org.ethereum.crypto.ECKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -38,6 +41,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.utils.Numeric;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -83,9 +87,34 @@ public class ETHIIWalletApiTest extends BaseII {
         fromPriKey = "4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39";
     }
 
+    Map<String, Object> pMap;
+    String packageAddressPrivateKeyZP;
+    String packageAddressPrivateKeyNE;
+    String packageAddressPrivateKeyHF;
     @Before
     public void before() {
+        try {
+            String path = new File(ETHIIWalletApiTest.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getPath();
+            String pData = IoUtils.readBytesToString(new File(path + File.separator + "ethwp.json"));
+            pMap = JSONUtils.json2map(pData);
+            String packageAddressZP = "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV";
+            String packageAddressNE = "TNVTdTSPMGoSukZyzpg23r3A7AnaNyi3roSXT";
+            String packageAddressHF = "TNVTdTSPV7WotsBxPc4QjbL8VLLCoQfHPXWTq";
+            packageAddressPrivateKeyZP = pMap.get(packageAddressZP).toString();
+            packageAddressPrivateKeyNE = pMap.get(packageAddressNE).toString();
+            packageAddressPrivateKeyHF = pMap.get(packageAddressHF).toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
+    protected void setLocalNewTest() {
+        list = new ArrayList<>();
+        list.add(packageAddressPrivateKeyZP);// 0x2804A4296211Ab079AED4e12120808F1703841b3
+        list.add(packageAddressPrivateKeyNE);// 0x4202726a119F7784085B04264BfF716267a51032
+        list.add(packageAddressPrivateKeyHF);// 0x4dAE32e287D43Ba6F6fE9323864e67A9c66B47e6
+        this.multySignContractAddress = "0x50074F4Bc4bC955622b49de16Fc6E3C1c73afBcA";
+        init();
     }
 
     protected void setDev() {
@@ -908,6 +937,22 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     @Test
+    public void ethSignByPri() {
+        // signData: 869897f6cec893bbd17c113936ba28308f4557100426324959137ae5b472dcea25645113a4b214d33b58463c9fc63f0c5488f1d60e0f1ad8e075710f35ba263e1b
+        String hashStr = "6c6cac790fd0558d28ba8a1d0b52b958eef4387bcffbb38fa0c4663dd07cab70";
+        String prikey = packageAddressPrivateKeyZP;
+        Credentials credentials = Credentials.create(prikey);
+        //String address = credentials.getAddress();
+        Sign.SignatureData signMessage = Sign.signMessage(HexUtil.decode(hashStr), credentials.getEcKeyPair(), false);
+        byte[] signed = new byte[65];
+        System.arraycopy(signMessage.getR(), 0, signed, 0, 32);
+        System.arraycopy(signMessage.getS(), 0, signed, 32, 32);
+        System.arraycopy(signMessage.getV(), 0, signed, 64, 1);
+        String signedHex = Numeric.toHexStringNoPrefix(signed);
+        System.out.println(String.format("signatures: %s", signedHex));
+    }
+
+    @Test
     public void verifySign() {
         String vHash = "0x3bd2e6b75230eef9cfee5240e3dbb656410bff53c59e08e48eb07eef62b904dd";
         String data = "bb7a28181f68a36af5b69a9778eb1e17fe8016f7dba9053054d4989e6ab4144446169ab6e04e2b55e56949b33d49683839c3be6822d4f4a9dc3f29589f9ffa1e1b6f9477428711aa35936e3909283abcf629186884d09f5dd8dff699d90aa61f337a51831ae74f9a313c147bb08136731671c8cd4ee7e44539cc79fecaf3897d9f1b328ac24121da89f46a034c17a7d4869972fb41ba3d9a5661eafab988851cfbd656e04ed25f88727a66bb203f8787f4665e89110f769cde070249879d02b566311c";
@@ -921,18 +966,32 @@ public class ETHIIWalletApiTest extends BaseII {
             }
             String r = "0x" + signed.substring(0, 64);
             String s = "0x" + signed.substring(64, 128);
+            int v = Integer.parseInt(signed.substring(128), 16) - 27;
             ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(r), Numeric.decodeQuantity(s));
             byte[] hashBytes = Numeric.hexStringToByteArray(vHash);
-            for (int i = 0; i < 4; i++) {
-                BigInteger recover = Sign.recoverFromSignature(i, signature, hashBytes);
-                if (recover != null) {
-                    String address = "0x" + Keys.getAddress(recover);
-                    System.out.println(String.format("index: %s, address: %s", i, address));
-                }
+            BigInteger recover = Sign.recoverFromSignature(v, signature, hashBytes);
+            if (recover != null) {
+                String address = "0x" + Keys.getAddress(recover);
+                System.out.println(String.format("index: %s, address: %s, pub: %s", v, address, covertPublicKeyAsHex(recover)));
             }
+            //for (int i = 0; i < 4; i++) {
+            //    BigInteger recover = Sign.recoverFromSignature(i, signature, hashBytes);
+            //    if (recover != null) {
+            //        String address = "0x" + Keys.getAddress(recover);
+            //        System.out.println(String.format("index: %s, address: %s", i, address));
+            //    }
+            //}
             k += 130;
         }
 
+    }
+
+    private static String covertPublicKeyAsHex(BigInteger ethPublickey) {
+        String pub = Numeric.toHexStringNoPrefix(ethPublickey);
+        pub = HtgUtil.leftPadding(pub, "0", 128);
+        String pubkeyFromEth = HtgConstant.PUBLIC_KEY_UNCOMPRESSED_PREFIX + pub;
+        io.nuls.core.crypto.ECKey ecKey = io.nuls.core.crypto.ECKey.fromPublicOnly(HexUtil.decode(pubkeyFromEth));
+        return ecKey.getPublicKeyAsHex();
     }
 
     @Test
@@ -1064,13 +1123,20 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     @Test
-    public void getCurrentGasPrice() throws IOException {
-        //setMain();
+    public void getCurrentGasPrice() throws Exception {
+        setMainProxy();
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         Logger logger = context.getLogger("org.web3j.protocol.http.HttpService");
         logger.setLevel(Level.INFO);
+        BigInteger gasPrice;
 
-        BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
+        gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
+        System.out.println(gasPrice);
+        System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+        System.out.println();
+
+        setMainProxy("https://rpc.flashbots.net");
+        gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
         System.out.println();

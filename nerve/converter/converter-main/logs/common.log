@@ -1,2 +1,0 @@
-2024-04-16 10:29:07,954 WARN [main] - ---currentTime:2024-04-16 10:29:07.949--,java.lang.StackTraceElement.timeOutWrapperFunctionReal(HtgWalletApi.java:903):APIConnection exception. ERROR: Failed to connect to /127.0.0.1:1080
-2024-04-16 10:29:27,046 INFO [main] - ---currentTime:2024-04-16 10:29:27.046--,java.lang.StackTraceElement.init(HtgWalletApi.java:122):initialization OKB API URL: https://xlayerrpc.okx.com

@@ -27,15 +27,14 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
-import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgInvokeTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxRelationStorageService;
-import network.nerve.converter.message.ComponentSignMessage;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.utils.ConverterUtil;
 
@@ -115,7 +114,7 @@ public class BitCoinLibResendHelper implements BeanInitial {
         }
         this.increase(nerveTxHash);
         try {
-            HtgDocking docking = (HtgDocking) htgContext.DOCKING();
+            IHeterogeneousChainDocking docking = htgContext.DOCKING();
             logger().info("[{}]transaction[{}]Prepare to resend, details: {}", po.getTxType(), nerveTxHash, po.toString());
             switch (po.getTxType()) {
                 case WITHDRAW:
@@ -131,7 +130,7 @@ public class BitCoinLibResendHelper implements BeanInitial {
                     }
                     return ethChangesHash;
                 case UPGRADE:
-                    String ethUpgradeHash = docking.createOrSignUpgradeTxII(nerveTxHash, po.getUpgradeContract(), po.getSignatures(), checkOrder);
+                    String ethUpgradeHash = docking.createOrSignUpgradeTxII(nerveTxHash, po.getUpgradeContract(), po.getSignatures());
                     if(StringUtils.isBlank(ethUpgradeHash)) {
                         logger().info("Nervetransaction[{}]Completed, no need to resend", nerveTxHash);
                     }

@@ -647,15 +647,15 @@ public class TrxWalletApiTest extends Base {
         //setM2();
         //setErc20FCI();
         //setErc20DX();
-        //setMain();
+        setMain();
         //setErc20USDTMain();
-        from = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
-        String to = "TYVxuksybZdbyQwoR25V2YUgXYAHikcLro";
-        String value = "1";
+        from = "TArDqazEuXWDywpB7rniyuvP2PW9ajtsaZ";
+        String to = "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN";
+        String value = "1000";
 
         //Function function = new Function("transfer", Arrays.asList(new Address(to), new Uint256(new BigDecimal(value).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger())), Arrays.asList(new TypeReference<Type>() {}));
 
-        Function crossOutIIFunction = getCrossOutIIFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", BigInteger.ZERO, ZERO_ADDRESS, "");
+        Function crossOutIIFunction = getCrossOutIIFunction("NERVEepb63pLhDvb91spxiTrPGWJWL6RP5k2bt", BigInteger.ZERO, ZERO_ADDRESS, "0x32393837383664392d306438652d343139382d623664352d393635303263326664346265");
         //Function function = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(value).multiply(BigInteger.TEN.pow(erc20Decimals)));
 
         TrxEstimateSun estimateSunUsed = walletApi.estimateSunUsed(from, to, crossOutIIFunction, new BigDecimal(value).movePointRight(6).toBigInteger());
@@ -683,6 +683,19 @@ public class TrxWalletApiTest extends Base {
             energyUsed = longList.get(0);
         } while (false);
         System.out.println(String.format("energyUsed: %s", energyUsed));*/
+    }
+
+    @Test
+    public void estimateTransferTokenSun() throws Exception {
+        setMain();
+        setErc20USDTMain();
+        from = "TArDqazEuXWDywpB7rniyuvP2PW9ajtsaZ";
+        String to = "TBD2PktZ5zDiPTooEM5p9TaEN1C8wJWfDp";
+        String value = "1";
+        Function function = new Function("transfer", Arrays.asList(new Address(to), new Uint256(new BigDecimal(value).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger())), Arrays.asList(new TypeReference<Type>() {}));
+        TrxEstimateSun estimateSunUsed = walletApi.estimateSunUsed(from, erc20Address, function, BigInteger.ZERO);
+        System.out.println(estimateSunUsed.getEnergyUsed());
+        System.out.println(estimateSunUsed.getSunUsed());
     }
 
     /**
@@ -907,7 +920,8 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void getTxReceiptAndRevertReason() throws Exception {
-        String txHash = "84ff441987b86425b232af0cb234028b5172e63c93b5d38a9446c1c2afa1894c";
+        setMain();
+        String txHash = "8e40722fa9c50f2938a30f221d889f0f5da4abe8caade2f779b558c68c929ca7";
         Response.TransactionInfo txInfo = wrapper.getTransactionInfoById(txHash);
         String s = Numeric.toHexString(txInfo.getContractResult(0).toByteArray());
         System.out.println(TrxUtil.getRevertReason(s));

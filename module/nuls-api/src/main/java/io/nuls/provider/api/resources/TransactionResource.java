@@ -27,6 +27,10 @@ import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.api.provider.block.BlockService;
 import io.nuls.base.api.provider.block.facade.BlockHeaderData;
 import io.nuls.base.api.provider.block.facade.GetBlockHeaderByHeightReq;
+import io.nuls.base.api.provider.block.facade.GetBlockHeaderByLastHeightReq;
+import io.nuls.base.api.provider.crosschain.CrossChainProvider;
+import io.nuls.base.api.provider.crosschain.facade.RehandleCtxReq;
+import io.nuls.core.model.StringUtils;
 import io.nuls.provider.api.config.Config;
 import io.nuls.base.api.provider.Result;
 import io.nuls.core.constant.CommonCodeConstanst;
@@ -39,9 +43,12 @@ import io.nuls.core.rpc.model.TypeDescriptor;
 import io.nuls.provider.model.ErrorData;
 import io.nuls.provider.model.RpcClientResult;
 import io.nuls.provider.model.dto.TransactionDto;
+import io.nuls.provider.model.jsonrpc.RpcErrorCode;
+import io.nuls.provider.model.jsonrpc.RpcResult;
 import io.nuls.provider.rpctools.BlockTools;
 import io.nuls.provider.rpctools.TransactionTools;
 import io.nuls.provider.utils.ResultUtil;
+import io.nuls.provider.utils.VerifyUtils;
 import io.nuls.v2.model.annotation.Api;
 import io.nuls.v2.model.annotation.ApiOperation;
 
@@ -64,8 +71,30 @@ public class TransactionResource {
     Config config;
     @Autowired
     TransactionTools transactionTools;
+    private CrossChainProvider crossChainProvider = ServiceManager.get(CrossChainProvider.class);
 
     BlockService blockService = ServiceManager.get(BlockService.class);
+
+    @GET
+    @Path("/rehandlectx/{hash}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(description = "rehandle cross_chain transactions", order = 301)
+    @Parameters({
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "transactionhash")
+    })
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = String.class))
+    public RpcClientResult rehandlectx(@PathParam("hash") String hash) {
+        if (StringUtils.isBlank(hash)) {
+            return RpcClientResult.getFailed(new ErrorData(CommonCodeConstanst.PARAMETER_ERROR.getCode(), "hash is empty"));
+        }
+
+        long blockHeight = blockService.getBlockHeaderByLastHeight(new GetBlockHeaderByLastHeightReq()).getData().getHeight();
+        Result<String> result = crossChainProvider.rehandleCtx(new RehandleCtxReq(hash, blockHeight));
+        if (result.isFailed()) {
+            return RpcClientResult.getFailed(new ErrorData(RpcErrorCode.SYS_UNKNOWN_EXCEPTION.getCode(), "hash is wrong"));
+        }
+        return RpcClientResult.getSuccess(true);
+    }
 
     @GET
     @Path("/{hash}")

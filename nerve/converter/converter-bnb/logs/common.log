@@ -1,3 +1,0 @@
-2024-05-27 12:03:13,586 INFO [main] - ---currentTime:2024-05-27 12:03:13.561--,java.lang.StackTraceElement.initClass(Base.java:96):init
-2024-05-27 19:07:44,829 INFO [main] - ---currentTime:2024-05-27 19:07:44.825--,java.lang.StackTraceElement.initClass(Base.java:96):init
-2024-05-27 19:07:48,991 INFO [main] - ---currentTime:2024-05-27 19:07:48.990--,java.lang.StackTraceElement.sendTx(Base.java:228):Transaction type: "WITHDRAW", EstimatedGasLimit: 190230

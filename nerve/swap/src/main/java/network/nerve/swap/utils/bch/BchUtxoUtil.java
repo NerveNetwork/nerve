@@ -545,7 +545,7 @@ public class BchUtxoUtil {
                 valid++;
             }
             if (valid < m) {
-                throw new RuntimeException("WITHDRAWAL_NOT_ENOUGH_SIGNATURE");
+                throw new RuntimeException(String.format("WITHDRAWAL_NOT_ENOUGH_SIGNATURE, params: inputIndex-%s, valid-%s, minNeed-%s, opReturn-%s", k, valid, m, opReturn));
             }
 
             //Build tx input script

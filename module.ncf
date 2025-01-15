@@ -1,9 +1,9 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=/Users/Tom/workspace/nerve-network/logs
+logPath=/Users/wangzhijian/workspace/nerve-network/logs
 logLevel=INFO
-dataPath=/Users/Tom/workspace/nerve-network/data
+dataPath=/Users/wangzhijian/workspace/nerve-network/data
 #Default This ChainID
 chainId=9
 #Address prefix

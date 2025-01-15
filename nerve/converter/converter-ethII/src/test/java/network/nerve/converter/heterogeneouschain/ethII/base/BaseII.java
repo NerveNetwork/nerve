@@ -32,9 +32,11 @@ import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.ethII.context.EthIIContext;
 import network.nerve.converter.heterogeneouschain.ethII.core.BeanUtilTest;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -52,10 +54,14 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 /**
  * @author: Mimi
@@ -69,6 +75,8 @@ public class BaseII {
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
     protected EthIIContext htgContext;
+    String mainEthRpcAddress = "https://geth.nerve.network";
+    int mainChainId = 1;
 
     @BeforeClass
     public static void initClass() {
@@ -102,6 +110,23 @@ public class BaseII {
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
         EthIIContext.config().setChainIdOnHtgNetwork(1);
+    }
+
+    protected void setMainProxy() {
+        this.setMainProxy(mainEthRpcAddress);
+    }
+
+    protected void setMainProxy(String rpc) {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(rpc, okHttpClient));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(rpc);
+        htgContext.getConfig().setChainIdOnHtgNetwork(mainChainId);
     }
 
     protected void setRinkeby() {

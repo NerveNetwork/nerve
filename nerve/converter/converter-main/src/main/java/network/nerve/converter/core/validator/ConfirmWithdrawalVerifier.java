@@ -121,6 +121,12 @@ public class ConfirmWithdrawalVerifier {
             WithdrawalTxData txData1 = ConverterUtil.getInstance(withdrawalTx.getTxData(), WithdrawalTxData.class);
             htgChainId = txData1.getHeterogeneousChainId();
             toAddress = txData1.getHeterogeneousAddress();
+            if (converterCoreApi.isProtocol38() && htgChainId == 203) {
+                String prefix = converterCoreApi.isNerveMainnet() ? "bitcoincash:" : "bchtest:";
+                if (!toAddress.startsWith(prefix)) {
+                    toAddress = prefix + toAddress;
+                }
+            }
         } else if (TxType.ONE_CLICK_CROSS_CHAIN == withdrawalTx.getType()) {
             OneClickCrossChainTxData txData1 = ConverterUtil.getInstance(withdrawalTx.getTxData(), OneClickCrossChainTxData.class);
             htgChainId = txData1.getDesChainId();

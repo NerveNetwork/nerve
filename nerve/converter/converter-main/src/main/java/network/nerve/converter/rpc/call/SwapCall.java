@@ -5,6 +5,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
 import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.bo.WithdrawalUTXO;
 import network.nerve.converter.utils.LoggerUtil;
@@ -279,7 +280,7 @@ public class SwapCall extends BaseCall {
     }
 
     public static String signFchWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signer, String to,
-                                         long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
+                                         long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws Exception {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -298,18 +299,18 @@ public class SwapCall extends BaseCall {
             String resultStr;
             Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_signFchWithdraw", params);
             if (result == null || result.get("value") == null) {
-                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                throw new Exception("Call swap module error, get empty data.");
             }
             resultStr = (String) result.get("value");
             return resultStr;
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_signFchWithdraw");
-            LoggerUtil.LOG.error(msg, e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(msg, e);
+            throw new Exception(e);
         }
     }
 
-    public static boolean verifyFchWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
+    public static boolean verifyFchWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws Exception {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -327,17 +328,17 @@ public class SwapCall extends BaseCall {
             params.put("splitGranularity", splitGranularity);
             Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_verifyFchWithdraw", params);
             if (result == null || result.get("value") == null) {
-                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                throw new Exception("Call swap module error, get empty data.");
             }
             return (Boolean) result.get("value");
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_verifyFchWithdraw");
-            LoggerUtil.LOG.error(msg, e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(msg, e);
+            throw new Exception(e);
         }
     }
 
-    public static int verifyFchWithdrawCount(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String toAddress, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
+    public static int verifyFchWithdrawCount(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String toAddress, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws Exception {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -355,17 +356,17 @@ public class SwapCall extends BaseCall {
             params.put("splitGranularity", splitGranularity);
             Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_verifyFchWithdrawCount", params);
             if (result == null || result.get("value") == null) {
-                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                throw new Exception("Call swap module error, get empty data.");
             }
             return Integer.parseInt(result.get("value").toString());
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_verifyFchWithdrawCount");
-            LoggerUtil.LOG.error(msg, e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(msg, e);
+            throw new Exception(e);
         }
     }
 
-    public static String createFchMultiSignWithdrawTx(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws NulsException {
+    public static String createFchMultiSignWithdrawTx(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity) throws Exception {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -384,20 +385,20 @@ public class SwapCall extends BaseCall {
             String resultStr;
             Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_createFchMultiSignWithdrawTx", params);
             if (result == null || result.get("value") == null) {
-                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                throw new Exception("Call swap module error, get empty data.");
             }
             resultStr = (String) result.get("value");
             return resultStr;
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_createFchMultiSignWithdrawTx");
-            LoggerUtil.LOG.error(msg, e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(msg, e);
+            throw new Exception(e);
         }
     }
 
 
     public static String signBchWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signer, String to,
-                                         long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws NulsException {
+                                         long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws Exception {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -417,18 +418,18 @@ public class SwapCall extends BaseCall {
             String resultStr;
             Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_signBchWithdraw", params);
             if (result == null || result.get("value") == null) {
-                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                throw new Exception("Call swap module error, get empty data.");
             }
             resultStr = (String) result.get("value");
             return resultStr;
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_signBchWithdraw");
-            LoggerUtil.LOG.error(msg, e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(msg, e);
+            throw new Exception(e);
         }
     }
 
-    public static boolean verifyBchWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws NulsException {
+    public static boolean verifyBchWithdraw(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws Exception {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -447,17 +448,17 @@ public class SwapCall extends BaseCall {
             params.put("mainnet", mainnet);
             Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_verifyBchWithdraw", params);
             if (result == null || result.get("value") == null) {
-                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                throw new Exception("Call swap module error, get empty data.");
             }
             return (Boolean) result.get("value");
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_verifyBchWithdraw");
-            LoggerUtil.LOG.error(msg, e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(msg, e);
+            throw new Exception(e);
         }
     }
 
-    public static int verifyBchWithdrawCount(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String toAddress, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws NulsException {
+    public static int verifyBchWithdrawCount(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String toAddress, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws Exception {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -476,17 +477,17 @@ public class SwapCall extends BaseCall {
             params.put("mainnet", mainnet);
             Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_verifyBchWithdrawCount", params);
             if (result == null || result.get("value") == null) {
-                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                throw new Exception("Call swap module error, get empty data.");
             }
             return Integer.parseInt(result.get("value").toString());
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_verifyBchWithdrawCount");
-            LoggerUtil.LOG.error(msg, e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(msg, e);
+            throw new Exception(e);
         }
     }
 
-    public static String createBchMultiSignWithdrawTx(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws NulsException {
+    public static String createBchMultiSignWithdrawTx(int nerveChainId, WithdrawalUTXO withdrawalUTXO, String signatureData, String to, long amount, long feeRate, String opReturn, int m, int n, boolean useAllUTXO, Long splitGranularity, boolean mainnet) throws Exception {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -506,14 +507,14 @@ public class SwapCall extends BaseCall {
             String resultStr;
             Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_createBchMultiSignWithdrawTx", params);
             if (result == null || result.get("value") == null) {
-                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                throw new Exception("Call swap module error, get empty data.");
             }
             resultStr = (String) result.get("value");
             return resultStr;
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_createBchMultiSignWithdrawTx");
-            LoggerUtil.LOG.error(msg, e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(msg, e);
+            throw new Exception(e);
         }
     }
 }

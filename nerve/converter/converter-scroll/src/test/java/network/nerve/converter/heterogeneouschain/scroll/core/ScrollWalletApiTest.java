@@ -110,7 +110,7 @@ public class ScrollWalletApiTest extends Base {
         }
     }
 
-    protected void setLocalNewTest() {
+    protected void setLocalNewTest() throws Exception {
         list = new ArrayList<>();
         list.add(packageAddressPrivateKeyZP);// 0x2804A4296211Ab079AED4e12120808F1703841b3
         list.add(packageAddressPrivateKeyNE);// 0x4202726a119F7784085B04264BfF716267a51032
@@ -119,7 +119,7 @@ public class ScrollWalletApiTest extends Base {
         init();
     }
 
-    protected void setDev() {
+    protected void setDev() throws Exception {
         // ["0xbe7fbb51979e0b0b70c48284e895e228290d9f73", "0xcb1fa0c0b7b4d57848bddaa4276ce0776a3215d2", "0x54103606d9fcdb40539d06344c8f8c6367ffc9b8"]
         list = new ArrayList<>();
         list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// 0xbe7fbb51979e0b0b70c48284e895e228290d9f73
@@ -143,7 +143,7 @@ public class ScrollWalletApiTest extends Base {
         this.multySignContractAddress = "0x2eDCf5f18D949c51776AFc42CDad667cDA2cF862";
         init();
     }
-    protected void setLocalTest() {
+    protected void setLocalTest() throws Exception {
         list = new ArrayList<>();
         list.add(pMap.get("0x2804a4296211ab079aed4e12120808f1703841b3").toString());// 0x2804a4296211ab079aed4e12120808f1703841b3
         list.add(pMap.get("0x4202726a119f7784085b04264bff716267a51032").toString());// 0x4202726a119f7784085b04264bff716267a51032
@@ -189,7 +189,7 @@ public class ScrollWalletApiTest extends Base {
         "0x49467643f1b6459caf316866ecef9213edc4fdf2",
         "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd",
      */
-    protected void setBeta() {
+    protected void setBeta() throws Exception {
         list = new ArrayList<>();
         list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 0x1a9f8b818a73b0f9fde200cd88c42b626d2661cd
         list.add("6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492");// 0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac
@@ -198,8 +198,8 @@ public class ScrollWalletApiTest extends Base {
         init();
     }
 
-    public void init() {
-        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+    public void init() throws Exception {
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         this.address = Credentials.create(list.get(0)).getAddress();
         this.priKey = list.get(0);
     }
@@ -484,18 +484,6 @@ public class ScrollWalletApiTest extends Base {
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setMainData() {
-        setMain();
-        // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
-        // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
-        // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
-        list = new ArrayList<>();
-        list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        list.add("");// Public key: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        list.add("");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
-        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
-        init();
-    }
     /**
      * Add N Administrators
      */
@@ -596,7 +584,7 @@ public class ScrollWalletApiTest extends Base {
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setUpgradeMain() {
+    protected void setUpgradeMain() throws Exception {
         setMain();
         list = new ArrayList<>();
         // holdCCPut the private key first
@@ -688,6 +676,57 @@ public class ScrollWalletApiTest extends Base {
 
         String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
         System.out.println(String.format("Withdrawal%sPieces,hash: %s", value, hash));
+    }
+
+    protected void setMainData() throws Exception {
+        setMain();
+        list = new ArrayList<>();
+        list.add("0000000000000000");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("");// Public key: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        list.add("");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        list.add("");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        list.add("");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        init();
+    }
+
+    /**
+     * 5Signatures
+     */
+    @Test
+    public void signDataForERC20WithdrawTest() throws Exception {
+        setMainData();
+        String txKey = "8881024000000000000000000000000000000000000000000000000000000000";
+        // Recipient Address
+        String toAddress = "0x4aA04Ac1c34989cE6c36Fe7BEf9B1a2167bF59F5";
+        // Mint quantity
+        String value = "10000";
+        // NEST tokencontract
+        String erc20 = "0xd29687c813D741E2F938F4aC377128810E217b1b";
+        int tokenDecimals = 18;
+        int signCount = 5;
+        String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
+        System.out.println(String.format("ERC20 Withdrawal %s Pieces, %s Signatures, signData: %s", value, signCount, signData));
+    }
+
+    /**
+     * Based on existing signature data Send transaction - erc20Withdrawal
+     */
+    @Test
+    public void sendERC20WithdrawBySignDataTest() throws Exception {
+        setMainData();
+        String txKey = "8881024000000000000000000000000000000000000000000000000000000000";
+        // Recipient Address
+        String toAddress = "0x4aA04Ac1c34989cE6c36Fe7BEf9B1a2167bF59F5";
+        // Mint quantity
+        String value = "10000";
+        // NEST tokencontract
+        String erc20 = "0xd29687c813D741E2F938F4aC377128810E217b1b";
+        int tokenDecimals = 18;
+        String signData = "ef12a882728b69e075b01a20a70b1860208da7fa6983ff685df29195e94cea122639579b1543f78aa763f484ea5e471ee255de569131b86e18254006bf7b882a1bd41398d279629b2791425ceca09a450a024e5bf8a728eb2504819c001410b86e5533c576e9bdb5dffb008fd3104716a6090b16728bad16ae8349785c8e881ecf1c29c30c996bbcbf5da32f10e34b0631467ed4268b6e6facae53e77a85f9e104f63fc377467bb451a02857569cbc2febf289af1ba72f2a999e2e2214b2c02512dc1b943f4c3432364dbcb19074e584a0dd9dce4d9fef4c8bc4d771e5eefea984f7c31bcc8686e69975797deb12e3188bef8b9187eddddaea3aaba4a6980b6a75641c1bef12b6929de650f52f01cfed98f4584d7d24806d89847b1ff2f1a8d31e3e4afc030f7b12eb893f093444549d5a4ad5ee23f305a6b518b92b06bfc54fa1b593921c0f381ac0a76450c6a00cac07f6c61adc13253792e1735c2d0b461a59d9568eb362d20408ff528d7114e24be26cbdf5cae013512968f83d1026b349b8a31357341b8eb5c547eac5e93276798dc05632b0b4917f26cce7dce8cf630756790e52a7cc54705b7d90000dc3170469e40bb99722c4e5d24f5233987a3edbb74ddf07ad1a1bd679628aa8b2ef7502b44c55906947024fbb03f5992f57e6e526f6ed7e0fee7e51fc5dcd7ec1d3fb7c571100efcaf5ca810d867278c61b6e55a5b419f49f5f321cd969a5e0f1ad6d7becee2044cf73ea4ec597eeb5a1bb42c2b05dcc8dc6a25f5556eef1aea08fa88198f1deb29b9626f0ab21b432fd2b9893b9cc39604bc296d21cd9e1c0414ad65b0d323c89356b9b7e161a5c7447cf236429fb8077568f847126073dfd66e9222c7d0287c62e8d3aade4f354d197d72ea4d09709bf807cba9cf11b";
+
+        String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
+        System.out.println(String.format("ERC20 Withdrawal %s Pieces, hash: %s", value, hash));
     }
 
     /**

@@ -127,7 +127,7 @@ public class FchBitCoinApi extends BitCoinLibApi implements BeanInitial {
             if (po.getNerveAddress().equals(ConverterContext.BITCOIN_SYS_WITHDRAWAL_FEE_ADDRESS)) {
                 // Record chain fee entry
                 feeLog = new WithdrawalFeeLog(
-                        po.getBlockHeight(), po.getBlockHash(), htgTxHash, htgContext.HTG_CHAIN_ID(), po.getValue().longValue(), true);
+                        txInfo.getHeight(), txInfo.getBlockId(), htgTxHash, htgContext.HTG_CHAIN_ID(), po.getValue().longValue(), true);
                 feeLog.setTxTime(txInfo.getBlockTime());
             }
         } else if (txType == HeterogeneousChainTxType.WITHDRAW) {
@@ -161,7 +161,7 @@ public class FchBitCoinApi extends BitCoinLibApi implements BeanInitial {
     }
 
     @Override
-    public String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
+    public String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws Exception {
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(txHash);
         // calc the min number of signatures
         int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
@@ -192,7 +192,7 @@ public class FchBitCoinApi extends BitCoinLibApi implements BeanInitial {
     }
 
     @Override
-    public Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws NulsException {
+    public Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws Exception {
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(txHash);
         // calc the min number of signatures
         int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
@@ -210,7 +210,8 @@ public class FchBitCoinApi extends BitCoinLibApi implements BeanInitial {
     @Override
     protected String _createMultiSignWithdrawTx(WithdrawalUTXO withdrawlUTXO, String signatureData, String to, long amount, String nerveTxHash) throws Exception {
         // calc the min number of signatures
-        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        int n = withdrawlUTXO.getPubs().size();
+        int m = htgContext.getConverterCoreApi().getByzantineCount(n);
 
         return FchUtil.createMultiSignWithdrawTx(
                 htgContext.getConverterCoreApi().getConverterConfig().getChainId(),
@@ -223,11 +224,11 @@ public class FchBitCoinApi extends BitCoinLibApi implements BeanInitial {
     }
 
     @Override
-    public String signManagerChanges(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount) throws NulsException {
+    public String signManagerChanges(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount) throws Exception {
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
-        if (coreApi.checkChangeP35(nerveTxHash)) {
-            return nerveTxHash;
-        }
+        //if (coreApi.checkChangeP35(nerveTxHash)) {
+        //    return nerveTxHash;
+        //}
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
@@ -284,7 +285,7 @@ public class FchBitCoinApi extends BitCoinLibApi implements BeanInitial {
     }
 
     @Override
-    public Boolean verifySignManagerChanges(String signAddress, String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signature) throws NulsException {
+    public Boolean verifySignManagerChanges(String signAddress, String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signature) throws Exception {
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
@@ -316,7 +317,7 @@ public class FchBitCoinApi extends BitCoinLibApi implements BeanInitial {
     }
 
     @Override
-    public boolean validateManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData) throws NulsException {
+    public boolean validateManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData) throws Exception {
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);

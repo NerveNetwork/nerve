@@ -41,6 +41,7 @@ import network.nerve.converter.heterogeneouschain.bitcoinlib.core.BitCoinLibWall
 import network.nerve.converter.heterogeneouschain.bitcoinlib.model.P2WSHMSInfo;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
 import network.nerve.converter.model.bo.WithdrawalUTXO;
 import network.nerve.converter.utils.ConverterUtil;
@@ -1274,7 +1275,7 @@ public class BitCoinLibUtil {
                 txSigs[valid++] = signature;
             }
             if (valid < m) {
-                throw new NulsException(ConverterErrorCode.WITHDRAWAL_NOT_ENOUGH_SIGNATURE);
+                throw new RuntimeException(String.format("WITHDRAWAL_NOT_ENOUGH_SIGNATURE, params: inputIndex-%s, valid-%s, minNeed-%s, opReturn-%s", k, valid, m, !HtgUtil.isEmptyList(opReturns) ? HexUtil.encode(opReturns.get(0)) : "emptyOpReturn"));
             }
             //Build tx input script
             input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, txSigs));

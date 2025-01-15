@@ -72,6 +72,12 @@ public class CrossChainBootStrap implements INerveCoreBootstrap {
             } else {
                 nulsCrossChainConfig.setVersion1_6_0_height(0L);
             }
+            String version38Height = configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_38_0");
+            if (StringUtils.isNotBlank(version38Height)) {
+                nulsCrossChainConfig.setVersion1_38_0_height(Long.parseLong(version38Height));
+            } else {
+                nulsCrossChainConfig.setVersion1_38_0_height(0L);
+            }
             String pubKeys = configurationLoader.getValue(ModuleE.Constant.CONSENSUS, "pubKeyList");
             HashSet<String> seedSet = new HashSet<>();
             nulsCrossChainConfig.setSeedNodeSet(seedSet);

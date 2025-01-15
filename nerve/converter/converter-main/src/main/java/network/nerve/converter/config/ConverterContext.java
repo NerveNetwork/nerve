@@ -24,9 +24,11 @@
 
 package network.nerve.converter.config;
 
+import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.dto.VirtualBankDirectorDTO;
+import network.nerve.converter.utils.LoggerUtil;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -192,6 +194,7 @@ public class ConverterContext {
     public static long PROTOCOL_1_35_0 = 0L;
     public static long PROTOCOL_1_36_0 = 0L;
     public static long PROTOCOL_1_37_0 = 0L;
+    public static long PROTOCOL_1_38_0 = 0L;
     /**
      * 0=local,1=signatrue-machine
      */
@@ -229,4 +232,6 @@ public class ConverterContext {
     public static byte[] AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0;
 
     public static String BITCOIN_SYS_WITHDRAWAL_FEE_ADDRESS = null;
+
+    public static NulsLogger MAIN_CHAIN_LOGGER = LoggerUtil.LOG;
 }

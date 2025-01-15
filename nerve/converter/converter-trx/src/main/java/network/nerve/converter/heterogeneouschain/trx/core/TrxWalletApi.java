@@ -501,6 +501,12 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             Response.TransactionExtention call = wrapper.blockingStub.triggerConstantContract(trigger);
 
             if (call.getConstantResultCount() == 0) {
+                if (call.getResult() != null && !call.getResult().getResult()) {
+                    ByteString message = call.getResult().getMessage();
+                    if (message != null) {
+                        return TrxEstimateSun.FAILED("Execute failed: " + message.toStringUtf8());
+                    }
+                }
                 return TrxEstimateSun.FAILED("Execute failed: empty result.");
             }
             String result = Numeric.toHexString(call.getConstantResult(0).toByteArray());

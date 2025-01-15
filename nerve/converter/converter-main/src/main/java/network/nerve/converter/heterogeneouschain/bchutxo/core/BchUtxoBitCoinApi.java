@@ -178,14 +178,12 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
     }
 
     @Override
-    public String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
-        logger().info("pierre test==={}", 10);
+    public String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws Exception {
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(txHash);
         // calc the min number of signatures
         int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
         boolean mainnet = htgContext.getConverterCoreApi().isNerveMainnet();
         if (htgContext.getConverterCoreApi().isLocalSign()) {
-            logger().info("pierre test==={}", 11);
             String signatures = BchUtxoUtil.signWithdraw(
                     htgContext.getConverterCoreApi().getConverterConfig().getChainId(),
                     withdrawlUTXO,
@@ -195,10 +193,8 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
                     withdrawlUTXO.getFeeRate(),
                     txHash,
                     m, n, false, getSplitGranularity(), mainnet);
-            logger().info("pierre test==={}, sign==={}", 12, signatures);
             return signatures;
         } else {
-            logger().info("pierre test==={}", 13);
             // sign machine support
             byte[] signerPub = HexUtil.decode(htgContext.ADMIN_ADDRESS_PUBLIC_KEY());
             String signatures = htgContext.getConverterCoreApi().signBchWithdrawByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(),
@@ -209,14 +205,13 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
                     value.longValue(),
                     withdrawlUTXO,
                     getSplitGranularity());
-            logger().info("pierre test==={}, sign==={}", 14, signatures);
             return signatures;
         }
     }
 
 
     @Override
-    public Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws NulsException {
+    public Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws Exception {
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(txHash);
         // calc the min number of signatures
         int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
@@ -232,11 +227,11 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
     }
 
     @Override
-    public String signManagerChanges(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount) throws NulsException {
-        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
-        if (coreApi.checkChangeP35(nerveTxHash)) {
-            return nerveTxHash;
-        }
+    public String signManagerChanges(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount) throws Exception {
+        //IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+        //if (coreApi.checkChangeP35(nerveTxHash)) {
+        //    return nerveTxHash;
+        //}
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
@@ -294,7 +289,7 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
     }
 
     @Override
-    public Boolean verifySignManagerChanges(String signAddress, String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signature) throws NulsException {
+    public Boolean verifySignManagerChanges(String signAddress, String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signature) throws Exception {
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
@@ -326,7 +321,7 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
     }
 
     @Override
-    public boolean validateManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData) throws NulsException {
+    public boolean validateManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData) throws Exception {
         // Business validation
         this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);

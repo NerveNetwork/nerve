@@ -26,10 +26,8 @@ package network.nerve.converter.heterogeneouschain.fch.core;
 import apipClass.BlockInfo;
 import apipClass.ResponseBody;
 import apipClass.TxInfo;
-import apipClient.ApipClient;
-import apipClient.ApipDataGetter;
-import apipClient.BlockchainAPIs;
-import apipClient.FreeGetAPIs;
+import apipClient.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.neemre.btcdcli4j.core.client.BtcdClient;
@@ -43,6 +41,7 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.heterogeneouschain.bitcoinlib.core.IBitCoinLibWalletApi;
 import network.nerve.converter.heterogeneouschain.bitcoinlib.model.BitCoinLibBlockHeader;
@@ -149,7 +148,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
 
     public BigDecimal getBalance(String address) {
         ApipClient apipClient = FreeGetAPIs.getFidCid(rpc, address);
-        Map data = (Map) checkBestHeight(apipClient.getResponseBody());
+        Map data = (Map) checkBestHeight(apipClient);
         if (data == null) {
             return BigDecimal.ZERO;
         }
@@ -162,7 +161,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
 
     public BigDecimal getPrice() {
         ApipClient apipClient = FreeGetAPIs.getPrices(rpc);
-        Map data = (Map) checkBestHeight(apipClient.getResponseBody());
+        Map data = (Map) checkBestHeight(apipClient);
         if (data == null) {
             return BigDecimal.ZERO;
         }
@@ -179,7 +178,18 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
         return bestHeightLocal.get();
     }
 
-    private Object checkBestHeight(ResponseBody responseBody) {
+    private Object checkBestHeight(ApipClient apipClient) {
+        if (apipClient == null) {
+            throw new RuntimeException(String.format("Request Error, empty response of apipClient."));
+        }
+        ResponseBody responseBody = apipClient.getResponseBody();
+        if (responseBody == null) {
+            try {
+                throw new RuntimeException(String.format("Request Error, detail: %s", JSONUtils.obj2json(apipClient)));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(String.format("Request Error, detail: %s, &s, &s", apipClient.getResponseBodyStr(), apipClient.getCode(), apipClient.getMessage()), e);
+            }
+        }
         if (responseBody.getCode() != 0) {
             throw new RuntimeException(String.format("%s, detail: %s", responseBody.getMessage(), responseBody.getData()));
         }
@@ -187,8 +197,9 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
         return responseBody.getData();
     }
 
-    private Object checkApiBalance(ResponseBody responseBody) {
-        checkBestHeight(responseBody);
+    private Object checkApiBalance(ApipClient client) {
+        checkBestHeight(client);
+        ResponseBody responseBody = client.getResponseBody();
         long balance = responseBody.getBalance();
         if (balance < 1000000000l) {
             // Last 1000,000 requests
@@ -202,7 +213,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
 
     public TxInfo getTransactionByHash(String txHash) {
         ApipClient client = BlockchainAPIs.txByIdsPost(rpc, new String[]{txHash}, via, sessionKey);
-        Object data = checkApiBalance(client.getResponseBody());
+        Object data = checkApiBalance(client);
         if (data == null) {
             return null;
         }
@@ -215,7 +226,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
 
     public String getOpReturnInfo(String txHash) {
         ApipClient client = BlockchainAPIs.opReturnByIdsPost(rpc, new String[]{txHash}, via, sessionKey);
-        Object data = checkApiBalance(client.getResponseBody());
+        Object data = checkApiBalance(client);
         if (data == null) {
             return null;
         }
@@ -285,7 +296,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
     public BlockInfo getBlockByHeight(long height) {
         String heightKey = height + "";
         ApipClient client = BlockchainAPIs.blockByHeightsPost(rpc, new String[]{heightKey}, via, sessionKey);
-        Object data = checkApiBalance(client.getResponseBody());
+        Object data = checkApiBalance(client);
         if (data == null) {
             return null;
         }
@@ -300,7 +311,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
         String[] txHashArr = new String[txHashes.size()];
         txHashes.toArray(txHashArr);
         ApipClient client = BlockchainAPIs.txByIdsPost(rpc, txHashArr, via, sessionKey);
-        Object data = checkApiBalance(client.getResponseBody());
+        Object data = checkApiBalance(client);
         if (data == null) {
             return null;
         }
@@ -309,7 +320,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
 
     public List<Cash> getAccountUTXOs(String address) {
         ApipClient apipClient = FreeGetAPIs.getCashes(rpc, address, 0);
-        Object data = checkBestHeight(apipClient.getResponseBody());
+        Object data = checkBestHeight(apipClient);
         if (data == null) {
             return null;
         }
@@ -318,7 +329,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
 
     public Map<String, Cash> getUTXOsByIds(String[] cashIds) {
         ApipClient client = BlockchainAPIs.cashByIdsPost(rpc, cashIds, via, sessionKey);
-        Object data = checkApiBalance(client.getResponseBody());
+        Object data = checkApiBalance(client);
         if (data == null) {
             return null;
         }
@@ -329,7 +340,7 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
         String cashId = ParseTools.calcTxoId(txid, vout);
         String[] cashes = new String[]{cashId};
         ApipClient client = BlockchainAPIs.cashByIdsPost(rpc, cashes, via, sessionKey);
-        Object data = checkApiBalance(client.getResponseBody());
+        Object data = checkApiBalance(client);
         if (data == null) {
             return null;
         }
@@ -354,8 +365,9 @@ public class FchWalletApi implements IBitCoinLibWalletApi, BeanInitial {
     }
 
     public String broadcast(String txHex) {
-        ApipClient apipClient = FreeGetAPIs.broadcast(rpc, txHex);
-        Object data = checkBestHeight(apipClient.getResponseBody());
+        //ApipClient apipClient = FreeGetAPIs.broadcast(rpc, txHex);
+        ApipClient apipClient = WalletAPIs.broadcastTxPost(rpc, txHex, via, sessionKey);
+        Object data = checkApiBalance(apipClient);
         if (data == null) {
             return null;
         }

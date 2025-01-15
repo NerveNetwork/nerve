@@ -892,6 +892,35 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     @Override
+    public BigInteger getCrossOutTxFee(AssetName assetName, boolean isToken) {
+        if (assetName == htgContext.ASSET_NAME()) {
+            BigDecimal amountCalc = TrxUtil.calcTrxOfWithdrawProtocol15(htgContext);
+            logger().warn("[{}] Currently transaction fees, required by the network TRX: {}",
+                    htgContext.getConfig().getSymbol(),
+                    amountCalc.movePointLeft(6).toPlainString());
+            return amountCalc.toBigInteger();
+        } else {
+            AssetName otherMainAssetName = assetName;
+            String otherSymbol = otherMainAssetName.toString();
+            int otherDecimals = otherMainAssetName.decimals();
+            IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+            BigDecimal otherMainAssetUSD = coreApi.getUsdtPriceByAsset(otherMainAssetName);
+            BigDecimal htgUSD = coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME());
+            if(null == otherMainAssetUSD || null == htgUSD){
+                logger().error("[{}][withdraw] Withdrawal fee calculation. Unable to obtain complete quotation. {}_USD:{}, {}_USD:{}", htgContext.getConfig().getSymbol(), otherSymbol, otherMainAssetUSD, htgContext.getConfig().getSymbol(), htgUSD);
+                throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
+            }
+            BigDecimal needOtherMainAssetAmount = TrxUtil.calcOtherMainAssetOfWithdraw(htgContext, otherMainAssetName, otherMainAssetUSD, htgUSD);
+            logger().info("[{}]The withdraw fee is for the current network needs {}: {}",
+                    htgContext.getConfig().getSymbol(),
+                    otherSymbol,
+                    needOtherMainAssetAmount.movePointLeft(otherDecimals).toPlainString());
+
+            return needOtherMainAssetAmount.toBigInteger();
+        }
+    }
+
+    @Override
     public boolean isMinterERC20(String erc20) throws Exception {
         return trxParseTxHelper.isMinterERC20(erc20);
     }

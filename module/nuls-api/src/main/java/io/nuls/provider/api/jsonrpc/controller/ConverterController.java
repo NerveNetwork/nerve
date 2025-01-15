@@ -8,6 +8,7 @@ import io.nuls.core.core.annotation.Controller;
 import io.nuls.core.core.annotation.RpcMethod;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.model.*;
+import io.nuls.core.rpc.model.message.Response;
 import io.nuls.provider.api.config.Context;
 import io.nuls.provider.model.dto.VirtualBankDirectorDTO;
 import io.nuls.provider.model.jsonrpc.RpcResult;
@@ -159,6 +160,18 @@ public class ConverterController {
             return RpcResult.paramError("[chainId] is inValid");
         }
         Result<Map<String, Object>> result = converterTools.getHeterogeneousMainAsset(chainId);
+        if (chainId == 106) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("symbol", "POL");
+            }
+        } else
+        if (chainId == 116) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("symbol", "KAIA");
+            }
+        }
         return ResultUtil.getJsonRpcResult(result);
     }
     @RpcMethod("getProposalInfo")
@@ -309,6 +322,20 @@ public class ConverterController {
             return RpcResult.paramError("[assetId] is inValid");
         }
         Result<Map<String, Object>> result = converterTools.getHeterogeneousAssetInfo(chainId, assetId);
+        //9-160
+        //5-34
+        if ((chainId == 9 && assetId == 160) || (chainId == 5 && assetId == 34)) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("symbol", "POL");
+            }
+        } else
+        if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("symbol", "KAIA");
+            }
+        }
         return ResultUtil.getJsonRpcResult(result);
     }
 
@@ -337,6 +364,22 @@ public class ConverterController {
         params1.put("chainId", chainId);
         params1.put("assetId", assetId);
         Result result = converterTools.commonRequest("cv_get_heterogeneous_chain_asset_info_list", params1);
+        if ((chainId == 9 && assetId == 160) || (chainId == 5 && assetId == 34)) {
+            List<Map> dataList = (List<Map>) result.getData();
+            if (dataList != null) {
+                for (Map data : dataList) {
+                    data.put("symbol", "POL");
+                }
+            }
+        } else
+        if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
+            List<Map> dataList = (List<Map>) result.getData();
+            if (dataList != null) {
+                for (Map data : dataList) {
+                    data.put("symbol", "KAIA");
+                }
+            }
+        }
         return ResultUtil.getJsonRpcResult(result);
     }
 
@@ -760,6 +803,25 @@ public class ConverterController {
         params1.put("nerveAssetChainId", params.get(i++));
         params1.put("nerveAssetId", params.get(i++));
         Result<Map<String, Object>> result = converterTools.commonRequest("cv_checkPauseIn", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getCrossOutTxFee")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "tx hash")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value")
+    })
+    )
+    public RpcResult getCrossOutTxFee(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int i = 0;
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", params.get(i++));
+        params1.put("txHash", params.get(i++));
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_getCrossOutTxFee", params1);
         return ResultUtil.getJsonRpcResult(result);
     }
 }

@@ -1,8 +1,0 @@
-{
-  "logLevel": "INFO",
-  "debug": 0,
-  "logPath": "../../../../logs",
-  "dataPath": "../../../../data",
-  "active.module": "",
-  "serviceManagerPort": 8771
-}

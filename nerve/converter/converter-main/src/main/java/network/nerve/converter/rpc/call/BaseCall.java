@@ -28,6 +28,7 @@ import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.utils.LoggerUtil;
 
@@ -57,18 +58,18 @@ public class BaseCall {
                     response = ResponseMessageProcessor.requestAndResponse(moduleCode, cmd, params, timeout);
                 }
             } catch (Exception e) {
-                LoggerUtil.LOG.error(e);
+                ConverterContext.MAIN_CHAIN_LOGGER.error(e);
                 throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD);
             }
             if (!response.isSuccess()) {
                 String errorCode = response.getResponseErrorCode();
-                LoggerUtil.LOG.error("Call interface [{}] error, ErrorCode is {}, ResponseComment:{}", cmd, errorCode, response.getResponseComment());
+                ConverterContext.MAIN_CHAIN_LOGGER.error("Call interface [{}] error, ErrorCode is {}, ResponseComment:{}", cmd, errorCode, response.getResponseComment());
                 throw new NulsException(ErrorCode.init(errorCode));
             }
             Map data = (Map)response.getResponseData();
             return data.get(cmd);
         } catch (RuntimeException e) {
-            LoggerUtil.LOG.error(e);
+            ConverterContext.MAIN_CHAIN_LOGGER.error(e);
             throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD);
         }
     }

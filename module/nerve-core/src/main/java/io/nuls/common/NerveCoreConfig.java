@@ -123,6 +123,7 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
     private Set<String> seedNodeSet;
 
     private Long version1_6_0_height;
+    private Long version1_38_0_height;
     /*-------------------------[Block]-----------------------------*/
     /**
      * Fork chain monitoring thread execution interval
@@ -744,6 +745,14 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
 
     public void setBlockAccountManager(String blockAccountManager) {
         this.blockAccountManager = blockAccountManager;
+    }
+
+    public Long getVersion1_38_0_height() {
+        return version1_38_0_height;
+    }
+
+    public void setVersion1_38_0_height(Long version1_38_0_height) {
+        this.version1_38_0_height = version1_38_0_height;
     }
 
     @Override

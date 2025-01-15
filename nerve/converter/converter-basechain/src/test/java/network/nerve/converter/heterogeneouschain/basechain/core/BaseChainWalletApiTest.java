@@ -1202,6 +1202,41 @@ public class BaseChainWalletApiTest extends Base {
     }
 
     @Test
+    public void estimateGasForAnyFunctionTest() throws Exception {
+        setMainProxy();
+        // Multiple contract addresses
+        String contractAddress;
+        contractAddress = "0x790AFEea28599a70a0B2CC9803aD2C0E98220B12";
+        contractAddress = "0x47b23E0D3d655A4E637ef22621668Fa374Fa6b78";
+        contractAddress = "0xDC5dDBB0A8Fe9DbdED7dFDfeb0922c3f21Eefd9f";
+
+        Function function = new Function(
+                "f1",
+                List.of(),
+                List.of(new TypeReference<Uint8>() {}));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0x5a78059280E7B4E5494d18B44fbaef5228BA8598",
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
     public void erc20TransferEstimateGasTest() throws Exception {
         setMain();
         String contractAddress = "0xe491d740595fe59d894ca1f3c7bf9f1144366aaa";

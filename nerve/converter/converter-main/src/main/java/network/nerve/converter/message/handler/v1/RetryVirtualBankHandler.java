@@ -74,6 +74,9 @@ public class RetryVirtualBankHandler implements MessageProcessor {
             chain.getLogger().error("msg is null, msg:{}", ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
             return;
         }
+        if ("a051a43ff30e9ce9693512688a9a9a95bd13c3e2244e6556ea128df3aad859e5".equals(virtualBankSignMessage.getHash().toHex())) {
+            return;
+        }
         messageService.retryVirtualBankSign(chain, nodeId, virtualBankSignMessage, true);
     }
 }

@@ -488,7 +488,7 @@ public class MessageUtil {
                     packCtx = TxUtil.mainConvertToFriend(ctx, config.getCrossCtxType());
                     packCtx.setTransactionSignature(signature.serialize());
                     convertCtxService.save(packCtx.getHash(), ctx, chain.getChainId());
-                    chain.getLogger().info("Received main network protocol cross chain transactionshash：{}Corresponding cross chain transactions of this chain protocolhash:{}", crossTxHashHex, packCtx.getHash().toHex());
+                    chain.getLogger().info("Received main network protocol cross chain transactionshash：{} 。Corresponding cross chain transactions of this chain protocolhash:{}", crossTxHashHex, packCtx.getHash().toHex());
                 }
             } else {
                 if (!config.isMainNet()) {

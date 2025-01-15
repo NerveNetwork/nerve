@@ -430,12 +430,12 @@ public class BtcTransferTest {
         //pri: 912b6f010e024327865784dd3388d906d4813c236458183574eda28762373d49
         boolean mainnet = true;
         String pubKey = "02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded";
-        System.out.println("Common address: " + getBtcLegacyAddress(pubKey, mainnet));
+        System.out.println("Legacy address: " + getBtcLegacyAddress(pubKey, mainnet));
         System.out.println("Sigwet compatible address: " + genSegWitCompatibleAddress(pubKey, mainnet));
         System.out.println("Sigwet native address: " + getNativeSegwitAddressByPubkey(pubKey, mainnet));
         System.out.println("Taproot address: " + genBtcTaprootAddressByPub(pubKey, mainnet));
         System.out.println("====Testnet address===");
-        System.out.println("Common address: " + getBtcLegacyAddress(pubKey, !mainnet));
+        System.out.println("Legacy address: " + getBtcLegacyAddress(pubKey, !mainnet));
         System.out.println("Sigwet compatible address: " + genSegWitCompatibleAddress(pubKey, !mainnet));
         System.out.println("Sigwet native address: " + getNativeSegwitAddressByPubkey(pubKey, !mainnet));
         System.out.println("Taproot address: " + genBtcTaprootAddressByPub(pubKey, !mainnet));
@@ -1543,25 +1543,26 @@ public class BtcTransferTest {
     Object[] baseDataSegWitForWithdraw() throws IOException {
 
         List<String> newPubs = new ArrayList<>();
-        newPubs.add("035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803");
-        newPubs.add("03c363f44196aa1a57ef7e14c19845acad721c9eefd837dacdf3fe3af1ba08ee21");
+        newPubs.add("02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03");
+        newPubs.add("028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b7");
         newPubs.add("029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b4");
-        newPubs.add("03743d75ac0ee77257dd11477a737bba2bd01a1b26246c477ef2a59fb8e873572a");
-        newPubs.add("03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c9");
-        newPubs.add("0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b");
+        newPubs.add("02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd");
+        newPubs.add("02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b9");
+        newPubs.add("02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0");
         newPubs.add("02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d");
         newPubs.add("023ad3fbc7d73473f2eca9c46237988682ebd690ab260077af70357efcf9afbe90");
-        newPubs.add("02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b9");
-        newPubs.add("039eefe5915a253db131c5a825f03ca048e5aad257edfcd295fea3fec78609d980");
-        newPubs.add("02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0");
-        newPubs.add("02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd");
         newPubs.add("03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df4");
-        newPubs.add("028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b7");
-        newPubs.add("02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03");
+        newPubs.add("039eefe5915a253db131c5a825f03ca048e5aad257edfcd295fea3fec78609d980");
+        newPubs.add("03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c9");
+        newPubs.add("03c363f44196aa1a57ef7e14c19845acad721c9eefd837dacdf3fe3af1ba08ee21");
+        newPubs.add("0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b");
+        newPubs.add("035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803");
+        newPubs.add("03743d75ac0ee77257dd11477a737bba2bd01a1b26246c477ef2a59fb8e873572a");
 
-        long feeRate = 30;
-        String nerveTxHash = "94f1a89e5bf1df196940585c3d312432e00a00a1627ca3af159abd058531fe5d";
-        String utxoJson = "[{\"txid\":\"3889ab98bc1be859d706bb9fc1246a10ea5f816c0cb4e764f18d2d91fe24ec47\",\"vout\":1,\"status\":{\"confirmed\":true,\"block_height\":847495,\"block_hash\":\"00000000000000000001f4cd5f8014ebc56a759a400beedaf76277b37bdbd1d9\",\"block_time\":1718116024},\"value\":25083859}]";
+        String toAddress = "bc1qzhwyexqzfz4d0mu7ktdad63wfssg08cek9sgjp";
+        long feeRate = 4;
+        String nerveTxHash = "9991024000000000000000000000000000000000000000000000000000000000";
+        String utxoJson = "[{\"txid\":\"d81404250b34915f859787f97599be0f0d48cd68edd341ff87065131b900f625\",\"vout\":1,\"status\":{\"confirmed\":true,\"block_height\":872144,\"block_hash\":\"000000000000000000014c646eaa17fed0fdb886ec5b9b8123a064732d245fac\",\"block_time\":1732674851},\"value\":1499999403}, {\"txid\":\"f1863c20a4681de5b8f5a9483d433691d78696107e618087527073f4b69472c3\",\"vout\":1,\"status\":{\"confirmed\":true,\"block_height\":872135,\"block_hash\":\"000000000000000000002728ac251ba5ebdba5ddd2c89e28c633e955d0fdf0eb\",\"block_time\":1732669701},\"value\":9999200}]";
         List<UTXOData> utxoDataList = new ArrayList<>();
         List<Map> utxoList = JSONUtils.json2list(utxoJson, Map.class);
         for (Map map : utxoList) {
@@ -1580,16 +1581,16 @@ public class BtcTransferTest {
         List<UTXOData> UTXOList = w.getUtxoDataList();
         // take pubkeys of all managers
         List<ECKey> newPubEcKeys = w.getPubs().stream().map(p -> ECKey.fromPublicOnly(p)).collect(Collectors.toList());
-        String toAddress = "bc1q7l4q8kqekyur4ak3tf4s2rr9rp4nhz6axejxjwrc3f28ywm4tl8smz5dpd";
+
         // calc the min number of signatures
         int n = newPubEcKeys.size(), m = 10;
-        long fee = BitCoinLibUtil.calcFeeMultiSignSizeP2WSH(UTXOList.size(), 1, new int[HexUtil.decode(nerveTxHash).length], m, n) * w.getFeeRate();
-        long totalMoney = 0;
-        for (int k = 0; k < UTXOList.size(); k++) {
-            totalMoney += UTXOList.get(k).getAmount().longValue();
-        }
+        //long fee = BitCoinLibUtil.calcFeeMultiSignSizeP2WSH(UTXOList.size(), 1, new int[HexUtil.decode(nerveTxHash).length], m, n) * w.getFeeRate();
+        //long totalMoney = 0;
+        //for (int k = 0; k < UTXOList.size(); k++) {
+        //    totalMoney += UTXOList.get(k).getAmount().longValue();
+        //}
         List<ECKey> currentPubs = newPubEcKeys;
-        long amount = totalMoney - fee;
+        long amount = new BigDecimal("15").movePointRight(8).longValue();
         List<byte[]> opReturns = List.of(HexUtil.decode(nerveTxHash));
         return new Object[]{currentPubs, amount, toAddress, UTXOList, opReturns, m, n, w.getFeeRate()};
     }
@@ -1629,7 +1630,7 @@ public class BtcTransferTest {
                     n,
                     feeRate,
                     mainnet,
-                    true, null
+                    false, null
             );
             byte[] signerPub = pri.getPubKey();
             BtcSignData signData = new BtcSignData(signerPub, signatures.stream().map(s -> HexUtil.decode(s)).collect(Collectors.toList()));
@@ -1652,7 +1653,7 @@ public class BtcTransferTest {
         int n = (int) baseData[i++];
         long feeRate = (long) baseData[i];
 
-        String signatureData = "0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b01473045022100ab4df37e66989a1d97bfa47f1f8becf3a1796b9af97c436d20760ed41f5106aa02206d34df24d7f70c48b68116adab920f254071e871a627857bdd23c10841687503, 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d0146304402203144f96460efe2d88531665bd4a5a5a61ddac2e878cea75dc48430621cb377380220167a06f80f45afafad480309e90e4f7ba6f7305d5708bf4cddf301980942fac9, 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f001473045022100f55fb1eeefc7e33f70f3000e74008b5dce55887c26fd768fda5fe3a8328177b402201befa11064656d999b8a33462712264408dd0ddd4070b7cc8d23b9c43fa38296, 02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a030146304402202ebf998a9c0655145799c193ddd584136fcf932e79d6720ce00d641703c2483f022067054de1f1d93095f191dd82ed2908cc618249a2f91a414cc90abf00fb584bb8, 028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b70146304402202ad1bb8df3d2a15d46f9ce175a8c6f28f56accc4ee6a82eb596402f272c8d78902205804cd92ecdee8dd66f3b422f222f2be1d4b9b755f5c7b2669b15fc0af6a0c4a,02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd0146304402203d1276667da7c487a2c660dc198867c13a3b68f4dad5723be7c76d987ba9bc63022023c19a0ed030cb977c80295511960119468074b19e650c16e97198c25979a34e, 03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df40146304402204f04fe67000d9a1b390d97af001c948db768f33eff50bf8687996fa0133c0f4502203e9b703c84ee81f57b22f85e92dbd2589ad963cfd5046a45f74fb8e0dcb58c22, 03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c90147304502210084f164c22dd6dc13091600ce9fb680ca253f4e1de76a1335cef0f1be26eb7536022063db47adf685195c33ef2f253550cfe1336bfe230cbe38710fe6166a7a16276a, 035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b8030146304402200ecba3c1cf4bbd0834fdd6fcb42029f06d888a84f336851d989edb561a2401820220642c9daabef3691080b2617946defcacf9318c85e5a88ede02ce52ade8ad0fb0, 02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b901473045022100985322d8699a2a28a1cf97c201d6eafb75fe105749dc6c56eddcefbaf147526802201f5c3dad9888cc792bb3db7ad600a06137ee6b2633bd3081d6dbfaf3f32c9e6c";
+        String signatureData = "";
         Map<String, List<String>> signatures = new HashMap<>();
         String[] signDatas = signatureData.split(",");
         for (String signData : signDatas) {

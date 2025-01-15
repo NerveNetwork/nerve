@@ -55,26 +55,22 @@ import network.nerve.converter.message.*;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.model.dto.SignAccountDTO;
-import network.nerve.converter.model.po.ComponentCallParm;
-import network.nerve.converter.model.po.ComponentSignByzantinePO;
-import network.nerve.converter.model.po.ProposalPO;
-import network.nerve.converter.model.po.TransactionPO;
+import network.nerve.converter.model.po.*;
 import network.nerve.converter.model.txdata.ChangeVirtualBankTxData;
 import network.nerve.converter.model.txdata.OneClickCrossChainTxData;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.NetWorkCall;
 import network.nerve.converter.rpc.call.TransactionCall;
-import network.nerve.converter.storage.ComponentSignStorageService;
-import network.nerve.converter.storage.ProposalStorageService;
-import network.nerve.converter.storage.TxStorageService;
-import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
+import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.*;
 
 import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EMPTY_STRING;
 
 /**
  * @author: Loki
@@ -97,6 +93,8 @@ public class MessageServiceImpl implements MessageService {
 
     @Autowired
     private ComponentSignStorageService componentSignStorageService;
+    @Autowired
+    private CfmChangeBankStorageService cfmChangeBankStorageService;
 
     @Autowired
     private HeterogeneousAssetHelper heterogeneousAssetHelper;
@@ -127,8 +125,8 @@ public class MessageServiceImpl implements MessageService {
             LoggerUtil.LOG.warn("Filter transactionshash: {}", hash.toHex());
             return;
         }
-        LoggerUtil.LOG.info("Received node[{}]New transaction signature hash: {}, Signature address:{}", nodeId, hash.toHex(),
-                AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chainId)));
+        LoggerUtil.LOG.info("Received node[{}]New transaction signature hash: {}, Signature address:{}, OriginalHash: {}", nodeId, hash.toHex(),
+                AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chainId)), message.getOriginalHash());
         TransactionPO txPO = txStorageService.get(chain, hash);
         if (null == txPO) {
             try {
@@ -400,6 +398,9 @@ public class MessageServiceImpl implements MessageService {
      */
     private void componentSignV21(Chain chain, String nodeId, ComponentSignMessage message, boolean isCreate) {
         NulsHash hash = message.getHash();
+        if ("a051a43ff30e9ce9693512688a9a9a95bd13c3e2244e6556ea128df3aad859e5".equals(hash.toHex())) {
+            return;
+        }
         List<HeterogeneousSign> listSign = message.getListSign();
         if (null == hash || null == listSign || listSign.size() == 0) {
             chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
@@ -493,10 +494,16 @@ public class MessageServiceImpl implements MessageService {
      * @param message
      * @throws NulsException
      */
-    private void changeVirtualBankMessageProcess(Chain chain, String nodeId, Transaction tx, ComponentSignMessage message, boolean isCreate) throws NulsException {
+    private void changeVirtualBankMessageProcess(Chain chain, String nodeId, Transaction tx, ComponentSignMessage message, boolean isCreate) throws Exception {
         synchronized (objectBankLock) {
             NulsHash hash = tx.getHash();
             String txHash = hash.toHex();
+            LoggerUtil.LOG.info("[Heterogeneous chain address signature message - handlechangeVirtualBank], Received node[{}]  hash:{}", nodeId, txHash);
+            ConfirmedChangeVirtualBankPO po = cfmChangeBankStorageService.find(chain, txHash);
+            if (po != null) {
+                LoggerUtil.LOG.info("[Completed - Heterogeneous chain address signature message - handlechangeVirtualBank], Transaction Completed. TxHash: {}", txHash);
+                return;
+            }
             // Determine if you have received the message
             ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, hash.toHex());
             boolean existMessage = isExistMessage(compSignPO, message);
@@ -504,7 +511,6 @@ public class MessageServiceImpl implements MessageService {
             //    return;
             //}
             compSignPO = initCompSignPO(compSignPO, hash);
-            LoggerUtil.LOG.info("[Heterogeneous chain address signature message - handlechangeVirtualBank], Received node[{}]  hash:{}", nodeId, txHash);
             List<IHeterogeneousChainDocking> chainDockings = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
             if (null == chainDockings || chainDockings.isEmpty()) {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
@@ -528,10 +534,10 @@ public class MessageServiceImpl implements MessageService {
                 if (null != txData.getOutAgents()) {
                     getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents());
                 }
-                if (converterCoreApi.checkChangeP35(txHash)) {
-                    inAddress = converterCoreApi.inChangeP35();
-                    outAddress = converterCoreApi.outChangeP35();
-                }
+                //if (converterCoreApi.checkChangeP35(txHash)) {
+                //    inAddress = converterCoreApi.inChangeP35();
+                //    outAddress = converterCoreApi.outChangeP35();
+                //}
                 addressCache.put(hChainId, new String[][]{inAddress, outAddress});
             }
             // Verify the correctness of the received message
@@ -895,7 +901,7 @@ public class MessageServiceImpl implements MessageService {
      * @param message
      * @throws NulsException
      */
-    private void withdrawMessageProcess(Chain chain, String nodeId, Transaction tx, ComponentSignMessage message) throws NulsException {
+    private void withdrawMessageProcess(Chain chain, String nodeId, Transaction tx, ComponentSignMessage message) throws Exception {
         synchronized (objectWithdrawLock) {
             NulsHash hash = tx.getHash();
             String txHash = hash.toHex();
@@ -1015,7 +1021,7 @@ public class MessageServiceImpl implements MessageService {
                                        String nodeId,
                                        ComponentSignMessage message,
                                        ComponentSignByzantinePO compSignPO
-                                       ) throws NulsException {
+                                       ) throws Exception {
         int heterogeneousChainId = docking.getChainId();
         String txHash = hash.toHex();
         // Verify the correctness of the signature based on the transaction
@@ -1098,7 +1104,7 @@ public class MessageServiceImpl implements MessageService {
      * @param message
      * @throws NulsException
      */
-    private void refundMessageProcess(Chain chain, String nodeId, Transaction tx, ProposalPO proposalPO, ComponentSignMessage message) throws NulsException {
+    private void refundMessageProcess(Chain chain, String nodeId, Transaction tx, ProposalPO proposalPO, ComponentSignMessage message) throws Exception {
         synchronized (objectRefundLock) {
             NulsHash hash = proposalPO.getHash();
             String txHash = hash.toHex();
@@ -1196,7 +1202,7 @@ public class MessageServiceImpl implements MessageService {
      * @param message
      * @throws NulsException
      */
-    private void upgradeMessageProcess(Chain chain, String nodeId, Transaction tx, ProposalPO proposalPO, ComponentSignMessage message) throws NulsException {
+    private void upgradeMessageProcess(Chain chain, String nodeId, Transaction tx, ProposalPO proposalPO, ComponentSignMessage message) throws Exception {
         synchronized (objectUpgradeLock) {
             NulsHash hash = proposalPO.getHash();
             String txHash = hash.toHex();
@@ -1297,17 +1303,33 @@ public class MessageServiceImpl implements MessageService {
         return false;
     }
 
-    private void retryVirtualBankMessageProcess(Chain chain, String nodeId, Transaction tx, VirtualBankSignMessage _message, boolean isCreate) throws NulsException {
+    String prepareHash = EMPTY_STRING;
+    int count = 0;
+    private void retryVirtualBankMessageProcess(Chain chain, String nodeId, Transaction tx, VirtualBankSignMessage _message, boolean isCreate) throws Exception {
         synchronized (objectBankLock) {
             NulsHash hash = tx.getHash();
             String txHash = hash.toHex();
-            LoggerUtil.LOG.info("[Resend virtual bank signature change message - handlechangeVirtualBank], Received node[{}]  hash:{}", nodeId, txHash);
-            ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, hash.toHex());
+            LoggerUtil.LOG.info("[Resend virtual bank signature change message - handlechangeVirtualBank], Received node[{}]  hash:{}, prepare: {}", nodeId, txHash, _message.getPrepare());
+            ConfirmedChangeVirtualBankPO po = cfmChangeBankStorageService.find(chain, txHash);
+            if (po != null) {
+                LoggerUtil.LOG.info("[Completed - Resend virtual bank signature change message - handlechangeVirtualBank], Transaction Completed. TxHash: {}", txHash);
+                return;
+            }
+            ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, txHash);
             // Preparation phase, resetcompSignPO
             if (_message.getPrepare() == 1) {
                 // Determine if you have received the message
                 if (compSignPO != null) {
-                    componentSignStorageService.delete(chain, hash.toHex());
+                    if (!txHash.equals(prepareHash)) {
+                        prepareHash = txHash;
+                        count = 0;
+                    }
+                    count++;
+                    if (count > 5) {
+                        LoggerUtil.LOG.info("[End Reset - Resend virtual bank signature change message - Reset the status of this node], Received node[{}]  hash:{}", nodeId, txHash);
+                        return;
+                    }
+                    componentSignStorageService.delete(chain, txHash);
                     NetWorkCall.broadcast(chain, _message, nodeId, ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
                     LoggerUtil.LOG.info("[Resend virtual bank signature change message - Reset the status of this node], Received node[{}]  hash:{}", nodeId, txHash);
                 }
@@ -1344,10 +1366,10 @@ public class MessageServiceImpl implements MessageService {
                 if (null != txData.getOutAgents()) {
                     getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents());
                 }
-                if (converterCoreApi.checkChangeP35(txHash)) {
-                    inAddress = converterCoreApi.inChangeP35();
-                    outAddress = converterCoreApi.outChangeP35();
-                }
+                //if (converterCoreApi.checkChangeP35(txHash)) {
+                //    inAddress = converterCoreApi.inChangeP35();
+                //    outAddress = converterCoreApi.outChangeP35();
+                //}
                 addressCache.put(hChainId, new String[][]{inAddress, outAddress});
             }
             // Verify the correctness of the received message

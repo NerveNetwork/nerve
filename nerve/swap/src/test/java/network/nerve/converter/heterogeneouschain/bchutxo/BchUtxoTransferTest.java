@@ -35,6 +35,7 @@ import network.nerve.swap.utils.bch.TestNet4ParamsForNerve;
 import network.nerve.swap.utils.fch.BtcSignData;
 import network.nerve.swap.utils.fch.FchUtil;
 import network.nerve.swap.utils.fch.UTXOData;
+import org.apache.http.message.BasicHeader;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.params.MainNetParams;
@@ -45,8 +46,10 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: PierreLuo
@@ -180,6 +183,7 @@ public class BchUtxoTransferTest {
             mainnet = true;
             params = MainNetParams.get();
             initAddr();
+            multisigAddress = "bitcoincash:pp54cej9hyllw9qyvca3u6rt6csnyz46kuhlfqn0r9";
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -285,6 +289,12 @@ public class BchUtxoTransferTest {
     }
 
     private List<UTXOData> getAccountUtxo(String address) {
+        if (mainnet) {
+            if (address.startsWith("bitcoincash:")) {
+                address = address.substring(12);
+            }
+            return this.takeUTXOFromOKX(address);
+        }
         String url = "http://bchutxo.nerve.network/jsonrpc";
         try {
             Map<String, Object> map = new HashMap<>(8);
@@ -319,30 +329,77 @@ public class BchUtxoTransferTest {
     }
 
     @Test
+    public void testValidAddr() throws Exception {
+        setMainnet();
+        String addr;
+        boolean valid;
+        addr = "bitcoincash:qp5qf769pgn3qm3qz9csfhfyjcfvd936es320ef2z3";
+        valid = CashAddress.isValidCashAddr(params, addr);
+        System.out.println(valid);
+        addr = "qp5qf769pgn3qm3qz9csfhfyjcfvd936es320ef2z3";
+        valid = CashAddress.isValidCashAddr(params, addr);
+        System.out.println(valid);
+    }
+
+    @Test
     public void testDeposit() throws IOException {
-        setTestnet();
+        //setTestnet();
+        setMainnet();
         long feeRate = 1;
-        String pri = fromPriKey;
+        String pri = "";
+        String legacyAddr = ECKey.fromPrivate(HexUtil.decode(pri)).toAddress(params).toString();
+        String fromAddress = CashAddressFactory.create().getFromBase58(params, legacyAddr).toString();
+        System.out.println(fromAddress);
+
         byte[] priBytes = HexUtil.decode(pri);
         //String to = "bchtest:qzfe84vndnmekw6gpdf0jefv9u4lqnf8qqh6vlk2ep";
         //String to = "bchtest:pp3fu5lfl0er99f37yk0ezfvjcspps57r5txs83q6w";
         String to = multisigAddress;
-        //long amount = new BigDecimal("0.001").movePointRight(8).longValue();
-        long amount = 213000;
+        long amount = new BigDecimal("0.019").movePointRight(8).longValue();
+        //long amount = 213000;
 
         List<UTXOData> inputs = this.getAccountUtxo(fromAddress);
         RechargeData rechargeData = new RechargeData();
-        rechargeData.setTo(AddressTool.getAddress("TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad"));
+        rechargeData.setTo(AddressTool.getAddress("NERVEepb6CwyEWh9mhnmPTJcuWpRzmYvoS7tLm"));
         rechargeData.setValue(amount);
         byte[] opReturn = rechargeData.serialize();
 
         Object[] datas = BchUtxoUtil.calcFeeAndUTXO(inputs, amount, feeRate, opReturn.length);
         long fee = (long) datas[0];
+        System.out.println("calc fee: " + fee);
         List<UTXOData> spendingCashes = (List<UTXOData>) datas[1];
         System.out.println(JSONUtils.obj2PrettyJson(spendingCashes));
 
         String signedTx = BchUtxoUtil.createTransactionSign(params, fromAddress, spendingCashes, priBytes, to, amount, feeRate, opReturn);
         System.out.println(signedTx);
+    }
+
+    List<UTXOData> takeUTXOFromOKX(String address) {
+        try {
+            String apiKey = "8054293f-de13-4b16-90eb-0b09a8ac90d1";
+            String url = "https://www.oklink.com/api/v5/explorer/address/utxo?chainShortName=BCH&address=%s";
+            List<BasicHeader> headers = new ArrayList<>();
+            headers.add(new BasicHeader("Ok-Access-Key", apiKey));
+            String s = HttpClientUtil.get(String.format(url, address), headers);
+            Map<String, Object> map = JSONUtils.json2map(s);
+            List<Map> data = (List<Map>) map.get("data");
+            if (data == null || data.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            Map dataMap = data.get(0);
+            List<Map> utxoList = (List<Map>) dataMap.get("utxoList");
+            if (utxoList == null || utxoList.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            List<UTXOData> resultList = utxoList.stream().map(utxo -> new UTXOData(
+                    (String) utxo.get("txid"),
+                    Integer.parseInt(utxo.get("index").toString()),
+                    new BigDecimal(utxo.get("unspentAmount").toString()).movePointRight(8).toBigInteger()
+            )).collect(Collectors.toList());
+            return resultList;
+        } catch (Exception e) {
+            return Collections.EMPTY_LIST;
+        }
     }
 
     @Test

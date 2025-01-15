@@ -139,9 +139,7 @@ public class EthContext implements Serializable {
             if (ethGasPrice.compareTo(MAX_HTG_GAS_PRICE) > 0) {
                 ethGasPrice = MAX_HTG_GAS_PRICE;
             }
-            if (ethGasPrice.compareTo(GWEI_1) >= 0) {
-                ETH_GAS_PRICE = ethGasPrice;
-            }
+            ETH_GAS_PRICE = ethGasPrice;
             /*
             Rolling back heterogeneous network packaging prices for stability6The mechanism of updating again after the second update is due to the cause of front-end and back-end issuespriceInconsistent
             if (ETH_GAS_PRICE == null || ETH_GAS_PRICE.compareTo(ethGasPrice) <= 0) {

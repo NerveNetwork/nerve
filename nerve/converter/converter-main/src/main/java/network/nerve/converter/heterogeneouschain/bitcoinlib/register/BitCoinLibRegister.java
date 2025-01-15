@@ -107,10 +107,6 @@ public abstract class BitCoinLibRegister extends HtgRegister {
         getHtgContext().getConverterCoreApi().addHtgWaitingTxInvokeDataHandler((Runnable) beanMap.get(BitCoinLibWaitingTxInvokeDataHandler.class));
     }
 
-    protected void initWaitingTxQueue() {
-
-    }
-
     private BeanMap initBeans(HtgContext htgContext, ConverterConfig converterConfig,
                               HtgCallBackManager htgCallBackManager, String dbName) {
         try {

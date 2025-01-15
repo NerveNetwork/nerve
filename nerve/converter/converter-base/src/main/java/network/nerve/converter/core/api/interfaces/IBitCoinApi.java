@@ -45,11 +45,11 @@ public interface IBitCoinApi {
 
     boolean isEnoughFeeOfWithdraw(String nerveTxHash, AssetName feeAssetName, BigDecimal fee, BigInteger transfer);
 
-    String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException;
+    String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws Exception;
 
-    Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws NulsException;
+    Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws Exception;
 
-    String createOrSignWithdrawTx(String txHash, String toAddress, BigInteger value, Integer assetId, String signed, boolean checkOrder) throws NulsException;
+    String createOrSignWithdrawTx(String txHash, String toAddress, BigInteger value, Integer assetId, String signed, boolean checkOrder) throws Exception;
 
     List<String> getMultiSignAddressPubs(String address);
 
@@ -57,10 +57,10 @@ public interface IBitCoinApi {
     // Used to determine whether cfmTask needs to send a withdrawal UTXO transaction, used to generate a new multi-signature address, and transfer assets from the current multi-signature address to the new multi-signature address.
     boolean checkEnoughAvailablePubs(String address);
 
-    String createOrSignManagerChangesTx(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData, boolean checkOrder) throws NulsException;
-    String signManagerChanges(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount) throws NulsException;
-    Boolean verifySignManagerChanges(String signAddress, String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signed) throws NulsException;
-    boolean validateManagerChangesTx(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException;
+    String createOrSignManagerChangesTx(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData, boolean checkOrder) throws Exception;
+    String signManagerChanges(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount) throws Exception;
+    Boolean verifySignManagerChanges(String signAddress, String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signed) throws Exception;
+    boolean validateManagerChangesTx(String txHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws Exception;
 
     boolean hasRecordFeePayment(String htgTxHash) throws NulsException;
     void recordFeePayment(long blockHeight, String blockHash, String htgTxHash, long fee, boolean recharge, Boolean nerveInner) throws Exception;

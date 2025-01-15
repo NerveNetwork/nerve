@@ -38,6 +38,14 @@ public class LoggerBuilder {
         Logger mongodbLogger2 = context.getLogger("org.mongodb.driver.cluster");
         mongodbLogger2.setAdditive(false);
         mongodbLogger2.setLevel(Level.ERROR);
+
+        Logger bitcoinjLogger = context.getLogger("org.bitcoinj");
+        bitcoinjLogger.setAdditive(false);
+        bitcoinjLogger.setLevel(Level.OFF);
+
+        Logger bitcoinLogger = context.getLogger("org.bitcoin");
+        bitcoinLogger.setAdditive(false);
+        bitcoinLogger.setLevel(Level.OFF);
     }
 
     public static NulsLogger getLogger(String fileName) {

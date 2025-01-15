@@ -424,6 +424,7 @@ public class BitCoinLibWalletApi implements IBitCoinLibWalletApi, BeanInitial {
     }
 
     public List<UTXOData> getAccountUTXOs(String address) {
+        getLog().info("[{}] GetAccountUTXOs, addr: {}, mainnet: {}", htgContext.HTG_CHAIN_ID(), address, htgContext.getConverterCoreApi().isNerveMainnet());
         if (htgContext.getConverterCoreApi().isNerveMainnet()) {
             String url = "http://api.v2.nabox.io/nabox-api/btc/utxo";
             Map<String, Object> param = new HashMap<>();

@@ -99,7 +99,8 @@ public class BchUtxoWalletApi extends BitCoinLibWalletApi {
         }
     }
 
-    public void BchUtxoWalletApi() {
+    public BchUtxoWalletApi() {
+        // 33bed3e2-1605-467f-a6d0-53888df39b62
         commonKey = "8054293f-de13-4b16-90eb-0b09a8ac90d1";
         defaultOkxApiKeys.add("3e228670-3b14-4025-9640-76eba9e85903");
         defaultOkxApiKeys.add("4bbbf9cc-bf13-4d5d-817d-9d9688e4dd26");
@@ -147,10 +148,12 @@ public class BchUtxoWalletApi extends BitCoinLibWalletApi {
     List<UTXOData> takeUTXOFromOKX(String address) {
         try {
             String apiKey = this.fetchApiKey();
+
             String url = "https://www.oklink.com/api/v5/explorer/address/utxo?chainShortName=BCH&address=%s";
             List<BasicHeader> headers = new ArrayList<>();
             headers.add(new BasicHeader("Ok-Access-Key", apiKey));
             String s = HttpClientUtil.get(String.format(url, address), headers);
+            getLog().info("[TakeUTXOFromOKX] key: {}, addr: {}, response: {}", apiKey, address, s);
             Map<String, Object> map = JSONUtils.json2map(s);
             List<Map> data = (List<Map>) map.get("data");
             if (data == null || data.isEmpty()) {
@@ -168,21 +171,26 @@ public class BchUtxoWalletApi extends BitCoinLibWalletApi {
             )).collect(Collectors.toList());
             return resultList;
         } catch (Exception e) {
+            getLog().error("TakeUTXOFromOKX error, addr: " + address, e);
             return Collections.EMPTY_LIST;
         }
     }
 
     @Override
     public List<UTXOData> getAccountUTXOs(String address) {
+        getLog().info("[BCH] GetAccountUTXOs, addr: {}, mainnet: {}", address, htgContext.getConverterCoreApi().isNerveMainnet());
         if (htgContext.getConverterCoreApi().isNerveMainnet()) {
             try {
+                if (address.startsWith("bitcoincash:")) {
+                    address = address.substring(12);
+                }
                 return MAINNET_ADDRESS_UTXO_CACHE.get(address);
             } catch (Exception e) {
                 getLog().error("get utxo error: " + e.getMessage());
                 return Collections.EMPTY_LIST;
             }
         } else {
-            String url = "http://bchutxo.nerve.network/jsonrpc";
+            String url = "https://bchutxo.nerve.network/jsonrpc";
             try {
                 RpcResult request = JsonRpcUtil.request(url, "getAddressUTXO", List.of(address));
                 List<Map> list = (List<Map>) request.getResult();

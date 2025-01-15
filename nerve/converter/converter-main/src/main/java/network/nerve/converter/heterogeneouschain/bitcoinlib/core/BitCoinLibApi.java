@@ -88,19 +88,19 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
     @Override
     public abstract List<UTXOData> getUTXOs(String address);
     @Override
-    public abstract String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException;
+    public abstract String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws Exception;
     @Override
-    public abstract Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws NulsException;
+    public abstract Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws Exception;
     @Override
     public abstract long getWithdrawalFeeSize(long fromTotal, long transfer, long feeRate, int inputNum);
     @Override
     public abstract long getChangeFeeSize(int utxoSize);
     @Override
-    public abstract String signManagerChanges(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount) throws NulsException;
+    public abstract String signManagerChanges(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount) throws Exception;
     @Override
-    public abstract Boolean verifySignManagerChanges(String signAddress, String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signature) throws NulsException;
+    public abstract Boolean verifySignManagerChanges(String signAddress, String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signature) throws Exception;
     @Override
-    public abstract boolean validateManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData) throws NulsException;
+    public abstract boolean validateManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData) throws Exception;
 
     protected abstract IBitCoinLibWalletApi walletApi();
     protected abstract String _createMultiSignWithdrawTx(WithdrawalUTXO withdrawlUTXO, String signatureData, String to, long amount, String nerveTxHash) throws Exception;
@@ -219,7 +219,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
     }
 
     @Override
-    public String createOrSignWithdrawTx(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
+    public String createOrSignWithdrawTx(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws Exception {
 
         try {
             if (!htgContext.isAvailableRPC()) {
@@ -275,7 +275,9 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
 
             WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
             String txStr = this._createMultiSignWithdrawTx(withdrawlUTXO, signatureData, toAddress, value.longValue(), nerveTxHash);
-
+            if (StringUtils.isBlank(txStr)) {
+                throw new Exception(String.format("Empty data for createMultiSignWithdrawTx, params: %s, %s, %s, %s, %s", withdrawlUTXO.getCurrentMultiSignAddress(), signatureData, toAddress, value.longValue(), nerveTxHash));
+            }
             String htgTxHash = walletApi().broadcast(txStr);
             if (StringUtils.isNotBlank(htgTxHash)) {
                 // Record withdrawal transactions that have been transferred to HTG Network transmission
@@ -290,7 +292,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
             }
             logger().error(e);
             if (e.getCause() != null) logger().error(e.getCause());
-            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+            throw e;
         }
     }
 
@@ -399,15 +401,15 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
     }
 
     @Override
-    public String createOrSignManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData, boolean checkOrder) throws NulsException {
+    public String createOrSignManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData, boolean checkOrder) throws Exception {
         try {
             WithdrawalUTXO withdrawlUTXO = null;
             boolean completeDirectly = false;
             do {
-                if (htgContext.getConverterCoreApi().checkChangeP35(nerveTxHash)) {
-                    completeDirectly = true;
-                    break;
-                }
+                //if (htgContext.getConverterCoreApi().checkChangeP35(nerveTxHash)) {
+                //    completeDirectly = true;
+                //    break;
+                //}
                 // Business validation
                 this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
                 withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
@@ -498,7 +500,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
             }
             logger().error(e);
             if (e.getCause() != null) logger().error(e.getCause());
-            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+            throw e;
         }
     }
 

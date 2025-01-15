@@ -185,6 +185,7 @@ public class ChainInfo extends BaseMessage {
         this.registerTime = registerTime;
     }
 
+    //todo 如果nuls修改了，则这里也修改为更严格版本
     public int getMinPassCount(){
         int minPassCount = getVerifierList().size() * getSignatureByzantineRatio()/ CrossChainConstant.MAGIC_NUM_100;
         if(minPassCount == 0){

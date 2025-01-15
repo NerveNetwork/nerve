@@ -101,6 +101,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
     private ComponentSignStorageService componentSignStorageService = SpringLiteContext.getBean(ComponentSignStorageService.class);
     private ConverterCoreApi converterCoreApi = SpringLiteContext.getBean(ConverterCoreApi.class);
     private CfmChangeBankStorageService cfmChangeBankStorageService = SpringLiteContext.getBean(CfmChangeBankStorageService.class);
+    private ConfirmWithdrawalStorageService confirmWithdrawalStorageService = SpringLiteContext.getBean(ConfirmWithdrawalStorageService.class);
 
     private String p35ChangeHash = "6ef994439924c868bfd98f15f154c8280e7b25905510d80ae763c562d615e991";
     private boolean checkedFillInP35ChangeTxOnStartup = false;
@@ -110,16 +111,17 @@ public class CfmTxSubsequentProcessTask implements Runnable {
     public void run() {
 
         try {
-            fillInP35ChangeTx();
-            fillInP35v1ChangeTx();
+            //fillInP35ChangeTx();
+            //fillInP35v1ChangeTx();
             LinkedBlockingDeque<TxSubsequentProcessPO> pendingTxQueue = chain.getPendingTxQueue();
+            int length = pendingTxQueue.size();
             out:
-            while (!pendingTxQueue.isEmpty()) {
+            for (int i = 0; i < length; i++) {
+            //while (!pendingTxQueue.isEmpty()) {
                 // Only remove,Do not remove head elements
                 TxSubsequentProcessPO pendingPO = pendingTxQueue.peekFirst();
                 Transaction tx = pendingPO.getTx();
                 String nerveTxHash = tx.getHash().toHex();
-                chain.getLogger().info("pierre test===hash=={}=={}", nerveTxHash, 1);
                 if (converterCoreApi.skippedTransaction(nerveTxHash)) {
                     // Determine if there is a problem with the transaction, Remove from queue, And remove it from the persistent library
                     chain.getLogger().info("[Heterogeneous chain pending queue] Historical legacy problem data, Remove transaction, hash:{}", nerveTxHash);
@@ -131,15 +133,13 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     continue;
                 }
 
-                chain.getLogger().info("pierre test===hash=={}=={}", nerveTxHash, 2);
-                if (this.isP35ChangeTx(nerveTxHash)) {
-                    pendingPO = this.checkUpdateChangeTxForP35(pendingPO);
-                    if (!converterCoreApi.isProtocol35()) {
-                        continue;
-                    }
-                }
+                //if (this.isP35ChangeTx(nerveTxHash)) {
+                //    pendingPO = this.checkUpdateChangeTxForP35(pendingPO);
+                //    if (!converterCoreApi.isProtocol35()) {
+                //        continue;
+                //    }
+                //}
 
-                chain.getLogger().info("pierre test===hash=={}=={}", nerveTxHash, 3);
                 if (!pendingPO.getRetry() && null != asyncProcessedTxStorageService.getComponentCall(chain, nerveTxHash)) {
                     // Judging that it has been executed, Remove from queue, And remove it from the persistent library
                     chain.getLogger().info("[Heterogeneous chain pending queue] Executed,Remove transaction, hash:{}", nerveTxHash);
@@ -149,7 +149,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     pendingTxQueue.remove();
                     continue;
                 }
-                chain.getLogger().info("pierre test===hash=={}=={}", nerveTxHash, 4);
                 // Determine if it has been confirmed
                 if (null == TransactionCall.getConfirmedTx(chain, tx.getHash())) {
                     if (pendingPO.getIsConfirmedVerifyCount() > ConverterConstant.CONFIRMED_VERIFY_COUNT) {
@@ -164,7 +163,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     // Terminate this execution and wait for the next execution to check if the transaction is confirmed again
                     break;
                 }
-                chain.getLogger().info("pierre test===hash=={}=={}", nerveTxHash, 5);
                 switch (tx.getType()) {
                     case TxType.CHANGE_VIRTUAL_BANK:
                         // Handling bank changes
@@ -194,20 +192,26 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                             withdrawalProcessor(pendingPO);
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
+                            ConfirmWithdrawalPO cfmWithdrawalTx = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, tx.getHash());
+                            if (null != cfmWithdrawalTx) {
+                                chain.getLogger().error("[withdraw] The withdraw tx is confirmed. withdrawHash:{}, cfmWithdrawalTx:{}", nerveTxHash, cfmWithdrawalTx.getConfirmWithdrawalTxHash().toHex());
+                                // And remove it from the persistence library
+                                txSubsequentProcessStorageService.delete(chain, nerveTxHash);
+                                // remove
+                                pendingTxQueue.remove();
+                                continue;
+                            }
                             // check btcSys'chain handle
                             if (TxType.WITHDRAWAL == tx.getType()) {
-                                chain.getLogger().info("pierre test===1");
                                 WithdrawalTxData txData1 = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
                                 int htgChainId = txData1.getHeterogeneousChainId();
                                 if (htgChainId > 200) {
-                                    chain.getLogger().info("pierre test===2");
                                     int feeChangeVersion = chain.getWithdrawFeeChangeVersion(nerveTxHash);
                                     if (pendingPO.isWithdrawExceedErrorTime(feeChangeVersion, 10)) {
                                         chain.getLogger().warn("[withdraw] Insufficient withdrawal fees, retry count exceeded limit, temporarily suspending processing of current advance tasks, feeChangeVersion: {}, txHash: {}", feeChangeVersion, nerveTxHash);
                                         throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
                                     }
                                     if (!withdrawalByzantineForBTC(pendingPO)) {
-                                        chain.getLogger().info("pierre test==={}", 19);
                                         TxSubsequentProcessPO po = chain.getPendingTxQueue().poll();
                                         chain.getPendingTxQueue().addLast(po);
                                         continue;
@@ -249,7 +253,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         break;
                     default:
                 }
-                chain.getLogger().info("pierre test===hash=={}=={}", nerveTxHash, 6);
                 if (chain.getCurrentIsDirector().get()) {
                     // Store successfully executed transactionshash, Executed items will no longer be executed (When the current node is in synchronous block mode,We also need to save thishash, Indicates that it has been executed)
                     ComponentCalledPO callPO = new ComponentCalledPO(
@@ -343,9 +346,9 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             Integer htgChainId = docking.getChainId();
             if (htgChainId > 200) {
                 boolean enoughAvailablePubs = docking.getBitCoinApi().checkEnoughAvailablePubs(docking.getCurrentMultySignAddress());
-                if (converterCoreApi.checkChangeP35(txHash)) {
-                    enoughAvailablePubs = true;
-                }
+                //if (converterCoreApi.checkChangeP35(txHash)) {
+                //    enoughAvailablePubs = true;
+                //}
                 if (!enoughAvailablePubs) {
                     // change multi-sign addr, transfer to new addr from current addr
                     // check if withdrawl tx has made UTXOs'tx
@@ -398,10 +401,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 if (null != txData.getOutAgents()) {
                     getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents(), pendingPO);
                 }
-                if (converterCoreApi.checkChangeP35(txHash)) {
-                    inAddress = converterCoreApi.inChangeP35();
-                    outAddress = converterCoreApi.outChangeP35();
-                }
+                //if (converterCoreApi.checkChangeP35(txHash)) {
+                //    inAddress = converterCoreApi.inChangeP35();
+                //    outAddress = converterCoreApi.outChangeP35();
+                //}
                 // call message signature
                 String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
                 String currentHaddress = docking.getCurrentSignAddress();
@@ -462,14 +465,15 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                                 }
                                 signatureDataBuilder.deleteCharAt(signatureDataBuilder.length() - 1);
                                 signed = signatureDataBuilder.toString();
-                            } else if (converterCoreApi.checkChangeP35(callParm.getTxHash())) {
-                                // In order to align the managers, take the signatures of all nodes
-                                StringBuilder signatureDataBuilder = new StringBuilder();
-                                for (Map<Integer, HeterogeneousSign> nodeSignMap : list) {
-                                    signatureDataBuilder.append(HexUtil.encode(nodeSignMap.get(docking.getChainId()).getSignature()));
-                                }
-                                signed = signatureDataBuilder.toString();
                             }
+                            //else if (converterCoreApi.checkChangeP35(callParm.getTxHash())) {
+                            //    // In order to align the managers, take the signatures of all nodes
+                            //    StringBuilder signatureDataBuilder = new StringBuilder();
+                            //    for (Map<Integer, HeterogeneousSign> nodeSignMap : list) {
+                            //        signatureDataBuilder.append(HexUtil.encode(nodeSignMap.get(docking.getChainId()).getSignature()));
+                            //    }
+                            //    signed = signatureDataBuilder.toString();
+                            //}
                             boolean vaildPass = docking.validateManagerChangesTxII(
                                     callParm.getTxHash(),
                                     callParm.getInAddress(),
@@ -630,13 +634,11 @@ public class CfmTxSubsequentProcessTask implements Runnable {
     }
 
     private boolean withdrawalByzantineForBTC(TxSubsequentProcessPO pendingPO) throws Exception {
-        chain.getLogger().info("pierre test==={}", 3);
         SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
         if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
             throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
         }
         if (!chain.getCurrentIsDirector().get()) {
-            chain.getLogger().info("pierre test==={}", 4);
             return true;
         }
         Transaction tx = pendingPO.getTx();
@@ -652,16 +654,14 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         WithdrawalUTXOTxData withdrawalUTXOTxData = docking.getBitCoinApi().takeWithdrawalUTXOs(nerveTxHash);
         // if not
         if (withdrawalUTXOTxData == null) {
-            chain.getLogger().info("pierre test==={}", 6);
             makeWithdrawalUTXOTx(pendingPO, htgChainId, docking.getCurrentMultySignAddress(), chain.getMapVirtualBank());
+            chain.getLogger().info("[{}] UTXO data waitting Byzantine, hash: {}", htgChainId, nerveTxHash);
             return false;
         } else if (withdrawalUTXOTxData.getFeeRate() > ConverterUtil.FEE_RATE_REBUILD) {
-            chain.getLogger().info("pierre test==={}", 7);
             // add Fee to rebuild WithdrawalUTXOTxData, refer to WithdrawalAdditionalFeeProcessor#commitV35
             rebuildWithdrawalUTXOTx(pendingPO, htgChainId);
             return false;
         } else {
-            chain.getLogger().info("pierre test==={}", 5);
             // if AA,BB or CC UTXOs'tx confirmed, take signature from docking
             // all node can make withdrawl'tx from UTXOs'tx
             // Determine if you have received the message, And signed it
@@ -675,7 +675,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 needSign = true;
             }
             if (needSign) {
-                chain.getLogger().info("pierre test==={}", 8);
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 HeterogeneousAssetInfo assetInfo = null;
                 CoinTo withdrawCoinTo = null;
@@ -695,7 +694,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 }
                 int heterogeneousChainId = assetInfo.getChainId();
                 BigInteger amount = withdrawCoinTo.getAmount();
-                chain.getLogger().info("pierre test==={}", 9);
                 // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
                 // BTC multi-signature address partition signature and collection
                 String signStrData = docking.getBitCoinApi().signWithdraw(nerveTxHash, toAddress, amount, assetInfo.getAssetId());
@@ -718,16 +716,13 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 }
                 compSignPO.getListMsg().add(currentMessage);
                 compSignPO.setCurrentSigned(true);
-                chain.getLogger().info("pierre test==={}", 15);
                 // Broadcast current node signature message
                 NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
                 chain.getLogger().info("[withdraw] Calling heterogeneous chain components to execute signatures, Send signed message. hash:{}", nerveTxHash);
             }
 
-            chain.getLogger().info("pierre test==={}", 16);
             boolean rs = false;
             if (compSignPO.getByzantinePass()) {
-                chain.getLogger().info("pierre test==={}", 17);
                 // collect more signatures
                 StringBuilder signatureDataBuilder = new StringBuilder();
                 for (ComponentSignMessage msg : compSignPO.getListMsg()) {
@@ -765,10 +760,9 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     }
 
                     String htgTxHash;
-                    if (pendingPO.getRetry() && docking instanceof HtgDocking) {
+                    if (pendingPO.getRetry()) {
                         // When the mechanism for resending withdrawals is executed, the withdrawal is triggered without checking the execution order, and the current node immediately executes it
-                        HtgDocking htgDocking = (HtgDocking) docking;
-                        htgTxHash = htgDocking.getBitCoinApi().createOrSignWithdrawTx(
+                        htgTxHash = docking.getBitCoinApi().createOrSignWithdrawTx(
                                 callParm.getTxHash(),
                                 callParm.getToAddress(),
                                 callParm.getValue(),
@@ -790,7 +784,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 }
                 rs = true;
             }
-            chain.getLogger().info("pierre test==={}", 18);
             // Store updated compSignPO
             componentSignStorageService.save(chain, compSignPO);
             return rs;

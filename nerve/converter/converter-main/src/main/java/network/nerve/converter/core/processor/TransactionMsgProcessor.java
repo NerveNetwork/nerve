@@ -202,7 +202,12 @@ public class TransactionMsgProcessor {
         } else {
             tx.setTransactionSignature(signature.serialize());
         }
-        LoggerUtil.LOG.info("Insufficient Byzantine signatures, hash:{}, Number of signatures required:{}, Current number of signatures:{}", tx.getHash().toHex(), byzantineCount, signCount);
+        List<P2PHKSignature> p2PHKSignatures = signature.getP2PHKSignatures();
+        StringBuilder sb = new StringBuilder();
+        for (P2PHKSignature s : p2PHKSignatures) {
+            sb.append(String.format("pppppub: %s, addr: %s, signData: %s", HexUtil.encode(s.getPublicKey()), AddressTool.getAddressString(s.getPublicKey(), chain.getChainId()), HexUtil.encode(s.getSignData().getSignBytes()))).append("\n");
+        }
+        LoggerUtil.LOG.info("Insufficient Byzantine signatures, hash:{}, Number of signatures required:{}, Current number of signatures:{}, detail: {}", tx.getHash().toHex(), byzantineCount, signCount, sb.toString());
         return false;
     }
 

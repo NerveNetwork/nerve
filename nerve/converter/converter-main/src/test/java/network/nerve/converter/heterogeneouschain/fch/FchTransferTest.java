@@ -99,7 +99,8 @@ public class FchTransferTest {
     String fromPriKey;
     String multisigAddress;
     //byte[] sessionKey = HexUtil.decode("17fd649617d838b514ba8338caf050c4753a51d1a471c11e1ee743329828dd8a");
-    byte[] sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
+    //byte[] sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
+    byte[] sessionKey = HexUtil.decode("fb0ceb389f17d6b54891d2d1fcedf992c91e68140afe8202a412a87b6c835392");
 
     @Before
     public void before() {
@@ -445,6 +446,14 @@ public class FchTransferTest {
         JsonTools.gsonPrint(apipClient.getResponseBody().getData());
     }
 
+    @Test
+    public void getBalanceTest() throws JsonProcessingException {
+        //String addr = "FKDtca1w9TgNKq7F24iWCL9fZKZU7ACZjV";
+        String addr = "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD";
+        ApipClient fidCid = FreeGetAPIs.getFidCid(urlHead, addr);
+        System.out.println(JSONUtils.obj2PrettyJson(fidCid));
+    }
+
     /**
      * Multiple signing transactions
      */
@@ -531,7 +540,7 @@ public class FchTransferTest {
         // 1059.99998000
         // 1059.99986000
         //    0.00001
-        sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
+        //sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
         ApipClient apipClient = BlockchainAPIs.blockByIdsPost(urlHead, new String[]{"000000000000024ae054ab1eaeb529d5f1fed6f86f084e4dc8d696c3f84335d3"}, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);
         System.out.println("blockDetailData:\n" + apipClient.getResponseBodyStr());
     }
@@ -562,11 +571,9 @@ public class FchTransferTest {
     @Test
     public void getTxInfoTest() {
         //BlockchainAPIs.cashByIdsPost()
-        String txHash = "5e6c1e6ac94d9bdfcc26cf196d682e4b6e14760686df9740049802c850a05551";
+        String txHash = "314363ec7b9fdfab95209fc43633cd33f0048bde4095c412a465d180f8ca0f67";
         ApipClient client = BlockchainAPIs.txByIdsPost(urlHead, new String[]{
-                txHash,
-                "5cda8e77bdbc65d90f18f5ce4d81d0966eaeef13a33ab79f664a27a48f9b06d6",
-                "74682f8e142f0b823faf41ddaf7afb1b9a4face199cce99e5cb2d75e3da0be04"
+                txHash
         }, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);
         System.out.println("tx info:\n" + client.getResponseBodyStr());
         List<TxInfo> txInfoList = ApipDataGetter.getTxInfoList(client.getResponseBody().getData());

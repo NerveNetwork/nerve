@@ -26,6 +26,7 @@ package network.nerve.converter.core.api;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.*;
 import io.nuls.core.constant.SyncStatusEnum;
+import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
@@ -48,6 +49,7 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.message.ComponentSignMessage;
 import network.nerve.converter.model.HeterogeneousSign;
@@ -238,6 +240,14 @@ public class ConverterCoreApi implements IConverterCoreApi {
             skipTransactions.add("7972319f32280ccb8baf199b2f92c9bf28365d16c8a6a61eba8e7ad1a61576ba");
             skipTransactions.add("e2d90a76bed32bbbdedc9957e189eb023b3f28d92cf4b574829d479fc69e5de3");
             skipTransactions.add("964ca5440bff2de68700a965321bab010cc74a19c6f7b07d8b1afe5133e5ad97");
+
+            skipTransactions.add("2bdc830371fda9aaa7cb9a981d9aced3ddb8032e77699c1a5a8efab1bc3516eb");
+            skipTransactions.add("274952a9ec9ded378b0f2a3c83567b3d717b619f3826cbd40af7d2e350b8904f");
+            skipTransactions.add("9b39f65a84e2d3ab712518e9fddbb030235ab310fbb60f61be0d3b0a35f0de64");
+            skipTransactions.add("93a5bba3ef96751ad4f2ac93c12b871e80d13b3ac8d4ba3a41aa8de02ef15bda");
+            skipTransactions.add("b2e20e2f69752f521554ccdc72926c000d862b8e09fa8c350fa1b522996a8688");
+            skipTransactions.add("75971d02a934e3b2b226009833aa561e294244ba757e751a828f2dd639354649");
+            skipTransactions.add("cdba5717f8ab0d9ea26d3624034523f83b1c33a89c8e374b95b6e86f81e000e2");
 
         }
         initSeedPackerOrder(nerveChain);
@@ -647,6 +657,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public boolean isProtocol37() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_37_0;
     }
+    @Override
+    public boolean isProtocol38() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_38_0;
+    }
 
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
@@ -689,6 +703,39 @@ public class ConverterCoreApi implements IConverterCoreApi {
         if (docking != null) {
             docking.getBitCoinApi().saveSplitGranularity(splitGranularity);
         }
+    }
+
+    @Override
+    public BigInteger getCrossOutTxFee(String txHash) throws NulsException {
+        Transaction nerveTx = this.getNerveTx(txHash);
+        if (nerveTx == null) {
+            throw new RuntimeException("error tx hash");
+        }
+        if (nerveTx.getType() != TxType.WITHDRAWAL) {
+            throw new RuntimeException("error tx type");
+        }
+        WithdrawalTxData txData = new WithdrawalTxData();
+        txData.parse(nerveTx.getTxData(), 0);
+
+        int htgChainId = txData.getHeterogeneousChainId();
+        if (htgChainId > 200) {
+            throw new RuntimeException("only support EVM & TRON");
+        }
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(htgChainId);
+
+        Coin feeCoin = null;
+        CoinData coinData = ConverterUtil.getInstance(nerveTx.getCoinData(), CoinData.class);
+        byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, nerveChain.getChainId());
+        for (CoinTo coinTo : coinData.getTo()) {
+            if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
+                // Subsidies for assembly and handling feescoinTo
+                feeCoin = coinTo;
+                break;
+            }
+        }
+        AssetName assetName = this.getHtgMainAssetName(feeCoin);
+        HeterogeneousAssetInfo assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, feeCoin.getAssetsChainId(), feeCoin.getAssetsId());
+        return docking.getCrossOutTxFee(assetName, assetInfo.getAssetId() > 1);
     }
 
     public void clearHtgMainAssetMap() {

@@ -5,6 +5,7 @@ import io.nuls.base.data.Transaction;
 import io.nuls.base.signture.SignatureUtil;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.crosschain.base.model.bo.ChainInfo;
 import io.nuls.crosschain.base.model.bo.txdata.RegisteredChainChangeData;
@@ -21,6 +22,7 @@ import io.nuls.crosschain.utils.CommonUtil;
 import io.nuls.crosschain.utils.TxUtil;
 import io.nuls.crosschain.utils.manager.ChainManager;
 
+import java.io.IOException;
 import java.util.*;
 
 @Component
@@ -63,6 +65,11 @@ public class RegisteredChainChangeServiceImpl implements RegisteredChainChangeSe
                     throw new NulsException(NulsCrossChainErrorCode.CTX_SIGN_BYZANTINE_FAIL);
                 }
             } catch (NulsException e) {
+                try {
+                    chain.getLogger().error(HexUtil.encode(verifierChangeTx.serialize()));
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
                 chain.getLogger().error(e);
                 errorCode = e.getErrorCode().getCode();
                 invalidTxList.add(verifierChangeTx);

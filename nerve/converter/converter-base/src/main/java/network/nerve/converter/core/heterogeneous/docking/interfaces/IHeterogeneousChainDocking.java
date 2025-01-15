@@ -230,7 +230,7 @@ public interface IHeterogeneousChainDocking {
      * Verify administrator change transactions
      */
     default boolean validateManagerChangesTxII(String txHash, String[] addAddresses,
-                                          String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
+                                          String[] removeAddresses, int orginTxCount, String signatureData) throws Exception {
         return false;
     }
 
@@ -240,7 +240,7 @@ public interface IHeterogeneousChainDocking {
      * @return Heterogeneous Chain Tradinghash
      */
     default String createOrSignManagerChangesTxII(String txHash, String[] addAddresses,
-                                          String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
+                                          String[] removeAddresses, int orginTxCount, String signatureData) throws Exception {
         return EMPTY_STRING;
     }
 
@@ -264,7 +264,7 @@ public interface IHeterogeneousChainDocking {
      * Signature administrator change
      */
     default String signManagerChangesII(String txHash, String[] addAddresses,
-                                          String[] removeAddresses, int orginTxCount) throws NulsException {
+                                          String[] removeAddresses, int orginTxCount) throws Exception {
         return EMPTY_STRING;
     }
 
@@ -278,7 +278,7 @@ public interface IHeterogeneousChainDocking {
     /**
      * Verify signature withdrawal
      */
-    default Boolean verifySignWithdrawII(String signAddress, String txHash, String toAddress, BigInteger value, Integer assetId, String signed) throws NulsException {
+    default Boolean verifySignWithdrawII(String signAddress, String txHash, String toAddress, BigInteger value, Integer assetId, String signed) throws Exception {
         return false;
     }
 
@@ -286,14 +286,14 @@ public interface IHeterogeneousChainDocking {
      * Verify signature administrator changes
      */
     default Boolean verifySignManagerChangesII(String signAddress, String txHash, String[] addAddresses,
-                                          String[] removeAddresses, int orginTxCount, String signed) throws NulsException {
+                                          String[] removeAddresses, int orginTxCount, String signed) throws Exception {
         return false;
     }
 
     /**
      * Verify signature contract upgrade authorization
      */
-    default Boolean verifySignUpgradeII(String signAddress, String txHash, String upgradeContract, String signed) throws NulsException {
+    default Boolean verifySignUpgradeII(String signAddress, String txHash, String upgradeContract, String signed) throws Exception {
         return false;
     }
 
@@ -365,4 +365,8 @@ public interface IHeterogeneousChainDocking {
 
     void closeChainPending();
     void closeChainConfirm();
+
+    default BigInteger getCrossOutTxFee(AssetName assetName, boolean isToken) {
+        return BigInteger.ZERO;
+    }
 }
