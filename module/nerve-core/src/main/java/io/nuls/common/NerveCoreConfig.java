@@ -124,6 +124,7 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
 
     private Long version1_6_0_height;
     private Long version1_38_0_height;
+    private Long version1_39_0_height;
     /*-------------------------[Block]-----------------------------*/
     /**
      * Fork chain monitoring thread execution interval
@@ -753,6 +754,14 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
 
     public void setVersion1_38_0_height(Long version1_38_0_height) {
         this.version1_38_0_height = version1_38_0_height;
+    }
+
+    public Long getVersion1_39_0_height() {
+        return version1_39_0_height;
+    }
+
+    public void setVersion1_39_0_height(Long version1_39_0_height) {
+        this.version1_39_0_height = version1_39_0_height;
     }
 
     @Override

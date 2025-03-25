@@ -383,7 +383,8 @@ public class BtcTransferTest {
         pubList.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260")));
         pubList.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("03e2029ddf8c0150d8a689465223cdca94a0c84cdb581e39ac13ca41d279c24ff5")));
         pubList.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02b42a0023aa38e088ffc0884d78ea638b9438362f15c610865dfbed9708347750")));
-        System.out.println(String.format("makeMultiAddr (%s of %s) for testnet: %s, segwit: %s", 2, pubList.size(), makeMultiAddr(pubList, 2, false), getNativeSegwitMultiSignAddress(2, pubList, false)));
+        System.out.println(String.format("makeMultiAddr (%s of %s) for testnet: %s", 2, pubList.size(), makeMultiAddr(pubList, 2, true)));
+        //System.out.println(String.format("makeMultiAddr (%s of %s) for testnet: %s, segwit: %s", 2, pubList.size(), makeMultiAddr(pubList, 2, true), getNativeSegwitMultiSignAddress(2, pubList, true)));
 
         //mainnet
         // 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b - NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
@@ -401,35 +402,38 @@ public class BtcTransferTest {
         // 023ad3fbc7d73473f2eca9c46237988682ebd690ab260077af70357efcf9afbe90 - NERVEepb6G71f2K3mPKrds8Be7KzdiCsM23Ewq
         // 035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803 - NERVEepb69vD3ZaZLgeUSwSonjndMTPmBGc8n1
         // 039eefe5915a253db131c5a825f03ca048e5aad257edfcd295fea3fec78609d980 - NERVEepb61YGfhhFwpTJVt9bj2scnSsVWZGXtt
-        List<org.bitcoinj.crypto.ECKey> pubList1 = new ArrayList<>();
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c9")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df4")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02a28a636088973c35ca0c28498b672cb8f61802164cf6904fc83463c4722c6292")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b7")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e3049")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("03c363f44196aa1a57ef7e14c19845acad721c9eefd837dacdf3fe3af1ba08ee21")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b9")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("023ad3fbc7d73473f2eca9c46237988682ebd690ab260077af70357efcf9afbe90")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803")));
-        pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("039eefe5915a253db131c5a825f03ca048e5aad257edfcd295fea3fec78609d980")));
-        System.out.println(String.format("makeMultiAddr (%s of %s) for mainnet: %s, segwit: %s", 10, pubList1.size(), makeMultiAddr(pubList1, 10, true), getNativeSegwitMultiSignAddress(10, pubList1, true)));
 
-        BitcoinNetwork network = TESTNET;
-        Wallet basic = Wallet.createBasic(network);
-        Address receiveAddress = basic.parseAddress("2NDu3vcpjyiMgvRjDpQfbyh9uF2McfDJ3NF");
-        System.out.println(receiveAddress);
+        //List<org.bitcoinj.crypto.ECKey> pubList1 = new ArrayList<>();
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c9")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df4")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02a28a636088973c35ca0c28498b672cb8f61802164cf6904fc83463c4722c6292")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b7")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e3049")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("03c363f44196aa1a57ef7e14c19845acad721c9eefd837dacdf3fe3af1ba08ee21")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b9")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("023ad3fbc7d73473f2eca9c46237988682ebd690ab260077af70357efcf9afbe90")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803")));
+        //pubList1.add(org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("039eefe5915a253db131c5a825f03ca048e5aad257edfcd295fea3fec78609d980")));
+        //System.out.println(String.format("makeMultiAddr (%s of %s) for mainnet: %s, segwit: %s", 10, pubList1.size(), makeMultiAddr(pubList1, 10, true), getNativeSegwitMultiSignAddress(10, pubList1, true)));
+        //
+        //BitcoinNetwork network = TESTNET;
+        //Wallet basic = Wallet.createBasic(network);
+        //Address receiveAddress = basic.parseAddress("2NDu3vcpjyiMgvRjDpQfbyh9uF2McfDJ3NF");
+        //System.out.println(receiveAddress);
     }
 
     @Test
     public void btcAddressTest() {
-        //pri: 912b6f010e024327865784dd3388d906d4813c236458183574eda28762373d49
         boolean mainnet = true;
-        String pubKey = "02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded";
+        //ECKey ecKey = ECKey.fromPrivate(HexUtil.decode("xxx"));
+        //String pubKey = ecKey.getPublicKeyAsHex();
+        String pubKey = "03443bd1192339f6d2f5078071718544395cfa63db17a0e9f864d6dd6673309f99";
+        System.out.println(String.format("pub: %s", pubKey));
         System.out.println("Legacy address: " + getBtcLegacyAddress(pubKey, mainnet));
         System.out.println("Sigwet compatible address: " + genSegWitCompatibleAddress(pubKey, mainnet));
         System.out.println("Sigwet native address: " + getNativeSegwitAddressByPubkey(pubKey, mainnet));
@@ -439,7 +443,7 @@ public class BtcTransferTest {
         System.out.println("Sigwet compatible address: " + genSegWitCompatibleAddress(pubKey, !mainnet));
         System.out.println("Sigwet native address: " + getNativeSegwitAddressByPubkey(pubKey, !mainnet));
         System.out.println("Taproot address: " + genBtcTaprootAddressByPub(pubKey, !mainnet));
-    }
+    }// 14Wo6L9A62gdkBqEKw2A4PxC467jvjJAP2
 
     @Test
     public void feePaymenyAddrTest() {
@@ -451,8 +455,8 @@ public class BtcTransferTest {
     @Test
     public void btcPriTest() throws Exception {
         //0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d:::KwdMAjGmerYanjeui5SHS7JkmpZvVipYvB2LJGU1ZxJwYvP98617
-        //System.out.println(calcEvmPriByBtcPri("KwdMAjGmerYanjeui5SHS7JkmpZvVipYvB2LJGU1ZxJwYvP98617", true));
-        System.out.println(calcBtcPriByEvmPri("0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d", false));
+        System.out.println(calcEvmPriByBtcPri("xxx", true));
+        //System.out.println(calcBtcPriByEvmPri("0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d", false));
     }
 
     @Test

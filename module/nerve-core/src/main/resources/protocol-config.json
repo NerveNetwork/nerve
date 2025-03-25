@@ -181,6 +181,14 @@
         "verifySignature": true,
         "verifyFee": true,
         "handler": "AccountUnlockProcessorV1"
+      },
+      {
+        "type": "88",
+        "systemTx": false,
+        "unlockTx": true,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "UnlockTransferProcessorV1"
       }
     ],
     "validMsgs": [

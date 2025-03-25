@@ -108,7 +108,7 @@ public class Base {
             htgWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://exchainrpc.okex.org";
-        //String mainEthRpcAddress = "https://okchain.mytokenpocket.vip";
+        //String mainEthRpcAddress = "https://oktc-mainnet.public.blastapi.io";
         //final OkHttpClient.Builder builder =
         //        new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
         //OkHttpClient okHttpClient = builder.build();

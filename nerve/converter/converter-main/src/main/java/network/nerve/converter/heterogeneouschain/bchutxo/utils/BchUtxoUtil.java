@@ -67,6 +67,23 @@ public class BchUtxoUtil {
         return CashAddressFactory.create().getFromBase58(mainnet ? MainNetParamsForAddr.get() : TestNet4ParamsForAddr.get(), btcLegacyAddress).toString();
     }
 
+    public static void main(String[] args) {
+        String hex = "00483045022100f967b44614cc8a464ba1ac1e2ec058bc1f4ea63a640b5fe00f3ab5276684edea02207d15fd732101ab8dd1178599bcfffe7007c213493641d8ee5924fb0d857f94dd414730440220517ae0decc5424cdcd2f1e56aa420af8b548533b9933028283a31ecb70ba5dfc022023d18e3c5ab32c8df6c803e1e93e91b65e487d33ded130ad7d4dd46f5dcc4bf3414c6302b2ad2b3d34a375bc46a36095c8c16ce9142da988911bdabdf7314ad0b18a116f02dcbc5523285dd50ffc8735d45c43807e88a68b860ceeb7357f0501d10e39469f032321f8ed4e0fa66a3732d147a61713732221fc4d0c9829f94604dd8082d210ff";
+        Script script = Script.parse(HexUtil.decode(hex));
+        List<ScriptChunk> chunks = script.chunks();
+        ScriptChunk scriptChunk = chunks.get(chunks.size() - 1);
+        byte[] stBytes = scriptChunk.data;
+        if (stBytes.length < 105
+                || stBytes[0] < OP_1 + 1
+                || stBytes[stBytes.length - 2] < OP_1 + 2
+                || (0xff & stBytes[stBytes.length - 1]) != OP_CHECKMULTISIG
+        ) {
+            System.out.println("error parse");
+            return;
+        }
+        Script redeemScript = Script.parse(scriptChunk.data);
+        System.out.println();
+    }
     public static String takeMultiSignAddressWithP2SH(RawInput input, boolean mainnet) {
         SignatureScript scriptSig = input.getScriptSig();
         if (scriptSig == null || StringUtils.isBlank(scriptSig.getHex())) {

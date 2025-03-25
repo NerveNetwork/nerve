@@ -86,7 +86,7 @@ public class MessageUtil {
             CtxStatusPO ctxStatusPO = ctxStatusService.get(hash, handleChainId);
             //If the transaction has been confirmed at this node, there is no need for further signature processing
             if (ctxStatusPO.getStatus() != TxStatusEnum.UNCONFIRM.getStatus() || messageBody.getSignature() == null) {
-                chain.getLogger().info("Cross chain transactions have been processed at this node,Hash:{}\n\n", hashHex);
+//                chain.getLogger().info("Cross chain transactions have been processed at this node,Hash:{}\n\n", hashHex);
                 return;
             }
             String signHex = HexUtil.encode(messageBody.getSignature());
@@ -133,7 +133,7 @@ public class MessageUtil {
             GetOtherCtxMessage responseMessage = new GetOtherCtxMessage();
             responseMessage.setRequestHash(cacheHash);
             NetWorkCall.sendToNode(chainId, responseMessage, nodeId, CommandConstant.GET_OTHER_CTX_MESSAGE);
-             chain.getLogger().info("Get transaction timeout, send to cross chain nodes {} Retrieve complete cross chain transactions again,Hash:{}", nodeId, hashHex);
+            chain.getLogger().info("Get transaction timeout, send to cross chain nodes {} Retrieve complete cross chain transactions again,Hash:{}", nodeId, hashHex);
         } else {
             chain.getOtherHashNodeIdMap().putIfAbsent(cacheHash, new LinkedHashSet<>());
             chain.getOtherHashNodeIdMap().get(cacheHash).add(new NodeType(nodeId, 1));
@@ -181,7 +181,7 @@ public class MessageUtil {
         signByzantineInChain(chain, ctx, signature, packAddressList, realHash);
         NetWorkCall.broadcast(chainId, messageBody, excludeNodes, CommandConstant.BROAD_CTX_SIGN_MESSAGE, false);
         chain.getLogger().info("Broadcast newly received cross chain transaction signatures to other nodes linked to them,Hash:{},autograph:{}\n\n", nativeHex, signHex);
-        chain.getLogger().info("\nxxooxx: {}\n", HexUtil.encode(ctx.serialize()));
+//        chain.getLogger().info("\nxxooxx: {}\n", HexUtil.encode(ctx.serialize()));
     }
 
     /**
@@ -223,7 +223,7 @@ public class MessageUtil {
                 ctxStatusPO.setStatus(TxStatusEnum.CONFIRMED.getStatus());
                 ctxStatusService.save(realHash, ctxStatusPO, chain.getChainId());
                 saveCtxSendHeight(chain, sendHeight, ctx);
-                chain.getLogger().info("Initial verifier transaction signature Byzantine verification passed,Save the height change of the verifier and wait for broadcast,Hash{},Broadcasting height{}", ctx.getHash().toHex(), sendHeight);
+                chain.getLogger().info("Initial verifier transaction signature Byzantine verification passed,Save the height change of the verifier and wait for broadcast,Hash: {}, signCount: {} - {}", ctx.getHash().toHex(), signCount, byzantineCount);
                 return true;
             } else {
                 signature.getP2PHKSignatures().addAll(misMatchSignList);
@@ -302,7 +302,7 @@ public class MessageUtil {
                 ctxStatusPO.setStatus(TxStatusEnum.CONFIRMED.getStatus());
                 ctxStatusService.save(realHash, ctxStatusPO, chain.getChainId());
                 saveCtxSendHeight(chain, broadHeight, ctx);
-                chain.getLogger().info("Cross chain transaction completed by Byzantium, placed in the waiting queue for packaging, waiting for broadcast,Hash:{},sendHeight:{},txType:{}", ctx.getHash().toHex(), broadHeight, ctx.getType());
+                chain.getLogger().info("Cross chain transaction completed by Byzantium, placed in the waiting queue for packaging, waiting for broadcast,Hash:{},signCount:{} - {}", ctx.getHash().toHex(), signCount, byzantineCount);
                 return true;
             } else {
                 signature.getP2PHKSignatures().addAll(misMatchSignList);

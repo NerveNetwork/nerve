@@ -242,7 +242,7 @@ public class TxUtil {
             CtxStatusPO ctxStatusPO = new CtxStatusPO(ctx, TxStatusEnum.UNCONFIRM.getStatus());
             //If this node is a consensus node, it needs to be signed and Byzantine, otherwise only the locally collected signature information needs to be broadcasted
             if (!StringUtils.isBlank(address) && chain.getVerifierList().contains(address)) {
-//                chain.getLogger().debug("-==-:: {}", ctx.getHash().toHex());
+                chain.getLogger().info("-==1-:: {}--{}", address, ctx.getHash().toHex());
                 BroadCtxSignMessage message = new BroadCtxSignMessage();
                 message.setLocalHash(hash);
                 TransactionSignature transactionSignature = new TransactionSignature();
@@ -321,7 +321,7 @@ public class TxUtil {
             sign = !cancelList.contains(address);
         }
         if (sign) {
-            chain.getLogger().info("This node is a consensus node that signs cross chain transactions,Hash:{}", hashHex);
+            chain.getLogger().info("-==2-:: {}--{}", address, hashHex);
             P2PHKSignature p2PHKSignature;
             try {
 
@@ -390,6 +390,7 @@ public class TxUtil {
         if (!sign) {
             return;
         }
+        chain.getLogger().info("-==3-:: {}--{}", address, ctx.getHash().toHex());
         BroadCtxSignMessage message = new BroadCtxSignMessage();
         message.setLocalHash(ctx.getHash());
         Transaction realTx = ctx;

@@ -396,5 +396,6 @@ public class TxType {
     public static final int WITHDRAWAL_UTXO = 85;
     public static final int WITHDRAWAL_UTXO_FEE_PAYMENT = 86;
     public static final int GENERAL_BUS = 87;
+    public static final int UNLOCK_TRANSFER = 88;
 
 }

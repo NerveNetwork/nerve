@@ -336,7 +336,7 @@ public class BchUtxoTransferTest {
         addr = "bitcoincash:qp5qf769pgn3qm3qz9csfhfyjcfvd936es320ef2z3";
         valid = CashAddress.isValidCashAddr(params, addr);
         System.out.println(valid);
-        addr = "qp5qf769pgn3qm3qz9csfhfyjcfvd936es320ef2z3";
+        addr = "qpat0x74cqp4fe757dr8fxkh6tql3whqxyxrmshfn6";
         valid = CashAddress.isValidCashAddr(params, addr);
         System.out.println(valid);
     }

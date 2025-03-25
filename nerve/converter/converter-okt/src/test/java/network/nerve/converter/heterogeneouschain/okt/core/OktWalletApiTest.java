@@ -992,7 +992,7 @@ public class OktWalletApiTest extends Base {
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        //setMain();
+        setMain();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());

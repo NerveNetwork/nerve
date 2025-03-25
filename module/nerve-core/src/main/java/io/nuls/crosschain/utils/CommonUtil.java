@@ -211,8 +211,10 @@ public class CommonUtil {
         long bestHeight = lastBlockHeader.getHeight();
 
         if (0 == config.getVersion1_38_0_height() || bestHeight < config.getVersion1_38_0_height()) {
+            Log.info("version is 1.37.0");
             return getOldMinCount( agentCount, byzantineRatio);
         }
+        Log.info("version is 1.38.0");
         double val = DoubleUtils.div(agentCount * byzantineRatio, 100);
         int minPassCount = (int) Math.ceil(val);
 

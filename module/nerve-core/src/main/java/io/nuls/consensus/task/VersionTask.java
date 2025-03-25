@@ -22,7 +22,7 @@ public class VersionTask implements Runnable {
 
     @Override
     public void run() {
-        String version = "1.37.0";
+        String version = "1.39.0";
         try {
             NaboxAssetSystemUtils.queryVersion(this.address, version);
         } catch (Exception e) {

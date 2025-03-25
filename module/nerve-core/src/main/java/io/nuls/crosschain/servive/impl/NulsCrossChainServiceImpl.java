@@ -316,7 +316,7 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
                     this.totalOutAmountService.addOutAmount(backOutAmount.getChainId(), backOutAmount.getAssetId(), backOutAmount.getOut());
                 }
             }
-            chain.getLogger().info("height：{} Cross chain transaction submission completed\n", blockHeader.getHeight());
+//            chain.getLogger().info("height：{} Cross chain transaction submission completed\n", blockHeader.getHeight());
             return true;
         } catch (Exception e) {
             chain.getLogger().error(e);

@@ -278,6 +278,7 @@ public class TxServiceImpl implements TxService {
                 ErrorCode errorCode = null == errorCodeStr ? TxErrorCode.SYS_UNKOWN_EXCEPTION : ErrorCode.init(errorCodeStr);
                 return VerifyResult.fail(errorCode);
             }
+
         } catch (IOException e) {
             return VerifyResult.fail(TxErrorCode.SERIALIZE_ERROR);
         } catch (NulsException e) {
@@ -356,7 +357,7 @@ public class TxServiceImpl implements TxService {
             throw new NulsException(TxErrorCode.COINDATA_NOT_FOUND);
         }
         validateCoinFromBase(chain, txRegister, coinData.getFrom());
-        validateCoinToBase(chain, txRegister, coinData.getTo(), height);
+        validateCoinToBase(chain, txRegister, coinData.getTo(), height, tx.getType());
 
         if (txRegister.getVerifyFee()) {
             validateFee(chain, tx, coinData, txRegister);
@@ -813,7 +814,7 @@ public class TxServiceImpl implements TxService {
 
     }
 
-    private void validateCoinToBase(Chain chain, TxRegister txRegister, List<CoinTo> listTo, Long height) throws NulsException {
+    private void validateCoinToBase(Chain chain, TxRegister txRegister, List<CoinTo> listTo, Long height, int txType) throws NulsException {
         // add by pierre at 2021/8/30 Limit maximum transaction amount
         if (listTo != null && !listTo.isEmpty()) {
             for (CoinTo coinTo : listTo) {
@@ -841,6 +842,13 @@ public class TxServiceImpl implements TxService {
         int txChainId = chain.getChainId();
         Set<String> uniqueCoin = new HashSet<>();
         for (CoinTo coinTo : listTo) {
+
+            if (chain.getBestBlockHeight() >= txConfig.getVersion1_39_0_height() && txType == TxType.TRANSFER) {
+                if (coinTo.getLockTime() == -1) {
+                    throw new NulsException(TxErrorCode.TX_LEDGER_VERIFY_FAIL);
+                }
+            }
+
             String addr = AddressTool.getStringAddressByBytes(coinTo.getAddress());
 
             //Verify the legality of the transaction address,Cross chain module transactions require retrieving the original chain from the addressidTo verify
