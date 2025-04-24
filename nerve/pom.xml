@@ -12,15 +12,13 @@
     <artifactId>nerve</artifactId>
     <packaging>pom</packaging>
 
-    <properties>
-        <java.version>11</java.version>
-    </properties>
     <modules>
         <module>quotation</module>
         <module>converter</module>
         <module>dex</module>
 <!--        <module>nerve-consensus-pocbft</module>-->
         <module>swap</module>
+        <module>hetool</module>
     </modules>
 
     <dependencies>

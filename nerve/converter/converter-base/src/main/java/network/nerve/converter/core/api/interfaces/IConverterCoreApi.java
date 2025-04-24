@@ -185,6 +185,7 @@ public interface IConverterCoreApi {
     boolean isProtocol36();
     boolean isProtocol37();
     boolean isProtocol38();
+    boolean isProtocol40();
 
     /**
      * Add task
@@ -250,6 +251,7 @@ public interface IConverterCoreApi {
     String getInitialFchPubKeyList();
 
     String getInitialBchPubKeyList();
+    String getInitialTbcPubKeyList();
 
     HeterogeneousAssetInfo getHeterogeneousAssetByNerveAsset(int htgChainId, int nerveAssetChainId, int nerveAssetId);
 
@@ -277,4 +279,6 @@ public interface IConverterCoreApi {
     void updateSplitGranularity(int htgChainId, long splitGranularity) throws Exception;
 
     BigInteger getCrossOutTxFee(String txHash) throws NulsException;
+
+    String signTbcWithdrawByMachine(long chainIdOnHtgNetwork, int htgChainId, boolean isContractAsset, String signerPubkey, String multiAddr, String txraw, List<BigInteger> fromAmounts) throws NulsException;
 }

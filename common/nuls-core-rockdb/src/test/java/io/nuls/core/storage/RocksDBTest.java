@@ -24,10 +24,12 @@
  */
 package io.nuls.core.storage;
 
+import io.nuls.core.rockdb.manager.RocksDBManager;
 import io.nuls.core.rockdb.model.Entry;
 import io.nuls.core.rockdb.service.BatchOperation;
 import io.nuls.core.rockdb.service.RocksDBService;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -46,7 +48,6 @@ import static io.nuls.core.rockdb.service.RocksDBService.entryList;
 import static io.nuls.core.rockdb.service.RocksDBService.get;
 import static io.nuls.core.rockdb.service.RocksDBService.keyList;
 import static io.nuls.core.rockdb.service.RocksDBService.listTable;
-import static io.nuls.core.rockdb.service.RocksDBService.multiGet;
 import static io.nuls.core.rockdb.service.RocksDBService.multiGetValueList;
 import static io.nuls.core.rockdb.service.RocksDBService.put;
 import static io.nuls.core.rockdb.service.RocksDBService.valueList;
@@ -60,17 +61,17 @@ public class RocksDBTest {
     private static String table;
     private static String key;
 
-    @Test
+    @Before
     public void test() throws Exception {
         table = "test-table";
         key = "test-key";
         initTest();
-//        createTableTest();
+        //createTableTest();
         //existTableTest();
         //destroyTableTest();
         //listTableTest();
-        putTest();
-        getTest();
+        //batchTest();
+        //getTest();
         //deleteTest();
         //multiGetTest();
         //multiGetValueListTest();
@@ -84,8 +85,33 @@ public class RocksDBTest {
 
     @Ignore
     @Test
+    public void batchTest() throws Exception {
+        String value = "testvalue";
+        try {
+            put(table, "1".getBytes(UTF_8), (value + "1").getBytes(UTF_8));
+            put(table, "2".getBytes(UTF_8), (value + "2").getBytes(UTF_8));
+            put(table, "3".getBytes(UTF_8), (value + "3").getBytes(UTF_8));
+            put(table, "4".getBytes(UTF_8), (value + "4").getBytes(UTF_8));
+            put(table, "5".getBytes(UTF_8), (value + "5").getBytes(UTF_8));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        List<byte[]> keys = new ArrayList<>();
+        keys.add("1".getBytes(UTF_8));
+        keys.add("2".getBytes(UTF_8));
+        keys.add("6".getBytes(UTF_8));
+        keys.add("4".getBytes(UTF_8));
+        keys.add("5".getBytes(UTF_8));
+        List<byte[]> list = RocksDBManager.getTable(table).multiGetAsList(keys);
+        System.out.println(new String(list.get(1), "utf8"));
+        System.out.println(list.get(2));
+        System.out.println(list.size());
+    }
+
+    @Ignore
+    @Test
     public void initTest() throws Exception {
-        String dataPath = "E:\\RocksDBTest";
+        String dataPath = "/Users/pierreluo/IdeaProjects/nerve-network/common/nuls-core-rockdb/src/test/resources/dbpath";
         long start = System.currentTimeMillis();
         RocksDBService.init(dataPath);
         long end = System.currentTimeMillis();
@@ -224,11 +250,11 @@ public class RocksDBTest {
         keyBytes.add("key2".getBytes());
         keyBytes.add("key3".getBytes());
         //keyBytes sizeCannot be greater than65536Otherwise, the query result will be empty
-        Map<byte[], byte[]> map = multiGet(table, keyBytes);
-        for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
-            result.put(new String(entry.getKey()), new String(entry.getValue()));
-            System.out.println(new String(entry.getKey()) + "==" + new String(entry.getValue()));
-        }
+        //Map<byte[], byte[]> map = multiGet(table, keyBytes);
+        //for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+        //    result.put(new String(entry.getKey()), new String(entry.getValue()));
+        //    System.out.println(new String(entry.getKey()) + "==" + new String(entry.getValue()));
+        //}
     }
 
     @Ignore

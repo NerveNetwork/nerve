@@ -256,7 +256,11 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 ConfirmedChangeVirtualBankTxData txData = ConverterUtil.getInstance(confirmedTx.getTxData(), ConfirmedChangeVirtualBankTxData.class);
                 List<HeterogeneousConfirmedVirtualBank> listConfirmed = txData.getListConfirmed();
                 for (HeterogeneousConfirmedVirtualBank virtualBank : listConfirmed) {
-                    heterogeneousDockingManager.getHeterogeneousDocking(virtualBank.getHeterogeneousChainId()).txConfirmedCompleted(virtualBank.getHeterogeneousTxHash(), nerveChain.getLatestBasicBlock().getHeight(), nerveTxHash, remark);
+                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(virtualBank.getHeterogeneousChainId());
+                    if (docking == null) {
+                        continue;
+                    }
+                    docking.txConfirmedCompleted(virtualBank.getHeterogeneousTxHash(), nerveChain.getLatestBasicBlock().getHeight(), nerveTxHash, remark);
                 }
                 // Cleaning Counters
                 countHash.remove(nerveTxHash);

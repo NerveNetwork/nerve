@@ -248,6 +248,13 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "PLS-USDT",
           "desc": "PLS relative USDT price"
+        },
+        {
+          "key": "TBC_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "TBC-USDT",
+          "desc": "TBC relative USDT price"
         }
       ]
     }

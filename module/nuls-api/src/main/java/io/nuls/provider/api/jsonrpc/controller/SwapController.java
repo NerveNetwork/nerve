@@ -138,6 +138,27 @@ public class SwapController {
         Result<Map<String, Object>> result = swapTools.getSwapPairInfoByPairAddress(chainId, pairAddress);
         return ResultUtil.getJsonRpcResult(result);
     }
+    @RpcMethod("getSwapPairInfosByPairAddress")
+    public RpcResult getSwapPairInfosByPairAddress(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        Object pairAddress;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            pairAddress = params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[pairAddress] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Result<Map<String, Object>> result = swapTools.getSwapPairInfosByPairAddress(chainId, (List<String>)pairAddress);
+        return ResultUtil.getJsonRpcResult(result);
+    }
 
     @RpcMethod("getStableSwapPairInfo")
     @ApiOperation(description = "queryStable-SwapTransaction pair information", order = 703)
@@ -167,6 +188,28 @@ public class SwapController {
             return RpcResult.paramError("[pairAddress] is incorrect");
         }
         Result<Map<String, Object>> result = swapTools.getStableSwapPairInfo(chainId, pairAddress);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getStableSwapPairInfos")
+    public RpcResult getStableSwapPairInfos(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        Object pairAddress;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            pairAddress = params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[pairAddress] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Result<Map<String, Object>> result = swapTools.getStableSwapPairInfos(chainId, (List<String>) pairAddress);
         return ResultUtil.getJsonRpcResult(result);
     }
 

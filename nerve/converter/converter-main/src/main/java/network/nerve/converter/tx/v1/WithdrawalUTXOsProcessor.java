@@ -97,6 +97,10 @@ public class WithdrawalUTXOsProcessor implements TransactionProcessor {
             for (Transaction tx : txs) {
                 WithdrawalUTXOTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalUTXOTxData.class);
                 String nerveTxHash = txData.getNerveTxHash();
+                // deal dirty data on testnet
+                /*if ("2f7253ca19967afb90fdd9644e302241688e24117deba03dbba0fcec5b46eee0".equals(nerveTxHash)) {
+                    continue;
+                }*/
                 if (!setDuplicate.add(nerveTxHash)) {
                     // Repeated transactions within the block
                     failsList.add(tx);

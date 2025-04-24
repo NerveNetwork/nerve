@@ -69,6 +69,17 @@ public class SwapTools implements CallRpc {
         }
     }
 
+    public Result<Map<String, Object>> getSwapPairInfosByPairAddress(int chainId, List<String> pairAddress) {
+        Map<String, Object> params = new HashMap<>(8);
+        params.put("chainId", chainId);
+        params.put("pairAddress", pairAddress);
+        try {
+            return callRpc(ModuleE.SW.abbr, "sw_swap_pair_infos_by_address", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
     /**
      * queryStable-SwapTransaction pair information
      */
@@ -78,6 +89,16 @@ public class SwapTools implements CallRpc {
         params.put("pairAddress", pairAddress);
         try {
             return callRpc(ModuleE.SW.abbr, "sw_stable_swap_pair_info", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+    public Result<Map<String, Object>> getStableSwapPairInfos(int chainId, List<String> pairAddress) {
+        Map<String, Object> params = new HashMap<>(8);
+        params.put("chainId", chainId);
+        params.put("pairAddress", pairAddress);
+        try {
+            return callRpc(ModuleE.SW.abbr, "sw_stable_swap_pair_infos", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
         } catch (NulsRuntimeException e) {
             return Result.fail(e.getCode(), e.getMessage());
         }

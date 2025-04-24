@@ -87,5 +87,8 @@ public interface IDepositTxSubmitter {
     Result validateDepositTx(String hTxHash);
 
     String depositTxSubmitOfBtcSys(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
-                                   BigInteger fee, String feeTo, String extend) throws Exception;
+                                   Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, BigInteger fee, String feeTo, String extend) throws Exception;
+
+    String depositIITxSubmitOfBtcSys(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
+                             Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, BigInteger mainAssetValue, BigInteger fee, String feeTo, String extend) throws Exception;
 }

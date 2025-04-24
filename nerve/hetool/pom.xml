@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>network.nerve</groupId>
+        <artifactId>nerve</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>network.nerve</groupId>
+    <artifactId>hetool</artifactId>
+
+    <properties>
+        <nuls.v2.version>1.0.0-SNAPSHOT</nuls.v2.version>
+    </properties>
+    <repositories>
+        <repository>
+            <id>nuls-release</id>
+            <url>https://nexus.nuls.io/repository/release/</url>
+        </repository>
+        <repository>
+            <id>nuls-snapshot</id>
+            <url>https://nexus.nuls.io/repository/snapshot/</url>
+        </repository>
+    </repositories>
+    <dependencies>
+
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>nuls-base-protocol-update</artifactId>
+            <version>${nuls.v2.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+            <version>24.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>js</artifactId>
+            <version>24.2.0</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>wasm</artifactId>
+            <version>24.2.0</version>
+            <type>pom</type>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.6</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.js</include>
+                    <include>*.json</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+</project>

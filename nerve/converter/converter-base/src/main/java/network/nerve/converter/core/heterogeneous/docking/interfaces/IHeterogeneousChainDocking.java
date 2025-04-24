@@ -91,6 +91,9 @@ public interface IHeterogeneousChainDocking {
      */
     boolean validateAddress(String address);
 
+    default String genMultiSignAddress(int threshold, List<byte[]> pubECKeys, boolean mainnet) {
+        return EMPTY_STRING;
+    }
     /**
      * Query address balance
      *

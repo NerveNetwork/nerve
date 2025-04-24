@@ -27,6 +27,7 @@ package network.nerve.converter.core.api.interfaces;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.btc.txdata.*;
 import network.nerve.converter.enums.AssetName;
+import network.nerve.converter.model.bo.UTXONeed;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -40,6 +41,7 @@ import java.util.Map;
 public interface IBitCoinApi {
 
     List<UTXOData> getUTXOs(String address);
+    UTXONeed getNeedUTXO(String address, BigInteger value, Integer assetId) throws Exception;
 
     long getFeeRate();
 
@@ -52,6 +54,9 @@ public interface IBitCoinApi {
     String createOrSignWithdrawTx(String txHash, String toAddress, BigInteger value, Integer assetId, String signed, boolean checkOrder) throws Exception;
 
     List<String> getMultiSignAddressPubs(String address);
+
+    int getCurrentMultiSignAddressPubsSize();
+    int getByzantineCount(int virtualBankTotal);
 
     // a check function to see whether the available public key of the current bitSys'chain is greater than total * (2/3) + 1
     // Used to determine whether cfmTask needs to send a withdrawal UTXO transaction, used to generate a new multi-signature address, and transfer assets from the current multi-signature address to the new multi-signature address.

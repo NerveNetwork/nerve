@@ -104,7 +104,7 @@ public class FchDocking extends BitCoinLibDocking {
     }
 
     @Override
-    protected String _genMultiSignAddress(int threshold, List<byte[]> pubs, boolean mainnet) {
+    public String genMultiSignAddress(int threshold, List<byte[]> pubs, boolean mainnet) {
         return FchUtil.genMultiP2sh(pubs, threshold, true).getFid();
     }
 

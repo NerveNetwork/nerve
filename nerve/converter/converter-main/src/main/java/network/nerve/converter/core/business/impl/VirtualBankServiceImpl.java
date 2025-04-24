@@ -201,15 +201,38 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
             if (director.getSeedNode()) {
                 heterogeneousSize = director.getHeterogeneousAddrMap().size();
-                if (chain.getChainId() == 5 && director.getHeterogeneousAddrMap().containsKey(101)) {
-                    // add by pierre at 2023/2/6 Test network deleted101allocation
-                    heterogeneousSize--;
+                if (chain.getChainId() == 5) {
+                    // add by pierre at 2023/2/6 Test network deleted 101 allocation
+                    if (director.getHeterogeneousAddrMap().containsKey(101)) {
+                        heterogeneousSize--;
+                    }
+                    if (director.getHeterogeneousAddrMap().containsKey(137)) {
+                        heterogeneousSize--;
+                    }
+                    if (director.getHeterogeneousAddrMap().containsKey(142)) {
+                        heterogeneousSize--;
+                    }
                 }
+                /*try {
+                    chain.getLogger().info("heterogeneousSize: {}", JSONUtils.obj2json(director.getHeterogeneousAddrMap()));
+                } catch (Exception e) {
+                    chain.getLogger().error(e);
+                }*/
                 break;
             }
         }
         int hSize = heterogeneousDockingManager.getAllHeterogeneousDocking().size();
-        chain.getLogger().debug("heterogeneousSize: {}, hSize: {}, bankNumber: {}", heterogeneousSize, hSize, bankNumber);
+        /*try {
+            Collection<IHeterogeneousChainDocking> dockings = heterogeneousDockingManager.getAllHeterogeneousDocking();
+            StringBuilder sb = new StringBuilder();
+            for (IHeterogeneousChainDocking docking : dockings) {
+                sb.append(docking.getChainId()).append(",");
+            }
+            chain.getLogger().info("hSize: {}", sb.toString());
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+        }*/
+        chain.getLogger().info("heterogeneousSize: {}, hSize: {}, bankNumber: {}", heterogeneousSize, hSize, bankNumber);
         /**
          * Determine the need for initialization
          */

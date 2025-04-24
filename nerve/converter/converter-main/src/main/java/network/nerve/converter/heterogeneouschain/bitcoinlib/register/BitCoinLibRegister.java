@@ -24,6 +24,8 @@
 package network.nerve.converter.heterogeneouschain.bitcoinlib.register;
 
 import com.neemre.btcdcli4j.core.client.BtcdClient;
+import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
@@ -45,9 +47,11 @@ import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
 import network.nerve.converter.heterogeneouschain.lib.storage.*;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
+import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -70,11 +74,31 @@ public abstract class BitCoinLibRegister extends HtgRegister {
     }
 
     @Override
-    public HeterogeneousChainInfo getChainInfo() {
+    public HeterogeneousChainInfo getChainInfo() throws Exception {
         HeterogeneousChainInfo info = new HeterogeneousChainInfo();
         info.setChainId(getHtgContext().getConfig().getChainId());
         info.setChainName(getHtgContext().getConfig().getSymbol());
         info.setMultySignAddress(getHtgContext().getConfig().getMultySignAddress());
+        String multiSigAddress = info.getMultySignAddress();
+        boolean hasPubs = htgMultiSignAddressHistoryStorageService.hasMultiSignAddressPubs(multiSigAddress);
+        if (!hasPubs) {
+            String initialBtcPubKeyList = this.getInitialMultiSignPubKeyList(getHtgContext().getConverterCoreApi());
+            String[] pubs = initialBtcPubKeyList.split(",");
+            List<byte[]> pubList = new ArrayList<>();
+            for (String pub : pubs) {
+                pubList.add(HexUtil.decode(pub));
+            }
+            BitCoinLibDocking docking = (BitCoinLibDocking) getHtgContext().DOCKING();
+            String genMultiSignAddress = docking.genMultiSignAddress(getHtgContext().getByzantineCount(pubs.length), pubList, getHtgContext().getConverterCoreApi().isNerveMainnet());
+            if (!multiSigAddress.equals(genMultiSignAddress)) {
+                throw new RuntimeException(String.format("[%s] The public key list for the multi-signature address in the file is wrong, multiSigAddress in settings: %s, genMultiSignAddress: %s",
+                        docking.getChainId(),
+                        multiSigAddress,
+                        genMultiSignAddress
+                ));
+            }
+            htgMultiSignAddressHistoryStorageService.saveMultiSignAddressPubs(multiSigAddress, pubs);
+        }
         return info;
     }
 
@@ -88,16 +112,30 @@ public abstract class BitCoinLibRegister extends HtgRegister {
         htgCallBackManager = (HtgCallBackManager) beanMap.get(HtgCallBackManager.class);
     }
 
+
     @Override
     public void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception {
         super.registerCallBack(registerInfo);
-        String multiSigAddress = registerInfo.getMultiSigAddress();
+        /*String multiSigAddress = registerInfo.getMultiSigAddress();
         boolean hasPubs = htgMultiSignAddressHistoryStorageService.hasMultiSignAddressPubs(multiSigAddress);
         if (!hasPubs) {
-            String initialBtcPubKeyList = this.getInitialMultiSignPubKeyList(registerInfo.getConverterCoreApi());
-            htgMultiSignAddressHistoryStorageService.saveMultiSignAddressPubs(multiSigAddress, initialBtcPubKeyList.split(","));
-        }
-
+            String initialBtcPubKeyList = this.getInitialMultiSignPubKeyList(getHtgContext().getConverterCoreApi());
+            String[] pubs = initialBtcPubKeyList.split(",");
+            List<byte[]> pubList = new ArrayList<>();
+            for (String pub : pubs) {
+                pubList.add(HexUtil.decode(pub));
+            }
+            BitCoinLibDocking docking = (BitCoinLibDocking) getHtgContext().DOCKING();
+            String genMultiSignAddress = docking.genMultiSignAddress(getHtgContext().getByzantineCount(pubs.length), pubList, getHtgContext().getConverterCoreApi().isNerveMainnet());
+            if (!multiSigAddress.equals(genMultiSignAddress)) {
+                throw new RuntimeException(String.format("[%s] The public key list for the multi-signature address in the file is wrong, multiSigAddress in settings: %s, genMultiSignAddress: %s",
+                        docking.getChainId(),
+                        multiSigAddress,
+                        genMultiSignAddress
+                ));
+            }
+            htgMultiSignAddressHistoryStorageService.saveMultiSignAddressPubs(multiSigAddress, pubs);
+        }*/
     }
 
     protected void initScheduled() {

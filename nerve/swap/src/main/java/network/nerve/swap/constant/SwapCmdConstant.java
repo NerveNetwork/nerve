@@ -54,6 +54,7 @@ public interface SwapCmdConstant {
     String SWAP_MIN_AMOUNT_TOKEN_TRADE = "sw_swap_min_amount_token_trade";
     String SWAP_PAIR_INFO = "sw_swap_pair_info";
     String SWAP_PAIR_INFO_BY_ADDRESS = "sw_swap_pair_info_by_address";
+    String SWAP_PAIR_INFOS_BY_ADDRESS = "sw_swap_pair_infos_by_address";
     String SWAP_PAIR_BY_LP = "sw_swap_pair_by_lp";
     String SWAP_PAIR_INFO_BY_LP = "sw_swap_pair_info_by_lp";
     String SWAP_PAIRS_ALL = "sw_get_all_swap_pairs";
@@ -65,6 +66,7 @@ public interface SwapCmdConstant {
     String STABLE_SWAP_REMOVE_LIQUIDITY = "sw_stable_swap_remove_liquidity";
     String STABLE_SWAP_TOKEN_TRADE = "sw_stable_swap_token_trade";
     String STABLE_SWAP_PAIR_INFO = "sw_stable_swap_pair_info";
+    String STABLE_SWAP_PAIR_INFOS = "sw_stable_swap_pair_infos";
     String STABLE_SWAP_PAIR_BY_LP = "sw_stable_swap_pair_by_lp";
     String STABLE_SWAP_PAIRS_ALL = "sw_get_all_stable_swap_pairs";
     String IS_LEGAL_BTC_ADDR = "sw_is_legal_btc_addr";

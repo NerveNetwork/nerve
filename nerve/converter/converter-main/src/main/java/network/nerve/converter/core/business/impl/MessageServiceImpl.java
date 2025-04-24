@@ -1049,9 +1049,11 @@ public class MessageServiceImpl implements MessageService {
             if (StringUtils.isBlank(currentHaddress)) {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
             }
+            // tbc total=10
             broadcastCurrentSign(chain, hash, compSignPO, signStrData, new HeterogeneousAddress(heterogeneousChainId, currentHaddress), message.getVirtualBankTotal());
         }
-        boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO);
+        // tbc total=10
+        boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO, docking.getBitCoinApi().getByzantineCount(message.getVirtualBankTotal()));
         if (byzantinePass && !compSignPO.getByzantinePass()) {
             // Create heterogeneous chain transactions
             StringBuilder signatureDataBuilder = new StringBuilder();
@@ -1276,17 +1278,29 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private boolean processComponentSignMsgByzantine(Chain chain, ComponentSignMessage message, ComponentSignByzantinePO compSignPO) {
-        return processComponentSignMsgByzantine(chain, message, compSignPO, true);
+        return processComponentSignMsgByzantine(chain, message, compSignPO, true, null);
+    }
+
+    private boolean processComponentSignMsgByzantine(Chain chain, ComponentSignMessage message, ComponentSignByzantinePO compSignPO, Integer byzantineMinPassCount) {
+        return processComponentSignMsgByzantine(chain, message, compSignPO, true, byzantineMinPassCount);
     }
 
     private boolean processComponentSignMsgByzantine(Chain chain, ComponentSignMessage message, ComponentSignByzantinePO compSignPO, boolean addMsg) {
+        return processComponentSignMsgByzantine(chain, message, compSignPO, addMsg, null);
+    }
+
+    private boolean processComponentSignMsgByzantine(Chain chain, ComponentSignMessage message, ComponentSignByzantinePO compSignPO, boolean addMsg, Integer byzantineMinPassCount) {
         // Add current signature message
         List<ComponentSignMessage> list = compSignPO.getListMsg();
         if (addMsg) {
             list.add(message);
         }
+
+        // tbc total=10
         // Byzantine verification
-        int byzantineMinPassCount = VirtualBankUtil.getByzantineCount(chain, message.getVirtualBankTotal());
+        if (byzantineMinPassCount == null) {
+            byzantineMinPassCount = VirtualBankUtil.getByzantineCount(chain, message.getVirtualBankTotal());
+        }
         if (list.size() >= byzantineMinPassCount) {
             // Debugging logs
             String signAddress = "";

@@ -116,7 +116,7 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
+    public String init(IConverterCoreApi coreApi, HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             isInitial = true;
             // Initialize instance

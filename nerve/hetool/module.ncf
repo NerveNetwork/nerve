@@ -1,0 +1,14 @@
+[JAVA]
+APP_NAME=hetool
+MAIN_CLASS=network.nerve.hetool.HeToolBootstrap
+VERSION=1.0.0
+JOPT_XMS=128
+JOPT_XMX=128
+
+
+[Core]
+Managed=1
+
+[hetool]
+moduleDynamicDependent=converter
+

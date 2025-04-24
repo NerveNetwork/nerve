@@ -110,7 +110,7 @@ public class TrxRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
+    public String init(IConverterCoreApi coreApi, HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             // Storing log instances
             trxContext.setLogger(logger);
@@ -119,6 +119,7 @@ public class TrxRegister implements IHeterogeneousChainRegister {
             trxContext.setConfig(config);
             // Initialize instance
             initBean();
+            trxContext.setConverterCoreApi(coreApi);
             // Initialize defaultAPI
             initDefualtAPI();
             // analysisTRX API URL

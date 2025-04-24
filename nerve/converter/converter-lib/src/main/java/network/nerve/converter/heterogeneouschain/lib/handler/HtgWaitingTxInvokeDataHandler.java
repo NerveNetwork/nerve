@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.heterogeneouschain.lib.handler;
 
+import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
@@ -38,6 +39,8 @@ import network.nerve.converter.utils.LoggerUtil;
 
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static io.protostuff.ByteString.EMPTY_STRING;
+import static network.nerve.converter.constant.ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW;
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.RESEND_TIME;
 
 
@@ -164,6 +167,12 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 queue.offer(po);
             }
         } catch (Exception e) {
+            if (e instanceof NulsException && INSUFFICIENT_FEE_OF_WITHDRAW.equals(((NulsException) e).getErrorCode())) {
+                // When the withdrawal fee is insufficient, it will not be counted as the number of resends
+                if (!htgContext.getConverterCoreApi().isNerveMainnet()) {
+                    return;
+                }
+            }
             logger().error("waiting tx error", e);
             if (po != null) {
                 queue.offer(po);

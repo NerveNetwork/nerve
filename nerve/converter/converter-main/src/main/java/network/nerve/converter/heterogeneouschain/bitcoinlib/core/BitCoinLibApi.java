@@ -41,6 +41,7 @@ import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.bitcoinlib.helper.IBitCoinLibParseTxHelper;
+import network.nerve.converter.heterogeneouschain.bitcoinlib.utils.BitCoinLibUtil;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
@@ -55,8 +56,10 @@ import network.nerve.converter.heterogeneouschain.lib.storage.HtgMultiSignAddres
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.NerveAssetInfo;
+import network.nerve.converter.model.bo.UTXONeed;
 import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
 import network.nerve.converter.model.bo.WithdrawalUTXO;
+import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -77,7 +80,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
     private HtgInvokeTxHelper htgInvokeTxHelper;
     private HtgPendingTxHelper htgPendingTxHelper;
     private HtgAccountStorageService htgAccountStorageService;
-    private HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
+    protected HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
     protected HtgCallBackManager htgCallBackManager;
     protected HtgUnconfirmedTxStorageService htgUnconfirmedTxStorageService;
     protected HtgListener htgListener;
@@ -87,6 +90,13 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
     }
     @Override
     public abstract List<UTXOData> getUTXOs(String address);
+
+    @Override
+    public UTXONeed getNeedUTXO(String address, BigInteger value, Integer assetId) throws Exception {
+        List<UTXOData> utxos = this.getUTXOs(address);
+        return new UTXONeed(utxos, null);
+    }
+
     @Override
     public abstract String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws Exception;
     @Override
@@ -103,7 +113,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
     public abstract boolean validateManagerChangesTx(String nerveTxHash, String[] addPubs, String[] removePubs, int orginTxCount, String signatureData) throws Exception;
 
     protected abstract IBitCoinLibWalletApi walletApi();
-    protected abstract String _createMultiSignWithdrawTx(WithdrawalUTXO withdrawlUTXO, String signatureData, String to, long amount, String nerveTxHash) throws Exception;
+    protected abstract String _createMultiSignWithdrawTx(WithdrawalUTXO withdrawlUTXO, String signatureData, String to, BigInteger _amount, String nerveTxHash, int assetId) throws Exception;
     protected abstract long _calcFeeMultiSignSize(int inputNum, int outputNum, int[] opReturnBytesLen, int m, int n);
     protected abstract long _calcFeeMultiSignSizeWithSplitGranularity(long fromTotal, long transfer, long feeRate, Long splitGranularity, int inputNum, int[] opReturnBytesLen, int m, int n);
     protected abstract WithdrawalFeeLog _takeWithdrawalFeeLogFromTxParse(String htgTxHash, boolean nerveInner) throws Exception;
@@ -122,6 +132,10 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
         return new WithdrawalUTXO(data.getNerveTxHash(), data.getHtgChainId(), data.getCurrentMultiSignAddress(), data.getCurrentVirtualBankTotal(), data.getFeeRate(), data.getPubs(), data.getUtxoDataList());
     }
 
+    protected void loadERC20(HtgUnconfirmedTxPo po, WithdrawalUTXO data) {
+        // for tbc
+    }
+
     @Override
     public boolean isEnoughFeeOfWithdraw(String nerveTxHash, AssetName feeAssetName, BigDecimal fee, BigInteger transfer) {
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
@@ -138,7 +152,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
             throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
         }
         List<String> multiSignAddressPubs = this.getMultiSignAddressPubs(withdrawlUTXO.getCurrentMultiSignAddress());
-        int n = multiSignAddressPubs.size(), m = coreApi.getByzantineCount(n);
+        int n = multiSignAddressPubs.size(), m = htgContext.getByzantineCount(n);
         byte[] nerveTxHashBytes = HexUtil.decode(nerveTxHash);
         if (htgContext.HTG_CHAIN_ID() == AssetName.FCH.chainId()) {
             nerveTxHashBytes = nerveTxHash.getBytes(StandardCharsets.UTF_8);
@@ -251,7 +265,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
             boolean isContractAsset = assetId > 1;
             String contractAddressERC20  = HtgConstant.ZERO_ADDRESS;
             po.setDecimals(htgContext.getConfig().getDecimals());
-            po.setAssetId(htgContext.HTG_ASSET_ID());
+            po.setAssetId(assetId);
 
             // Convert the address to lowercase
             po.setTo(toAddress);
@@ -274,7 +288,8 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
             }
 
             WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
-            String txStr = this._createMultiSignWithdrawTx(withdrawlUTXO, signatureData, toAddress, value.longValue(), nerveTxHash);
+            this.loadERC20(po, withdrawlUTXO);// for tbc
+            String txStr = this._createMultiSignWithdrawTx(withdrawlUTXO, signatureData, toAddress, value, nerveTxHash, assetId);
             if (StringUtils.isBlank(txStr)) {
                 throw new Exception(String.format("Empty data for createMultiSignWithdrawTx, params: %s, %s, %s, %s, %s", withdrawlUTXO.getCurrentMultiSignAddress(), signatureData, toAddress, value.longValue(), nerveTxHash));
             }
@@ -309,7 +324,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
         // take pubkeys of all managers
         List<ECKey> pubEcKeys = withdrawlUTXO.getPubs().stream().map(p -> ECKey.fromPublicOnly(p)).collect(Collectors.toList());
         // calc the min number of signatures
-        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getByzantineCount(n);
 
         Transaction tx = BchUtxoUtil.createNativeSegwitMultiSignTx(
                 signatures, pubEcKeys,
@@ -354,6 +369,20 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
     }
 
     @Override
+    public int getCurrentMultiSignAddressPubsSize() {
+        List<String> multiSignAddressPubs = htgMultiSignAddressHistoryStorageService.getMultiSignAddressPubs(htgContext.MULTY_SIGN_ADDRESS());
+        if (multiSignAddressPubs == null || multiSignAddressPubs.isEmpty()) {
+            return 0;
+        }
+        return multiSignAddressPubs.size();
+    }
+
+    @Override
+    public int getByzantineCount(int virtualBankTotal) {
+        return htgContext.getByzantineCount(virtualBankTotal);
+    }
+
+    @Override
     public boolean checkEnoughAvailablePubs(String address) {
         List<String> addressPubs = htgMultiSignAddressHistoryStorageService.getMultiSignAddressPubs(address);
         List<String> allPackerPubs = htgContext.getConverterCoreApi().getAllPackerPubs();
@@ -364,8 +393,7 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
             }
         }
         htgContext.logger().info("{} availablePubs: {}", address, availablePubs);
-        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
-        int byzantineCount = coreApi.getByzantineCount(addressPubs.size());
+        int byzantineCount = htgContext.getByzantineCount(addressPubs.size());
         return availablePubs.size() > byzantineCount + 1;
     }
 
@@ -406,10 +434,11 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
             WithdrawalUTXO withdrawlUTXO = null;
             boolean completeDirectly = false;
             do {
-                //if (htgContext.getConverterCoreApi().checkChangeP35(nerveTxHash)) {
-                //    completeDirectly = true;
-                //    break;
-                //}
+                if (htgContext.HTG_CHAIN_ID() == AssetName.TBC.chainId()) {
+                    // tbc no change
+                    completeDirectly = true;
+                    break;
+                }
                 // Business validation
                 this.changeBaseCheck(nerveTxHash, addPubs, removePubs);
                 withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
@@ -595,13 +624,21 @@ public abstract class BitCoinLibApi implements IBitCoinApi, BeanInitial {
 
     @Override
     public Map<String, String> getMinimumFeeOfWithdrawal(String nerveTxHash) throws NulsException {
-        WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(nerveTxHash);
+        WithdrawalUTXOTxData withdrawlUTXO = this.takeWithdrawalUTXOs(nerveTxHash);
         if (withdrawlUTXO == null) {
             logger().error("[{}] [withdraw] Withdrawal fee calculation, empty withdrawlUTXO. nerveTxHash: {}", htgContext.getConfig().getSymbol(), nerveTxHash);
             throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
         }
+        if (htgContext.HTG_CHAIN_ID() == AssetName.TBC.chainId()) {
+            Map<String, String> resultMap = new HashMap<>();
+            resultMap.put("minimumFee", String.valueOf(BitCoinLibUtil.TBC_FEE));
+            resultMap.put("utxoSize", String.valueOf(withdrawlUTXO.getUtxoDataList().size()));
+            resultMap.put("ftUtxoSize", String.valueOf(withdrawlUTXO.getFtUtxoDataList() == null ? 0 : withdrawlUTXO.getFtUtxoDataList().size()));
+            resultMap.put("feeRate", String.valueOf(withdrawlUTXO.getFeeRate()));
+            return resultMap;
+        }
         List<String> multiSignAddressPubs = this.getMultiSignAddressPubs(withdrawlUTXO.getCurrentMultiSignAddress());
-        int n = multiSignAddressPubs.size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        int n = multiSignAddressPubs.size(), m = htgContext.getByzantineCount(n);
         byte[] nerveTxHashBytes = HexUtil.decode(nerveTxHash);
         if (htgContext.HTG_CHAIN_ID() == AssetName.FCH.chainId()) {
             nerveTxHashBytes = nerveTxHash.getBytes(StandardCharsets.UTF_8);

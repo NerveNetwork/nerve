@@ -76,4 +76,7 @@ public interface HtgMultiSignAddressHistoryStorageService {
 
     void saveSplitGranularity(long splitGranularity) throws Exception;
     long getCurrentSplitGranularity();
+
+    void saveFtData(FtData ftData) throws Exception;
+    FtData getFtData(String contractId) throws Exception;
 }

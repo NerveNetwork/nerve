@@ -101,7 +101,7 @@ public class BchUtxoDocking extends BitCoinLibDocking {
     }
 
     @Override
-    protected String _genMultiSignAddress(int threshold, List<byte[]> pubECKeys, boolean mainnet) {
+    public String genMultiSignAddress(int threshold, List<byte[]> pubECKeys, boolean mainnet) {
         return BchUtxoUtil.multiAddr(pubECKeys, threshold, mainnet);
     }
 

@@ -84,6 +84,7 @@ import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKMULTISIG;
  */
 public class BitCoinLibUtil {
 
+    public static final long TBC_FEE = 10000;
     public static final BigInteger _0n = BigInteger.ZERO;
     public static final BigInteger _1n = BigInteger.ONE;
     public static final BigInteger _2n = BigInteger.valueOf(2);
@@ -1497,9 +1498,9 @@ public class BitCoinLibUtil {
         List<String> multiSignAddressPubs = currentMultiSignAddressPubs;
         List<ECKey> oldPubEcKeys = multiSignAddressPubs.stream().map(p -> ECKey.fromPublicOnly(HexUtil.decode(p))).collect(Collectors.toList());
 
-        String toAddress = BitCoinLibUtil.getNativeSegwitMultiSignAddress(coreApi.getByzantineCount(newPubEcKeys.size()), newPubEcKeys, coreApi.isNerveMainnet());
+        String toAddress = BitCoinLibUtil.getNativeSegwitMultiSignAddress(htgContext.getByzantineCount(newPubEcKeys.size()), newPubEcKeys, coreApi.isNerveMainnet());
         // calc the min number of signatures
-        int n = oldPubEcKeys.size(), m = coreApi.getByzantineCount(n);
+        int n = oldPubEcKeys.size(), m = htgContext.getByzantineCount(n);
         byte[] nerveTxHashBytes = HexUtil.decode(nerveTxHash);
         long fee = BitCoinLibUtil.calcFeeMultiSignSizeP2WSH(UTXOList.size(), 1, new int[]{nerveTxHashBytes.length}, m, n) * withdrawlUTXO.getFeeRate();
         long totalMoney = 0;

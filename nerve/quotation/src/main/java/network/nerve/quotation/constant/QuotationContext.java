@@ -84,6 +84,7 @@ public class QuotationContext {
     public static long protocol30Height = 0L;
     public static long protocol31Height = 0L;
     public static long protocol34Height = 0L;
+    public static long protocol40Height = 0L;
 
     /**
      * Log instance

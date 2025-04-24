@@ -42,6 +42,7 @@ import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
@@ -763,12 +764,6 @@ public class WithdrawalProcessor implements TransactionProcessor {
                             log.error("The asset withdrawal is zero, txhash:{}, AssetChainId:{}, AssetId:{}, Amount: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), coinTo.getAmount());
                             continue outer;
                         }
-                        if (htgChainId > 200 && coinTo.getAmount().compareTo(BigInteger.valueOf(ConverterConstant.BTC_DUST_AMOUNT)) < 0) {
-                            failsList.add(tx);
-                            errorCode = ConverterErrorCode.BTC_DUST_AMOUNT.getCode();
-                            log.error("The asset withdrawal is too small, txhash:{}, AssetChainId:{}, AssetId:{}, Amount: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), coinTo.getAmount());
-                            continue outer;
-                        }
                         // Withdrawal of assetscoinTo
                         withdrawalToInfo = coinTo.getAssetsChainId() + "-" + coinTo.getAssetsId() + "-" + coinTo.getAmount().toString();
                         HeterogeneousAssetInfo heterogeneousAssetInfo =
@@ -781,6 +776,27 @@ public class WithdrawalProcessor implements TransactionProcessor {
                             continue outer;
                         }
                         // add by pierre at 2022/7/1 Withdrawal suspension mechanism
+                        if (htgChainId > 200 && heterogeneousAssetInfo.getAssetId() == 1 && coinTo.getAmount().compareTo(BigInteger.valueOf(ConverterConstant.BTC_DUST_AMOUNT)) < 0) {
+                            failsList.add(tx);
+                            errorCode = ConverterErrorCode.BTC_DUST_AMOUNT.getCode();
+                            log.error("The asset withdrawal is too small, txhash:{}, AssetChainId:{}, AssetId:{}, Amount: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), coinTo.getAmount());
+                            continue outer;
+                        }
+                        if (htgChainId == AssetName.TBC.chainId() && heterogeneousAssetInfo.getAssetId() > 1) {
+                            //6dcef27bb0fa95e42d78d1258fc2cd842e06620447746edf3443020f0005220c
+                            if (!converterCoreApi.isNerveMainnet() && "6dcef27bb0fa95e42d78d1258fc2cd842e06620447746edf3443020f0005220c".equals(hash)) {
+                                // skipped it
+                                log.info("Ignore it: 6dcef27bb0fa95e42d78d1258fc2cd842e06620447746edf3443020f0005220c, as the data is incompatible");
+                            } else {
+                                BigInteger checkedValue = converterCoreApi.checkDecimalsSubtractedToNerveForWithdrawal(heterogeneousAssetInfo, coinTo.getAmount());
+                                if (checkedValue.compareTo(BigInteger.ZERO) == 0) {
+                                    failsList.add(tx);
+                                    errorCode = ConverterErrorCode.WITHDRAWAL_ZERO_AMOUNT.getCode();
+                                    log.error("[TBC Token Withdrawal] The asset withdrawal is too small, txhash:{}, AssetChainId:{}, AssetId:{}, Amount: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), coinTo.getAmount());
+                                    continue outer;
+                                }
+                            }
+                        }
                         boolean pauseOut = converterCoreApi.isPauseOutHeterogeneousAsset(heterogeneousAssetInfo.getChainId(), heterogeneousAssetInfo.getAssetId());
                         if (pauseOut) {
                             failsList.add(tx);

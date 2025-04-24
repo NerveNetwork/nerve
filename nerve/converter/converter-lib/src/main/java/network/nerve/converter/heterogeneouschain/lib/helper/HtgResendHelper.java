@@ -153,6 +153,9 @@ public class HtgResendHelper implements BeanInitial {
             if (e instanceof NulsException && INSUFFICIENT_FEE_OF_WITHDRAW.equals(((NulsException) e).getErrorCode())) {
                 // When the withdrawal fee is insufficient, it will not be counted as the number of resends
                 this.decrease(nerveTxHash);
+                if (!htgContext.getConverterCoreApi().isNerveMainnet()) {
+                    return EMPTY_STRING;
+                }
             }
             logger().error("Transaction resend failed, waiting for resend transaction", e);
             throw e;

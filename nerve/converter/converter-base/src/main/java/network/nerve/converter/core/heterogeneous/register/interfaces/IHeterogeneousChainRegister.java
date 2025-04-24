@@ -25,6 +25,7 @@
 package network.nerve.converter.core.heterogeneous.register.interfaces;
 
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
@@ -44,12 +45,12 @@ public interface IHeterogeneousChainRegister {
     /**
      * 2. NerveThe core will call this function to initialize the data of heterogeneous chains, such as initializing configurations、DB
      */
-    String init(HeterogeneousCfg config, NulsLogger logger) throws Exception;
+    String init(IConverterCoreApi coreApi, HeterogeneousCfg config, NulsLogger logger) throws Exception;
 
     /**
      * 3. Obtain basic information about heterogeneous chains, such aschainId、symbol、Initial multi signature address
      */
-    HeterogeneousChainInfo getChainInfo();
+    HeterogeneousChainInfo getChainInfo() throws Exception;
 
     /**
      * 4. Obtain heterogeneous chain implementationNerveinterface specification

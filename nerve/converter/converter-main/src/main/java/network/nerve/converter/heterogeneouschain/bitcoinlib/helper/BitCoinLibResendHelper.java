@@ -142,7 +142,11 @@ public class BitCoinLibResendHelper implements BeanInitial {
         } catch (Exception e) {
             // When execution fails due to insufficient transaction signatures, report toCORERequesting Byzantine signatures for the transaction again
             if (e instanceof NulsException && ConverterUtil.isInsufficientSignature((NulsException) e) && this.regainSignatures(po, times + 1)) {
-                logger().info("Nervetransaction[{}]Resend completed, htgTxHash: {}", nerveTxHash, po.getTxHash());
+                logger().info("Nervetransaction [{}] Resend completed, htgTxHash: {}", nerveTxHash, po.getTxHash());
+                return po.getTxHash();
+            }
+            if (e.getMessage() != null && e.getMessage().contains("Transaction already in the mempool")) {
+                logger().info("Nerve transaction [{}] Resend completed(Transaction already in the mempool), htgTxHash: {}", nerveTxHash, po.getTxHash());
                 return po.getTxHash();
             }
             if (e instanceof NulsException && INSUFFICIENT_FEE_OF_WITHDRAW.equals(((NulsException) e).getErrorCode())) {

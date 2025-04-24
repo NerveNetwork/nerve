@@ -66,6 +66,7 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
     private final String WITHDRAWL_UTXO_PREFIX;
     private final String WITHDRAWL_UTXO_REBUILD_PREFIX;
     private final String WITHDRAWL_UTXO_LOCKED_PREFIX;
+    private final String FTDATA_PREFIX;
     private final byte[] SPLIT_GRANULARITY;
 
     private final HtgContext htgContext;
@@ -84,6 +85,7 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
         this.WITHDRAWL_UTXO_REBUILD_PREFIX = htgChainId + "_WITHDRAWL_UTXO_REBUILD_PREFIX-";
         this.WITHDRAWL_UTXO_LOCKED_PREFIX = htgChainId + "_WITHDRAWL_UTXO_LOCKED_PREFIX-";
         this.SPLIT_GRANULARITY = stringToBytes(htgChainId + "_SPLIT_GRANULARITY");
+        this.FTDATA_PREFIX = htgChainId + "_FTDATA_PREFIX-";
     }
 
     private boolean merged = false;
@@ -301,11 +303,16 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
     public void saveWithdrawalUTXOs(WithdrawalUTXOTxData txData) throws Exception {
         ConverterDBUtil.putModel(baseArea(), stringToBytes(WITHDRAWL_UTXO_PREFIX + txData.getNerveTxHash()), txData);
         List<UTXOData> utxoDataList = txData.getUtxoDataList();
-        if (HtgUtil.isEmptyList(utxoDataList)) {
-            return;
+        if (!HtgUtil.isEmptyList(utxoDataList)) {
+            for (UTXOData utxo : utxoDataList) {
+                RocksDBService.put(baseArea(), stringToBytes(WITHDRAWL_UTXO_LOCKED_PREFIX + utxo.getTxid() + "-" + utxo.getVout()), HexUtil.decode(txData.getNerveTxHash()));
+            }
         }
-        for (UTXOData utxo : utxoDataList) {
-            RocksDBService.put(baseArea(), stringToBytes(WITHDRAWL_UTXO_LOCKED_PREFIX + utxo.getTxid() + "-" + utxo.getVout()), HexUtil.decode(txData.getNerveTxHash()));
+        List<FtUTXOData> ftUtxoDataList = txData.getFtUtxoDataList();
+        if (!HtgUtil.isEmptyList(ftUtxoDataList)) {
+            for (FtUTXOData utxo : ftUtxoDataList) {
+                RocksDBService.put(baseArea(), stringToBytes(WITHDRAWL_UTXO_LOCKED_PREFIX + utxo.getTxId() + "-" + utxo.getOutputIndex()), HexUtil.decode(txData.getNerveTxHash()));
+            }
         }
     }
 
@@ -394,5 +401,22 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
             return 0;
         }
         return ByteUtils.byteToLong(bytes);
+    }
+
+    @Override
+    public void saveFtData(FtData ftData) throws Exception {
+        RocksDBService.put(baseArea(), stringToBytes(FTDATA_PREFIX + ftData.getContractTxid()), ftData.serialize());
+
+    }
+
+    @Override
+    public FtData getFtData(String contractId) throws Exception {
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(FTDATA_PREFIX + contractId));
+        if (bytes == null) {
+            return null;
+        }
+        FtData po = new FtData();
+        po.parse(bytes, 0);
+        return po;
     }
 }

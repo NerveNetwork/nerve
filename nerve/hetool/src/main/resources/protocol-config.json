@@ -1,0 +1,12 @@
+[
+  {
+    "version": "1",
+    "extend": "",
+    "validTxs": [
+    ],
+    "validMsgs": [
+    ],
+    "invalidTxs": "",
+    "invalidMsgs": ""
+  }
+]

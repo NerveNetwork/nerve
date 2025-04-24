@@ -35,7 +35,9 @@ import network.nerve.converter.model.bo.HeterogeneousCfg;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -56,6 +58,11 @@ public abstract class HtgContext {
     protected static final BigInteger HTG_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
     protected static final BigInteger BASE_GAS_LIMIT = BigInteger.valueOf(50000L);
     private BigInteger GAS_LIMIT_OF_WITHDRAW_V2;
+    private Map<String, Object> cache = new HashMap<>();
+
+    public Map<String, Object> dynamicCache() {
+        return cache;
+    }
 
     public abstract int HTG_CHAIN_ID();
     public abstract HeterogeneousCfg getConfig();
@@ -97,6 +104,11 @@ public abstract class HtgContext {
      */
     public boolean supportPendingCall() {
         return true;
+    }
+
+
+    public int getByzantineCount(Integer total) {
+        return this.getConverterCoreApi().getByzantineCount(total);
     }
 
     public BigInteger calcGasPrice(BigInteger ethGasPrice, BigInteger currentGasPrice) {

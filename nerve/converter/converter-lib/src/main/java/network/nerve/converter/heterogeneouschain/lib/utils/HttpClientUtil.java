@@ -203,6 +203,15 @@ public class HttpClientUtil {
         httpPost.setEntity(entity);
     }
 
+    private static void setPostParams(HttpPost httpPost, List<Map> params) throws Exception {
+        //Set request parameters
+        String json = JSONUtils.obj2json(params);
+        StringEntity entity = new StringEntity(json, "UTF-8");
+        entity.setContentEncoding("UTF-8");
+        entity.setContentType("application/json");//sendjsonNeed to set upcontentType
+        httpPost.setEntity(entity);
+    }
+
     private static void setPutParams(HttpPut httpPut, Map<String, Object> params) throws Exception {
         //Set request parameters
         String json = JSONUtils.obj2json(params);
@@ -221,12 +230,37 @@ public class HttpClientUtil {
      * @author SHANHY
      * @create 2015year12month18day
      */
+    public static String post(String url, List<Map> params) throws Exception {
+        return post(url, params, null);
+    }
+
+    public static String post(String url, List<Map> params, List<BasicHeader> headers) throws Exception {
+        return post_(url, params, headers);
+    }
+
     public static String post(String url, Map<String, Object> params) throws Exception {
+        return post(url, params, null);
+    }
+
+    public static String post(String url, Map<String, Object> params, List<BasicHeader> headers) throws Exception {
+        return post_(url, params, headers);
+    }
+
+    public static String post_(String url, Object params, List<BasicHeader> headers) throws Exception {
         CloseableHttpResponse response = null;
         try {
             HttpPost httppost = new HttpPost(url);
             config(httppost);
-            setPostParams(httppost, params);
+            if(headers != null && !headers.isEmpty()) {
+                headers.stream().forEach(header -> httppost.addHeader(header));
+            }
+            if (params instanceof Map) {
+                setPostParams(httppost, (Map) params);
+            } else if (params instanceof List) {
+                setPostParams(httppost, (List) params);
+            } else {
+                throw new RuntimeException("unkown params type");
+            }
             CloseableHttpClient httpClient = getHttpClient(url);
             response = httpClient.execute(httppost,
                     HttpClientContext.create());

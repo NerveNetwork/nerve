@@ -48,6 +48,7 @@ import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.BindHeterogeneousContractMode;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
@@ -185,6 +186,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
                 rtMap.put("heterogeneousChainId", docking.getChainId());
                 rtMap.put("heterogeneousChainSymbol", docking.getChainSymbol());
                 rtMap.put("heterogeneousChainMultySignAddress", docking.getCurrentMultySignAddress());
+                rtMap.put("decimalsSubtractedToNerve", assetInfo.getDecimalsSubtractedToNerve());
                 resultList.add(rtMap);
             }
         } catch (Exception e) {
@@ -513,7 +515,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (nerveAsset.get("decimalPlace") != null) {
                 nerveAssetDecimals = Integer.parseInt(nerveAsset.get("decimalPlace").toString());
             }
-            if (nerveAssetDecimals != decimals) {
+            if (heterogeneousChainId != AssetName.TBC.chainId() && nerveAssetDecimals != decimals) {
                 throw new NulsRuntimeException(ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY);
             }
             HeterogeneousAssetInfo assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(heterogeneousChainId, nerveAssetChainId, nerveAssetId);

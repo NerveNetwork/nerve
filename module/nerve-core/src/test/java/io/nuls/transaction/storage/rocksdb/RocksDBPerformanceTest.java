@@ -187,7 +187,6 @@ public class RocksDBPerformanceTest {
                 for (Transaction tx : noExistList) {
                     keys.add(tx.getHash().getBytes());
                 }
-                Map<byte[], byte[]> list1 = RocksDBService.multiGet(TABLE_NAME_1, keys);
                 long s2 = System.currentTimeMillis() - s1;
                 System.out.println("timeno:" + s2);
             }

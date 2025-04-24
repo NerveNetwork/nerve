@@ -101,7 +101,7 @@ public class BtcDocking extends BitCoinLibDocking {
     }
 
     @Override
-    protected String _genMultiSignAddress(int threshold, List<byte[]> pubECKeys, boolean mainnet) {
+    public String genMultiSignAddress(int threshold, List<byte[]> pubECKeys, boolean mainnet) {
         List<ECKey> pubs = pubECKeys.stream().map(p -> ECKey.fromPublicOnly(p)).collect(Collectors.toList());
         return BitCoinLibUtil.getNativeSegwitMultiSignAddress(threshold, pubs, mainnet);
     }

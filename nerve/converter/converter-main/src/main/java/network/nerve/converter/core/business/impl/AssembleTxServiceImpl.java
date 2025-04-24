@@ -2205,6 +2205,22 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                         dto.getAmount())
         );
         tos.add(coinTo);
+
+        // Simultaneously rechargetokenandmain, increasemainSupport for
+        if (dto.isDepositII()) {
+            NerveAssetInfo mainInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(dto.getHtgChainId(), 1);
+            CoinTo mainTo = new CoinTo(
+                    toAddress,
+                    mainInfo.getAssetChainId(),
+                    mainInfo.getAssetId(),
+                    converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                            dto.getHtgChainId(),
+                            mainInfo.getAssetChainId(),
+                            mainInfo.getAssetId(),
+                            dto.getMainAmount())
+            );
+            tos.add(mainTo);
+        }
         // There is a handling fee
         if (StringUtils.isNotBlank(dto.getFeeTo()) && dto.getFee().compareTo(BigInteger.ZERO) > 0) {
             CoinTo mainTo = new CoinTo(

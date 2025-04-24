@@ -225,23 +225,85 @@ public class RechargeVerifier {
 
         if (null != info) {
             BtcTxInfo txInfo = (BtcTxInfo) info;
-            if (StringUtils.isNotBlank(txInfo.getNerveFeeTo())) {
-                if (listCoinTo.size() != 2) {
-                    throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+            if (info.isDepositIIMainAndToken()) {
+                // Verify simultaneous rechargetokenandmain
+                CoinTo tokenAmountTo, mainAmountTo, feeTo;
+                BigInteger fee = BigInteger.ZERO;
+                if (StringUtils.isNotBlank(txInfo.getNerveFeeTo())) {
+                    if (listCoinTo.size() < 3) {
+                        throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                    }
+                    feeTo = listCoinTo.get(2);
+                    fee = feeTo.getAmount();
+                    if (!txInfo.getNerveFeeTo().equals(AddressTool.getStringAddressByBytes(feeTo.getAddress()))) {
+                        throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+                    }
+                } else {
+                    if (listCoinTo.size() > 2) {
+                        throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                    }
                 }
+
+                HeterogeneousAssetInfo tokenInfo, mainInfo;
                 CoinTo coin0 = listCoinTo.get(0);
+                HeterogeneousAssetInfo info0 = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coin0.getAssetsChainId(), coin0.getAssetsId());
                 CoinTo coin1 = listCoinTo.get(1);
-                if (txInfo.getValue().add(txInfo.getFee()).compareTo(coin0.getAmount().add(coin1.getAmount())) != 0) {
+                HeterogeneousAssetInfo info1 = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coin1.getAssetsChainId(), coin1.getAssetsId());
+                // Both assets cannot be primary assets, assetId:1 Main assets
+                if (info0.getAssetId() == 1 && info1.getAssetId() == 1) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+                }
+                if (info0.getAssetId() == 1) {
+                    mainAmountTo = coin0;
+                    mainInfo = info0;
+                    tokenAmountTo = coin1;
+                    tokenInfo = info1;
+                } else if (info1.getAssetId() == 1){
+                    mainAmountTo = coin1;
+                    mainInfo = info1;
+                    tokenAmountTo = coin0;
+                    tokenInfo = info0;
+                } else {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+                }
+                if (txInfo.getDepositIIMainAssetValue().add(txInfo.getFee()).compareTo(mainAmountTo.getAmount().add(fee)) != 0) {
                     throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
                 }
+
+                this.heterogeneousRechargeValidForCrossOutIIBtcSys(info, tokenAmountTo, tokenInfo, mainAmountTo, mainInfo);
             } else {
-                if (listCoinTo.size() > 1) {
-                    throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                // Verify only rechargetoken perhaps Recharge only main
+                BigInteger fee = BigInteger.ZERO;
+                CoinTo mainTo, feeTo;
+                if (StringUtils.isNotBlank(txInfo.getNerveFeeTo())) {
+                    if (listCoinTo.size() < 2) {
+                        throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                    }
+                    feeTo = listCoinTo.get(1);
+                    fee = feeTo.getAmount();
+                    if (!txInfo.getNerveFeeTo().equals(AddressTool.getStringAddressByBytes(feeTo.getAddress()))) {
+                        throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+                    }
+                } else {
+                    if (listCoinTo.size() > 1) {
+                        throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                    }
                 }
+
+                // Through in chain assetsid Obtain heterogeneous chain information
                 CoinTo coinTo = listCoinTo.get(0);
-                if (txInfo.getValue().add(txInfo.getFee()).compareTo(coinTo.getAmount()) != 0) {
-                    throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+                if (txInfo.getAssetId() == 1) {
+                    mainTo = coinTo;
+                    if (txInfo.getValue().add(txInfo.getFee()).compareTo(mainTo.getAmount().add(fee)) != 0) {
+                        throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+                    }
+                } else {
+                    if (txInfo.getFee().compareTo(fee) != 0) {
+                        throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+                    }
                 }
+                HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                heterogeneousRechargeValid(info, coinTo, heterogeneousAssetInfo);
             }
         } else {
             // Check proposals (OriginalTxHash Not a heterogeneous chain transactionhash, Or it could be a proposalhash)
@@ -251,7 +313,6 @@ public class RechargeVerifier {
             }
             proposalRechargeValidOfBtcSys(chain, proposalPO, listCoinTo);
         }
-
     }
 
     /**
@@ -302,6 +363,35 @@ public class RechargeVerifier {
             depositIIMainAssetValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(mainInfo, depositIIMainAssetValue);
         }
         if (depositIIMainAssetValue.compareTo(mainAmountTo.getAmount()) != 0) {
+            // Recharge main amount error
+            throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+        }
+        if (!info.getNerveAddress().equals(AddressTool.getStringAddressByBytes(tokenAmountTo.getAddress()))) {
+            throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+        }
+        if (!info.getNerveAddress().equals(AddressTool.getStringAddressByBytes(mainAmountTo.getAddress()))) {
+            throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+        }
+    }
+
+    private void heterogeneousRechargeValidForCrossOutIIBtcSys(HeterogeneousTransactionInfo info, CoinTo tokenAmountTo, HeterogeneousAssetInfo tokenInfo, CoinTo mainAmountTo, HeterogeneousAssetInfo mainInfo) throws NulsException {
+        if (info.getAssetId() != tokenInfo.getAssetId()) {
+            // RechargetokenAsset error
+            throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+        }
+        BigInteger tokenValue = info.getValue();
+        tokenValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(tokenInfo, tokenValue);
+        if (tokenValue.compareTo(tokenAmountTo.getAmount()) != 0) {
+            // RechargetokenAmount error
+            throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+        }
+        if (info.getDepositIIMainAssetAssetId() != mainInfo.getAssetId()) {
+            // Recharge main asset error
+            throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+        }
+        BigInteger mainValue = info.getDepositIIMainAssetValue();
+        mainValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(mainInfo, mainValue);
+        if (mainValue.compareTo(mainAmountTo.getAmount()) != 0) {
             // Recharge main amount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
@@ -420,12 +510,128 @@ public class RechargeVerifier {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
         BtcTxInfo txInfo = (BtcTxInfo) info;
-        if (listCoinTo.size() > 1) {
-            throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
-        }
-        CoinTo coinTo = listCoinTo.get(0);
-        if (txInfo.getValue().add(txInfo.getFee()).compareTo(coinTo.getAmount()) != 0) {
-            throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+        if (info.isDepositIIMainAndToken()) {
+            // Verify simultaneous rechargetokenandmain
+            CoinTo tokenAmountTo, mainAmountTo, feeTo;
+            BigInteger fee = BigInteger.ZERO;
+            if (StringUtils.isNotBlank(txInfo.getNerveFeeTo())) {
+                if (listCoinTo.size() < 3) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                }
+                feeTo = listCoinTo.get(2);
+                fee = feeTo.getAmount();
+                if (!txInfo.getNerveFeeTo().equals(AddressTool.getStringAddressByBytes(feeTo.getAddress()))) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+                }
+            } else {
+                if (listCoinTo.size() > 2) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                }
+            }
+
+            HeterogeneousAssetInfo tokenInfo, mainInfo;
+            CoinTo coin0 = listCoinTo.get(0);
+            HeterogeneousAssetInfo info0 = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coin0.getAssetsChainId(), coin0.getAssetsId());
+            CoinTo coin1 = listCoinTo.get(1);
+            HeterogeneousAssetInfo info1 = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coin1.getAssetsChainId(), coin1.getAssetsId());
+            // Both assets cannot be primary assets, assetId:1 Main assets
+            if (info0.getAssetId() == 1 && info1.getAssetId() == 1) {
+                throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+            }
+            if (info0.getAssetId() == 1) {
+                mainAmountTo = coin0;
+                mainInfo = info0;
+                tokenAmountTo = coin1;
+                tokenInfo = info1;
+            } else if (info1.getAssetId() == 1){
+                mainAmountTo = coin1;
+                mainInfo = info1;
+                tokenAmountTo = coin0;
+                tokenInfo = info0;
+            } else {
+                throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+            }
+            if (txInfo.getDepositIIMainAssetValue().add(txInfo.getFee()).compareTo(mainAmountTo.getAmount().add(fee)) != 0) {
+                throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+            }
+
+            if (info.getAssetId() != tokenInfo.getAssetId()) {
+                // RechargetokenAsset error
+                throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+            }
+            BigInteger tokenValue = info.getValue();
+            tokenValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(tokenInfo, tokenValue);
+            if (tokenValue.compareTo(tokenAmountTo.getAmount()) != 0) {
+                // RechargetokenAmount error
+                throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+            }
+            if (info.getDepositIIMainAssetAssetId() != mainInfo.getAssetId()) {
+                // Recharge main asset error
+                throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+            }
+            BigInteger mainValue = info.getDepositIIMainAssetValue();
+            mainValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(mainInfo, mainValue);
+            if (mainValue.compareTo(mainAmountTo.getAmount()) != 0) {
+                // Recharge main amount error
+                throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+            }
+            if (!Arrays.equals(proposalPO.getAddress(), tokenAmountTo.getAddress())) {
+                chain.getLogger().error("The payment address for the recharge transaction is not the proposed payment address");
+                throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+            }
+            if (!Arrays.equals(proposalPO.getAddress(), mainAmountTo.getAddress())) {
+                chain.getLogger().error("The payment address for the recharge transaction is not the proposed payment address");
+                throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+            }
+        } else {
+            // Verify only rechargetoken perhaps Recharge only main
+            BigInteger fee = BigInteger.ZERO;
+            CoinTo mainTo, feeTo;
+            if (StringUtils.isNotBlank(txInfo.getNerveFeeTo())) {
+                if (listCoinTo.size() < 2) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                }
+                feeTo = listCoinTo.get(2);
+                fee = feeTo.getAmount();
+                if (!txInfo.getNerveFeeTo().equals(AddressTool.getStringAddressByBytes(feeTo.getAddress()))) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+                }
+            } else {
+                if (listCoinTo.size() > 1) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                }
+            }
+
+            // Through in chain assetsid Obtain heterogeneous chain information
+            CoinTo coinTo = listCoinTo.get(0);
+            if (txInfo.getAssetId() == 1) {
+                mainTo = coinTo;
+                if (txInfo.getValue().add(txInfo.getFee()).compareTo(mainTo.getAmount().add(fee)) != 0) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+                }
+            } else {
+                if (txInfo.getFee().compareTo(fee) != 0) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+                }
+            }
+            HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coinTo.getAssetsChainId(), coinTo.getAssetsId());
+            if (info.getAssetId() != heterogeneousAssetInfo.getAssetId()) {
+                // Recharge asset error
+                throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+            }
+            BigInteger infoValue = info.getValue();
+            if (converterCoreApi.isProtocol22()) {
+                infoValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(heterogeneousAssetInfo, info.getValue());
+            }
+            if (infoValue.compareTo(coinTo.getAmount()) != 0) {
+                // Recharge amount error
+                throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+            }
+            if (!Arrays.equals(proposalPO.getAddress(), coinTo.getAddress())) {
+                // The payment address for the recharge transaction is not the proposed payment address
+                chain.getLogger().error("The payment address for the recharge transaction is not the proposed payment address");
+                throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+            }
         }
     }
 

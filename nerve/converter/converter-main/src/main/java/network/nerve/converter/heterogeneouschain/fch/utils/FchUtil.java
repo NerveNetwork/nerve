@@ -225,9 +225,9 @@ public class FchUtil {
         List<String> multiSignAddressPubs = currentMultiSignAddressPubs;
         List<byte[]> oldPubEcKeys = multiSignAddressPubs.stream().map(p -> HexUtil.decode(p)).collect(Collectors.toList());
 
-        String toAddress = FchUtil.genMultiP2sh(newPubEcKeys, coreApi.getByzantineCount(newPubEcKeys.size()), true).getFid();
+        String toAddress = FchUtil.genMultiP2sh(newPubEcKeys, htgContext.getByzantineCount(newPubEcKeys.size()), true).getFid();
         // calc the min number of signatures
-        int n = oldPubEcKeys.size(), m = coreApi.getByzantineCount(n);
+        int n = oldPubEcKeys.size(), m = htgContext.getByzantineCount(n);
         long fee = FchUtil.calcFeeMultiSign(UTXOList.size(), 1, nerveTxHash.getBytes(StandardCharsets.UTF_8).length, m, n) * withdrawlUTXO.getFeeRate();
         long totalMoney = 0;
         for (int k = 0; k < UTXOList.size(); k++) {

@@ -83,11 +83,12 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
+    public String init(IConverterCoreApi coreApi, HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             isInitial = true;
             // Initialize instance
             initBean();
+            getHtgContext().setConverterCoreApi(coreApi);
             // Storing log instances
             getHtgContext().setLogger(logger);
             // Storing configuration instances
@@ -115,7 +116,7 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public HeterogeneousChainInfo getChainInfo() {
+    public HeterogeneousChainInfo getChainInfo() throws Exception {
         HeterogeneousChainInfo info = new HeterogeneousChainInfo();
         info.setChainId(getHtgContext().getConfig().getChainId());
         info.setChainName(getHtgContext().getConfig().getSymbol());

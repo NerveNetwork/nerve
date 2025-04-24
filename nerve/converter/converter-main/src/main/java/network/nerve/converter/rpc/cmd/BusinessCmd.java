@@ -291,9 +291,11 @@ public class BusinessCmd extends BaseCmd {
                     } else if (addr.getChainId() == 116) {
                         addr.setSymbol("KAIA");
                     } else {
-                        IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
-                        String chainSymbol = heterogeneousDocking.getChainSymbol();
-                        addr.setSymbol(chainSymbol);
+                        IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(addr.getChainId());
+                        if (heterogeneousDocking != null) {
+                            String chainSymbol = heterogeneousDocking.getChainSymbol();
+                            addr.setSymbol(chainSymbol);
+                        }
                     }
                 }
                 list.add(directorDTO);

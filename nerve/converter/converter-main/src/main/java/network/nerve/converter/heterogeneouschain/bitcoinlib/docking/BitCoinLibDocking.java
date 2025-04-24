@@ -70,7 +70,7 @@ import static io.protostuff.ByteString.EMPTY_STRING;
  */
 public abstract class BitCoinLibDocking implements IHeterogeneousChainDocking, BeanInitial {
 
-    private HeterogeneousAssetInfo mainAsset;
+    protected HeterogeneousAssetInfo mainAsset;
     protected ConverterConfig converterConfig;
     protected HtgListener listener;
     protected HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
@@ -102,7 +102,8 @@ public abstract class BitCoinLibDocking implements IHeterogeneousChainDocking, B
     @Override
     public abstract boolean validateAddress(String address);
     protected abstract Object[] _makeChangeTxBaseInfo (HtgContext htgContext, WithdrawalUTXO withdrawlUTXO, List<String> currentMultiSignAddressPubs);
-    protected abstract String _genMultiSignAddress(int threshold, List<byte[]> pubECKeys, boolean mainnet);
+    @Override
+    public abstract String genMultiSignAddress(int threshold, List<byte[]> pubECKeys, boolean mainnet);
     @Override
     public abstract HeterogeneousConfirmedInfo getConfirmedTxInfo(String txHash) throws Exception;
     @Override
@@ -289,15 +290,15 @@ public abstract class BitCoinLibDocking implements IHeterogeneousChainDocking, B
             if (data == null) {
                 return;
             }
-            WithdrawalUTXO withdrawalUTXO = new WithdrawalUTXO(data.getNerveTxHash(), data.getHtgChainId(), data.getCurrentMultiSignAddress(), data.getCurrentVirtualBankTotal(), data.getFeeRate(), data.getPubs(), data.getUtxoDataList());
-            if (confirmTxRemark == null && withdrawalUTXO == null) {
+            if (confirmTxRemark == null) {
                 return;
             }
+            WithdrawalUTXO withdrawalUTXO = new WithdrawalUTXO(data.getNerveTxHash(), data.getHtgChainId(), data.getCurrentMultiSignAddress(), data.getCurrentVirtualBankTotal(), data.getFeeRate(), data.getPubs(), data.getUtxoDataList());
             List<UsedUTXOData> checkList = Collections.EMPTY_LIST;
             // If it is a change transaction, check whether the address has been changed
-            if (nerveTx.getType() == TxType.CHANGE_VIRTUAL_BANK) {
+            if (nerveTx.getType() == TxType.CHANGE_VIRTUAL_BANK && context().HTG_CHAIN_ID() != AssetName.TBC.chainId()) {
                 List<byte[]> pubs = withdrawalUTXO.getPubs();
-                String multiSignAddress = this._genMultiSignAddress(coreApi.getByzantineCount(pubs.size()), pubs, coreApi.isNerveMainnet());
+                String multiSignAddress = this.genMultiSignAddress(context().getByzantineCount(pubs.size()), pubs, coreApi.isNerveMainnet());
                 if (!context().MULTY_SIGN_ADDRESS().equals(multiSignAddress)) {
                     this.updateMultySignAddress(multiSignAddress);
                     String[] pubArray = new String[pubs.size()];
@@ -315,7 +316,7 @@ public abstract class BitCoinLibDocking implements IHeterogeneousChainDocking, B
                         checkList = withdrawalUTXO.getUtxoDataList().stream().map(u -> new UsedUTXOData(u.getTxid(), u.getVout())).collect(Collectors.toList());
                     }
                 }
-            } else {
+            } else if (nerveTx.getType() == TxType.WITHDRAWAL) {
                 if (confirmTxRemark == null) {
                     checkList = Collections.EMPTY_LIST;
                 } else {

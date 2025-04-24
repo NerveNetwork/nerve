@@ -51,6 +51,7 @@ public class QuotationCall {
      */
     public static BigDecimal getPriceByOracleKey(Chain chain, String oracleKey) {
         /********************* For testing purposes ***************************/
+        //TODO pierre test code
         /*if("ETH_PRICE".equals(oracleKey)){
             return new BigDecimal("3417.30564502");
         } else if (ORACLE_KEY_NVT_PRICE.equals(oracleKey)){
@@ -115,11 +116,21 @@ public class QuotationCall {
             return new BigDecimal("0.01993");
         } else if ("PLS_PRICE".equals(oracleKey)){
             return new BigDecimal("0.0001142");
-        }*/
+        } else if ("TBC_PRICE".equals(oracleKey)){
+            return new BigDecimal("1.1666");
+        }
         if (chain.getChainId() == 5 && "SHM_PRICE".equals(oracleKey)){
             return new BigDecimal("0.01993");
-        }
+        }*/
         /************************************************/
+        BigDecimal quotation = quFinalQuotation(chain, oracleKey);
+        if (chain.getChainId() == 5 && "TBC_PRICE".equals(oracleKey) && (quotation == null || quotation.compareTo(BigDecimal.ZERO) == 0)){
+            return new BigDecimal("0.95");
+        }
+        return quotation;
+    }
+
+    private static BigDecimal quFinalQuotation(Chain chain, String oracleKey) {
         try {
             Map<String, Object> params = new HashMap(ConverterConstant.INIT_CAPACITY_4);
             params.put(Constants.VERSION_KEY_STR, ConverterConstant.RPC_VERSION);

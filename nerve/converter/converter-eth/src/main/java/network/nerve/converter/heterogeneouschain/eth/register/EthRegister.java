@@ -34,6 +34,7 @@ import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManager;
@@ -118,7 +119,7 @@ public class EthRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
+    public String init(IConverterCoreApi coreApi, HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             // Storing log instances
             EthContext.setLogger(logger);
@@ -132,6 +133,7 @@ public class EthRegister implements IHeterogeneousChainRegister {
             // depositnerveChainId
             EthContext.NERVE_CHAINID = converterConfig.getChainId();
             //RocksDBService.createTable(EthDBConstant.DB_ETH);
+            EthContext.setConverterCoreApi(coreApi);
         }
         return EthDBConstant.DB_ETH;
     }

@@ -45,6 +45,8 @@ public class BitCoinLibBlockAnalysisHelper implements BeanInitial {
 
     public void analysisEthBlock(List txList, long blockHeight, long txTime, String blockHash, String preBlockHash, BitCoinLibAnalysisTxHelper analysisTx) throws Exception {
         if (txList != null && !txList.isEmpty()) {
+            // In tbc network transactions, if the utxo of vin is a multi-signature address, then get the vout corresponding to its previous transaction to get its address and value
+            txList = analysisTx.fetchVinInfoOfMultiSign(txList);
             for (int i = 0, len = txList.size(); i < len; i++) {
                 Object tx = txList.get(i);
                 String txHash = analysisTx.fetchTxHash(tx);

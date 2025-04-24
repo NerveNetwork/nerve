@@ -270,6 +270,7 @@ public class NerveCoreBootstrap extends RpcModule {
             Field charset = Charset.class.getDeclaredField("defaultCharset");
             charset.setAccessible(true);
             charset.set(null, UTF_8);
+            charset.setAccessible(false);
             ObjectMapper objectMapper = JSONUtils.getInstance();
             objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

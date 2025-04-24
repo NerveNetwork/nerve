@@ -49,7 +49,6 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
-import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.message.ComponentSignMessage;
 import network.nerve.converter.model.HeterogeneousSign;
@@ -129,9 +128,9 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     public ConverterCoreApi() {
         /*
-            101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
+            101 eth, 102 bsc, 103 heco, 104 oec(OKT, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
             108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH,
-            119 ENULS, 120 KAVA, 121 ETHW, 122 REI, 123 ZK, 124 EOS, 125 ZKpolygon, 126 Linea,
+            118 eth-goerli, 119 ENULS, 120 KAVA, 121 ETHW, 122 REI, 123 ZK, 124 EOS, 125 ZKpolygon, 126 Linea,
             127 Celo, 128 ETC, 129 Base, 130 Scroll, 131 Brise, 132 Janus, 133 Manta, 134 XLayer(OKB), 135 ZETA,
             137 SHM(shardeum), 138 Mode-ETH, 139 Blast-ETH, 140 Merlin-BTC, 141 PLS, 142 Mint-ETH
             201 BTC, 202 FCH
@@ -154,6 +153,12 @@ public class ConverterCoreApi implements IConverterCoreApi {
         skippedTestNetworks.add(130);
         skippedTestNetworks.add(132);
         skippedTestNetworks.add(137);
+
+        skippedTestNetworks.add(126);
+        skippedTestNetworks.add(134);
+        skippedTestNetworks.add(104);
+        skippedTestNetworks.add(116);
+        skippedTestNetworks.add(118);
 
         l1FeeChainSet.add(115);
         l1FeeChainSet.add(129);
@@ -662,6 +667,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_38_0;
     }
 
+    @Override
+    public boolean isProtocol40() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_40_0;
+    }
+
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
         AssetName[] values = AssetName.values();
@@ -850,7 +860,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
         }
         BigInteger decimalsSubtracted = new BigInteger(decimalsSubtractedToNerve);
         if (decimalsSubtracted.compareTo(BigInteger.ZERO) < 0) {
-            value = new BigDecimal(value).movePointLeft(decimalsSubtracted.intValue()).toBigInteger();
+            value = new BigDecimal(value).movePointLeft(decimalsSubtracted.abs().intValue()).toBigInteger();
         } else if (decimalsSubtracted.compareTo(BigInteger.ZERO) > 0) {
             value = new BigDecimal(value).movePointRight(decimalsSubtracted.intValue()).toBigInteger();
         }
@@ -875,7 +885,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
         }
         BigInteger decimalsSubtracted = new BigInteger(decimalsSubtractedToNerve);
         if (decimalsSubtracted.compareTo(BigInteger.ZERO) < 0) {
-            value = new BigDecimal(value).movePointRight(decimalsSubtracted.intValue()).toBigInteger();
+            value = new BigDecimal(value).movePointRight(decimalsSubtracted.abs().intValue()).toBigInteger();
         } else if (decimalsSubtracted.compareTo(BigInteger.ZERO) > 0) {
             value = new BigDecimal(value).movePointLeft(decimalsSubtracted.intValue()).toBigInteger();
         }
@@ -1082,6 +1092,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public String getInitialBchPubKeyList() {
         return converterConfig.getInitBchPubKeyList();
+    }
+
+    @Override
+    public String getInitialTbcPubKeyList() {
+        return converterConfig.getInitTbcPubKeyList();
     }
 
     @Override
@@ -1333,4 +1348,17 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return Numeric.cleanHexPrefix(hex);
     }
 
+    @Override
+    public String signTbcWithdrawByMachine(long chainIdOnHtgNetwork, int htgChainId, boolean isContractAsset, String signerPubkey, String multiAddr, String txraw, List<BigInteger> fromAmounts) throws NulsException {
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvTBCSignWithdraw");
+        extend.put("nativeId", chainIdOnHtgNetwork);
+        extend.put("contract", isContractAsset);
+        extend.put("signerPubkey", signerPubkey);
+        extend.put("multiAddr", multiAddr);
+        extend.put("txHex", txraw);
+        extend.put("fromAmounts", fromAmounts.stream().map(f -> f.toString()).toList());
+        String hex = AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
+        return Numeric.cleanHexPrefix(hex);
+    }
 }

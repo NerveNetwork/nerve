@@ -157,6 +157,8 @@ public class HeterogeneousChainManager {
                         heterogeneousChainMap.put(info.getChainId(), info);
                 });
             }
+            // TBC always load setting file
+            heterogeneousChainMap.remove(AssetName.TBC.chainId());
 
             Collection<Object> list = SpringLiteContext.getAllBeanList();
             List<IHeterogeneousChainRegister> registerList = new ArrayList<>();
@@ -189,7 +191,7 @@ public class HeterogeneousChainManager {
                     continue;
                 }
                 // Execute initialization functions for heterogeneous chains
-                String dbName = register.init(heterogeneousCfg, chain.getLogger());
+                String dbName = register.init(converterCoreApi, heterogeneousCfg, chain.getLogger());
                 // add by pierre at 2023/9/5 Database merge
                 do {
                     //Check this chainDBHas it been merged
@@ -228,14 +230,19 @@ public class HeterogeneousChainManager {
                 // Save heterogeneous chains symbol and chainId The relationship between
                 heterogeneousChainIdRuleMap.put(chainInfo.getChainName(), chainId);
                 String multySignAddress = chainInfo.getMultySignAddress();
-                // Basic information of persistent storage heterogeneous chains
-                if (StringUtils.isNotBlank(multySignAddress) && !heterogeneousChainMap.containsKey(chainId)) {
-                    try {
-                        heterogeneousChainInfoStorageService.saveHeterogeneousChainInfo(chainId, chainInfo);
-                    } catch (Exception e) {
-                        throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
-                    }
+                // TBC always load setting file
+                if (chainId == AssetName.TBC.chainId()) {
                     heterogeneousChainMap.put(chainId, chainInfo);
+                } else {
+                    // Basic information of persistent storage heterogeneous chains
+                    if (StringUtils.isNotBlank(multySignAddress) && !heterogeneousChainMap.containsKey(chainId)) {
+                        try {
+                            heterogeneousChainInfoStorageService.saveHeterogeneousChainInfo(chainId, chainInfo);
+                        } catch (Exception e) {
+                            throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
+                        }
+                        heterogeneousChainMap.put(chainId, chainInfo);
+                    }
                 }
                 if (chainId == 202) {
                     // Fixed the bug of upper and lower case letters in the address

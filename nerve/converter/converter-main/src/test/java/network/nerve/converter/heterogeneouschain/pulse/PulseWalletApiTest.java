@@ -140,6 +140,8 @@ public class PulseWalletApiTest extends Base {
         list.add(packageAddressPrivateKeyZP);// 0x2804A4296211Ab079AED4e12120808F1703841b3
         list.add(packageAddressPrivateKeyNE);// 0x4202726a119F7784085B04264BfF716267a51032
         list.add(packageAddressPrivateKeyHF);// 0x4dAE32e287D43Ba6F6fE9323864e67A9c66B47e6
+        //list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
+        //list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
         this.multySignContractAddress = "0x50074F4Bc4bC955622b49de16Fc6E3C1c73afBcA";
         init();
     }
@@ -636,14 +638,17 @@ public class PulseWalletApiTest extends Base {
      */
     @Test
     public void managerReplace1By10Managers() throws Exception {
-        setLocalTest();
+        setLocalNewTest();
         // GasPriceprepare
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
-        String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
-        String[] adds = new String[]{"0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389"};
-        String[] removes = new String[]{"0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
+        String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3c1";
+        String[] adds = new String[]{};
+        String[] removes = new String[]{
+                "0xd29e172537a3fb133f790ebe57ace8221cb8024f",
+                "0x8f05ae1c759b8db56ff8124a89bb1305ece17b65"
+        };
         int txCount = 1;
-        int signCount = 10;
+        int signCount = 5;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }

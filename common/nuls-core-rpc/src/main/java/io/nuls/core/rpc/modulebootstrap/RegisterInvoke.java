@@ -8,8 +8,10 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.MapUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * @Author: zhoulijun
@@ -58,22 +60,39 @@ public class RegisterInvoke extends BaseInvoke {
                         return ;
                     }
                     NotifySender notifySender = SpringLiteContext.getBean(NotifySender.class);
-                    notifySender.send("registerModuleDependent_" + entry.getKey(),10,() -> {
-                        Response cmdResp = null;
-                        try {
-                            cmdResp = ResponseMessageProcessor.requestAndResponse(entry.getKey(), "registerModuleDependencies", MapUtils.beanToLinkedMap(module));
-                            Log.debug("registerModuleDependent : {},result:{}", entry.getKey(),cmdResp);
-                            return cmdResp.isSuccess();
-                        } catch (Exception e) {
-                            Log.error("Calling remote interface failed. module:{} - interface:{} - message:{}", module, "registerModuleDependencies", e.getMessage());
-                            return false;
-                        }
-                    });
+                    notifySender.send("registerModuleDependent_" + entry.getKey(),10, new RegisterModuleCallable(entry, module));
                 }
             });
 
         }
 
+    }
+
+    static class RegisterModuleCallable implements Callable<Boolean> {
+
+        Map.Entry<String, Map> entry;
+        Module module;
+
+        public RegisterModuleCallable(Map.Entry<String, Map> entry, Module module) {
+            this.entry = entry;
+            this.module = module;
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+            Response cmdResp = null;
+            try {
+                Map map = new HashMap();
+                map.put("name", module.getName());
+                map.put("version", module.getVersion());
+                cmdResp = ResponseMessageProcessor.requestAndResponse(entry.getKey(), "registerModuleDependencies", map);
+                Log.debug("registerModuleDependent : {},result:{}", entry.getKey(),cmdResp);
+                return cmdResp.isSuccess();
+            } catch (Exception e) {
+                Log.error("Calling remote interface failed. module:{} - interface:{} - message:{}", module, "registerModuleDependencies", e.getMessage());
+                return false;
+            }
+        }
     }
 
 }

@@ -44,6 +44,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import static network.nerve.quotation.constant.QuotationConstant.ANCHOR_TOKEN_TBC;
+
 /**
  * @author: Loki
  * @date: 2019/12/5
@@ -122,6 +124,10 @@ public class CollectorProcessor implements Collector {
             for (Future<EnquiryResult> future : effectiveList) {
                 try {
                     EnquiryResult enquiryResult = future.get();
+                    // TBC does not calculate prices from the AS system
+                    if (ANCHOR_TOKEN_TBC.equals(anchorToken) && enquiryResult.name.equals("AS")) {
+                        continue;
+                    }
                     BigDecimal querierPrice = enquiryResult.price;
                     if (null == querierPrice || querierPrice.compareTo(BigDecimal.ZERO) <= 0) {
                         continue;

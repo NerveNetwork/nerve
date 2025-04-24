@@ -1,6 +1,7 @@
 package network.nerve.converter.heterogeneouschain.bnb.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
@@ -17,7 +18,6 @@ import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
-import org.ethereum.crypto.ECKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.web3j.abi.*;
@@ -36,6 +36,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -1231,12 +1232,76 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void test() {
-        byte n = (byte) 23;
-        System.out.println(String.format("%02x", n & 255));
-        System.out.println(Numeric.toHexStringNoPrefix(new byte[]{n}));
-        String base64 = "KOoEFTB97jAj695UEfVZJtk5oYcroD2om9MhMOa6r3VsF+aZCATTUoc6XKeczWU+pftfuixAgzYR+gZKCWvvQRtF6rhSt8x8WgVT9YC6gXjpoJHjfCy2L3QFK3MypnoQNE5FM5Zgrctcw6Nvi+wLyoD2iyekpSAM93B9swgITyQ3GyeQgsiGhxTuXi0653pUDh4QtRjdm8GuSFMuUI6DBfCSaoTnJPCuDxLQSZLw2HMCfui0vTCz0wtI+JnFq0mQ/yYcTBJoYuAAL9lhX3YaB4gwlSAoxlRR4j6+h06kTs6YAkJkSUk/Vkcv2p9GHFR69KW3QxggHz33MQZHxGZgifp2yhvH5EaWiaWLJ1Qmqs74anqUwSQLpUAvrxeUKxqX/0uGsjt1VgmWo8ZlVTCyICZ8kE5/aOKXRDgRPJBMpWE89HaaG1V1vIxchMaIlolU60U2GRpPPGSDHBbW4T8DA4fSs2J3JKh0cgq4hS+Ukmm5qPYLXwQ2qBHkpUGfbivhxX7coIQby+04KBj1mxybic079IfzzFxiqptDIyzwke/jVK37UV4oCIxLCYN9R5UZfdN9UoxZseB8a2/yDQBlzDLvKmewRhwbv+10HWnHzAY/a0V9D9p79nZtwwd6CS45dv3qBKxVfCSxQF2cdRAs+AUTWeWXHnxi6rG9/E1o7VHfKLjliYsKHCjjDCron0Z4FzkXzaZwAu25Q23oVobb/4mcSrfuw46KOCNLMvZCUpNCg6xr01mIlGvi85/tNEkrqZJc4z5Kj0Ic+ryuopO67bX6iUNCZeN57kL8Mf+n73GUi4r0s06WR2UKi0qVbuXtqOcm3raXmVG2ZJoRTKHu8pALjskWq8DU6xsQQnPFIr9YODvjV/yoKxi/aE3Aj+P4/LjsfNyQDk7DnDq8Fje0Lb3Z18nJKC4sjkN8+RqKVe9/sXT8E8mcXe52HBERERERERERERERERERERERERERERERERERERERERERERERERERERE=";
-        System.out.println(Numeric.toHexString(Base64.getDecoder().decode(base64)));
+        String data = "This request authorizes the wallet connection and does not trigger a block transaction or pay any fees, Nonce: 69840881";
+
+        //String prikey = "";
+        //Credentials credentials = Credentials.create(prikey);
+        //String address = credentials.getAddress();
+        //Sign.SignatureData signMessage = Sign.signPrefixedMessage(data.getBytes(StandardCharsets.UTF_8), credentials.getEcKeyPair());
+        //byte[] signed = new byte[65];
+        //System.arraycopy(signMessage.getR(), 0, signed, 0, 32);
+        //System.arraycopy(signMessage.getS(), 0, signed, 32, 32);
+        //System.arraycopy(signMessage.getV(), 0, signed, 64, 1);
+        //String signedHex = Numeric.toHexStringNoPrefix(signed);
+
+        // 1a8d0269bed623d3879912b3513d8e02ebf604442cd5335f618f7f1827e8de6b75ba1d4942c278b29b8bb00a96bfbd693c1d87edde927fa5a63d41c2a2a070bd
+        String pub = "031a8d0269bed623d3879912b3513d8e02ebf604442cd5335f618f7f1827e8de6b";
+        String signedHex = Numeric.cleanHexPrefix("096bcda9d87fec29991902bb160eb00bc92ebad2f95e8cde56d4d0925f65b9e1512ee74d9ce1dccabf6c910c968342679aaebb1fa2cca13a4544cf24f2e63c7e1b");
+        //String r = "0x" + signedHex.substring(0, 64);
+        //String s = "0x" + signedHex.substring(64, 128);
+        //int v = Integer.parseInt(signedHex.substring(128), 16) - 27;
+        //System.out.println(v);
+        //ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(r), Numeric.decodeQuantity(s));
+        //byte[] hashBytes = getEthereumMessageHash(data.getBytes(StandardCharsets.UTF_8));
+        //BigInteger recover = Sign.recoverFromSignature(v, signature, hashBytes);
+        //System.out.println(HexUtil.encode(recover.toByteArray()));
+        // 44d538478f4cb73a3c8874ba94d93c75c9df93be33e300773223cfc1833e8baa0f081f54e1e1db14c3503ce7b50716f8eb109f2a8473280eb72bba08676982b7
+
+        //byte n = (byte) 23;
+        //System.out.println(String.format("%02x", n & 255));
+        //System.out.println(Numeric.toHexStringNoPrefix(new byte[]{n}));
+        //String base64 = "KOoEFTB97jAj695UEfVZJtk5oYcroD2om9MhMOa6r3VsF+aZCATTUoc6XKeczWU+pftfuixAgzYR+gZKCWvvQRtF6rhSt8x8WgVT9YC6gXjpoJHjfCy2L3QFK3MypnoQNE5FM5Zgrctcw6Nvi+wLyoD2iyekpSAM93B9swgITyQ3GyeQgsiGhxTuXi0653pUDh4QtRjdm8GuSFMuUI6DBfCSaoTnJPCuDxLQSZLw2HMCfui0vTCz0wtI+JnFq0mQ/yYcTBJoYuAAL9lhX3YaB4gwlSAoxlRR4j6+h06kTs6YAkJkSUk/Vkcv2p9GHFR69KW3QxggHz33MQZHxGZgifp2yhvH5EaWiaWLJ1Qmqs74anqUwSQLpUAvrxeUKxqX/0uGsjt1VgmWo8ZlVTCyICZ8kE5/aOKXRDgRPJBMpWE89HaaG1V1vIxchMaIlolU60U2GRpPPGSDHBbW4T8DA4fSs2J3JKh0cgq4hS+Ukmm5qPYLXwQ2qBHkpUGfbivhxX7coIQby+04KBj1mxybic079IfzzFxiqptDIyzwke/jVK37UV4oCIxLCYN9R5UZfdN9UoxZseB8a2/yDQBlzDLvKmewRhwbv+10HWnHzAY/a0V9D9p79nZtwwd6CS45dv3qBKxVfCSxQF2cdRAs+AUTWeWXHnxi6rG9/E1o7VHfKLjliYsKHCjjDCron0Z4FzkXzaZwAu25Q23oVobb/4mcSrfuw46KOCNLMvZCUpNCg6xr01mIlGvi85/tNEkrqZJc4z5Kj0Ic+ryuopO67bX6iUNCZeN57kL8Mf+n73GUi4r0s06WR2UKi0qVbuXtqOcm3raXmVG2ZJoRTKHu8pALjskWq8DU6xsQQnPFIr9YODvjV/yoKxi/aE3Aj+P4/LjsfNyQDk7DnDq8Fje0Lb3Z18nJKC4sjkN8+RqKVe9/sXT8E8mcXe52HBERERERERERERERERERERERERERERERERERERERERERERERERERERE=";
+        //System.out.println(Numeric.toHexString(Base64.getDecoder().decode(base64)));
+        System.out.println(verifyPub(data, signedHex, pub));
     }
+
+    public static boolean verifyPub(String data, String signedHex, String _pub) {
+        String r = "0x" + signedHex.substring(0, 64);
+        String s = "0x" + signedHex.substring(64, 128);
+        int v = Integer.parseInt(signedHex.substring(128), 16);
+        if (v >= 27) {
+            v -= 27;
+        }
+        ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(r), Numeric.decodeQuantity(s));
+        byte[] hashBytes = getEthereumMessageHash(data.getBytes(StandardCharsets.UTF_8));
+        BigInteger recover = Sign.recoverFromSignature(v, signature, hashBytes);
+        String pub = Numeric.toHexStringNoPrefix(recover);
+        pub = leftPadding(pub, "0", 128);
+        pub = "04" + pub;
+        byte[] encoded = ECKey.fromPublicOnly(HexUtil.decode(pub)).getPubKeyPoint().getEncoded(true);
+        String compressedPub = HexUtil.encode(encoded);
+        return compressedPub.equalsIgnoreCase(_pub);
+    }
+
+    static String leftPadding(String orgin, String padding, int total) {
+        return padding.repeat(total - orgin.length()) + orgin;
+    }
+
+    static byte[] getEthereumMessageHash(byte[] message) {
+        byte[] prefix = getEthereumMessagePrefix(message.length);
+
+        byte[] result = new byte[prefix.length + message.length];
+        System.arraycopy(prefix, 0, result, 0, prefix.length);
+        System.arraycopy(message, 0, result, prefix.length, message.length);
+
+        return Hash.sha3(result);
+    }
+
+    static byte[] getEthereumMessagePrefix(int messageLength) {
+        return MESSAGE_PREFIX.concat(String.valueOf(messageLength)).getBytes();
+    }
+
+    static final String MESSAGE_PREFIX = "\u0019NULS Signed Message:\n";
 
     @Test
     public void arrayTest() {

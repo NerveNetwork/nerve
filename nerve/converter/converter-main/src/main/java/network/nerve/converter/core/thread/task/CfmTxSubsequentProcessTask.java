@@ -34,6 +34,7 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.btc.txdata.UTXOData;
 import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
@@ -45,6 +46,7 @@ import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
@@ -346,9 +348,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             Integer htgChainId = docking.getChainId();
             if (htgChainId > 200) {
                 boolean enoughAvailablePubs = docking.getBitCoinApi().checkEnoughAvailablePubs(docking.getCurrentMultySignAddress());
-                //if (converterCoreApi.checkChangeP35(txHash)) {
-                //    enoughAvailablePubs = true;
-                //}
+                if (htgChainId == AssetName.TBC.chainId()) {
+                    // tbc not change
+                    enoughAvailablePubs = true;
+                }
                 if (!enoughAvailablePubs) {
                     // change multi-sign addr, transfer to new addr from current addr
                     // check if withdrawl tx has made UTXOs'tx
@@ -652,6 +655,14 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
         // check if withdrawl tx has made UTXOs'tx
         WithdrawalUTXOTxData withdrawalUTXOTxData = docking.getBitCoinApi().takeWithdrawalUTXOs(nerveTxHash);
+        // deal dirty data on testnet
+        /*if (!converterCoreApi.isNerveMainnet() && "2f7253ca19967afb90fdd9644e302241688e24117deba03dbba0fcec5b46eee0".equals(nerveTxHash)) {
+            UTXOData utxoData = withdrawalUTXOTxData.getUtxoDataList().get(0);
+            boolean lockedUTXO = docking.getBitCoinApi().isLockedUTXO(utxoData.getTxid(), utxoData.getVout());
+            if (!lockedUTXO) {
+                withdrawalUTXOTxData = null;
+            }
+        }*/
         // if not
         if (withdrawalUTXOTxData == null) {
             makeWithdrawalUTXOTx(pendingPO, htgChainId, docking.getCurrentMultySignAddress(), chain.getMapVirtualBank());
@@ -706,6 +717,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 HeterogeneousSign currentSign = new HeterogeneousSign(heterogeneousAddress, HexUtil.decode(signStrData));
                 List<HeterogeneousSign> listSign = new ArrayList<>();
                 listSign.add(currentSign);
+                // tbc total=10
                 ComponentSignMessage currentMessage = new ComponentSignMessage(pendingPO.getCurrenVirtualBankTotal(),
                         nerveTxHashObj, listSign);
                 // Initialize the object for storing signatures
@@ -1069,8 +1081,8 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 ComponentCallParm callParm = callParmsList.get(0);
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
                 if (!converterCoreApi.checkNetworkRunning(docking.getChainId())) {
-                    chain.getLogger().info("[withdraw] Test network[{}]Run Pause, chainId: {}", docking.getChainSymbol(), docking.getChainId());
-                    throw new NulsException(ConverterErrorCode.WITHDRAWAL_PAUSE);
+                    chain.getLogger().info("[withdraw] Test network [{}] Run Pause, chainId: {}", docking.getChainSymbol(), docking.getChainId());
+                    return true;
                 }
                 if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
                     WithdrawalTotalFeeInfo totalFeeInfo = assembleTxService.calculateWithdrawalTotalFee(chain, tx);

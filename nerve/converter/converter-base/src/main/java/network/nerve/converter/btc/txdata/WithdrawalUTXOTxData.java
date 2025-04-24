@@ -30,6 +30,7 @@ import io.nuls.base.data.BaseNulsData;
 import io.nuls.base.data.NulsHash;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.SerializeUtils;
 import network.nerve.converter.model.bo.WithdrawalUTXO;
 import network.nerve.converter.utils.ConverterUtil;
@@ -50,6 +51,9 @@ public class WithdrawalUTXOTxData extends BaseNulsData {
     private long feeRate;
     private List<byte[]> pubs;
     private List<UTXOData> utxoDataList;
+    private String script;
+    private String ftAddress;
+    private List<FtUTXOData> ftUtxoDataList;
 
     public WithdrawalUTXOTxData() {
     }
@@ -96,6 +100,19 @@ public class WithdrawalUTXOTxData extends BaseNulsData {
                 stream.writeNulsData(utxoData);
             }
         }
+        if (StringUtils.isNotBlank(script)) {
+            stream.writeString(script);
+        }
+        if (StringUtils.isNotBlank(ftAddress)) {
+            stream.writeString(ftAddress);
+            int listSize1 = ftUtxoDataList == null ? 0 : ftUtxoDataList.size();
+            stream.writeUint16(listSize1);
+            if(null != ftUtxoDataList){
+                for(FtUTXOData utxoData : ftUtxoDataList){
+                    stream.writeNulsData(utxoData);
+                }
+            }
+        }
     }
 
     @Override
@@ -122,6 +139,20 @@ public class WithdrawalUTXOTxData extends BaseNulsData {
             }
             this.utxoDataList = list;
         }
+        if (!byteBuffer.isFinished()) {
+            this.script = byteBuffer.readString();
+        }
+        if (!byteBuffer.isFinished()) {
+            this.ftAddress = byteBuffer.readString();
+            int listSize1 = byteBuffer.readUint16();
+            if(0 < listSize1){
+                List<FtUTXOData> list = new ArrayList<>();
+                for(int i = 0; i< listSize1; i++){
+                    list.add(byteBuffer.readNulsData(new FtUTXOData()));
+                }
+                this.ftUtxoDataList = list;
+            }
+        }
     }
 
     @Override
@@ -142,6 +173,18 @@ public class WithdrawalUTXOTxData extends BaseNulsData {
         if (null != utxoDataList) {
             for(UTXOData utxoData : utxoDataList){
                 size += SerializeUtils.sizeOfNulsData(utxoData);
+            }
+        }
+        if (StringUtils.isNotBlank(script)) {
+            size += SerializeUtils.sizeOfString(script);
+        }
+        if (StringUtils.isNotBlank(ftAddress)) {
+            size += SerializeUtils.sizeOfString(ftAddress);
+            size += SerializeUtils.sizeOfUint16();
+            if (null != ftUtxoDataList) {
+                for(FtUTXOData utxoData : ftUtxoDataList){
+                    size += SerializeUtils.sizeOfNulsData(utxoData);
+                }
             }
         }
         return size;
@@ -203,6 +246,30 @@ public class WithdrawalUTXOTxData extends BaseNulsData {
         this.utxoDataList = utxoDataList;
     }
 
+    public String getScript() {
+        return script;
+    }
+
+    public void setScript(String script) {
+        this.script = script;
+    }
+
+    public String getFtAddress() {
+        return ftAddress;
+    }
+
+    public void setFtAddress(String ftAddress) {
+        this.ftAddress = ftAddress;
+    }
+
+    public List<FtUTXOData> getFtUtxoDataList() {
+        return ftUtxoDataList;
+    }
+
+    public void setFtUtxoDataList(List<FtUTXOData> ftUtxoDataList) {
+        this.ftUtxoDataList = ftUtxoDataList;
+    }
+
     public WithdrawalUTXO toWithdrawalUTXO() {
         return new WithdrawalUTXO(
                 this.nerveTxHash,
@@ -235,6 +302,8 @@ public class WithdrawalUTXOTxData extends BaseNulsData {
             sb.deleteCharAt(sb.length() - 1);
         }
         sb.append("]");
+        sb.append(",\"ftAddress\":")
+                .append('\"').append(ftAddress).append('\"');
         sb.append(",\"utxoDataList\":[");
         if (utxoDataList != null) {
             for (UTXOData utxo : utxoDataList) {
@@ -242,7 +311,16 @@ public class WithdrawalUTXOTxData extends BaseNulsData {
             }
             sb.deleteCharAt(sb.length() - 1);
         }
-        sb.append("]}");
+        sb.append("]");
+        sb.append(",\"ftUtxoDataList\":[");
+        if (ftUtxoDataList != null) {
+            for (FtUTXOData utxo : ftUtxoDataList) {
+                sb.append(utxo.toString()).append(",");
+            }
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        sb.append("]");
+        sb.append("}");
         return sb.toString();
     }
 }

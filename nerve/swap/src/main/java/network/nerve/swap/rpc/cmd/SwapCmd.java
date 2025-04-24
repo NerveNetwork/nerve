@@ -1091,6 +1091,37 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = SWAP_PAIR_INFOS_BY_ADDRESS, version = 1.0, description = "Address based on transaction pairs querySwapTransaction pair informations")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String[]", parameterDes = "Transaction to address")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = List.class, description = "Transaction pair informations")
+    }))
+    public Response getSwapPairInfosByPairAddress(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            List<String> _pairAddress = (List<String>) params.get("pairAddress");
+            List result = new ArrayList();
+            for (String pair : _pairAddress) {
+                SwapPairDTO pairDTO = swapPairCache.get(pair);
+                if (pairDTO == null) {
+                    return failed(SwapErrorCode.DATA_NOT_FOUND);
+                }
+
+                Map<String, Object> resultData = JSONUtils.jsonToMap(pairDTO.toString());
+                result.add(resultData);
+            }
+            Map r = new HashMap();
+            r.put("value", result);
+            return success(r);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
     @CmdAnnotation(cmd = STABLE_SWAP_PAIR_INFO, version = 1.0, description = "queryStable-SwapTransaction pair information")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
@@ -1109,6 +1140,36 @@ public class SwapCmd extends BaseCmd {
             }
             Map<String, Object> resultData = JSONUtils.jsonToMap(pairDTO.toString());
             return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = STABLE_SWAP_PAIR_INFOS, version = 1.0, description = "queryStable-SwapTransaction pair informations")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String[]", parameterDes = "Transaction to address")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = List.class, description = "Transaction pair informations")
+    }))
+    public Response getStableSwapPairInfos(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            List<String> _pairAddress = (List<String>) params.get("pairAddress");
+            List result = new ArrayList();
+            for (String pair : _pairAddress) {
+                StableSwapPairDTO pairDTO = stableSwapPairCache.get(pair);
+                if (pairDTO == null) {
+                    return failed(SwapErrorCode.DATA_NOT_FOUND);
+                }
+                Map<String, Object> resultData = JSONUtils.jsonToMap(pairDTO.toString());
+                result.add(resultData);
+            }
+            Map r = new HashMap();
+            r.put("value", result);
+            return success(r);
         } catch (Exception e) {
             logger().error(e);
             return failed(e.getMessage());

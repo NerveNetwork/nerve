@@ -25,6 +25,7 @@
 package network.nerve.converter.model.vo;
 
 import io.nuls.core.crypto.HexUtil;
+import network.nerve.converter.btc.txdata.FtUTXOData;
 import network.nerve.converter.btc.txdata.UTXOData;
 import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 
@@ -43,6 +44,9 @@ public class WithdrawalUTXOVO {
     private long feeRate;
     private List<String> pubs;
     private List<UTXOData> utxoDataList;
+    private String script;
+    private String ftAddress;
+    private List<FtUTXOData> ftUtxoDataList;
 
     public WithdrawalUTXOVO() {
     }
@@ -55,8 +59,34 @@ public class WithdrawalUTXOVO {
         this.feeRate = txData.getFeeRate();
         this.pubs = txData.getPubs().stream().map(b -> HexUtil.encode(b)).collect(Collectors.toList());
         this.utxoDataList = txData.getUtxoDataList();
+        this.script = txData.getScript();
+        this.ftAddress = txData.getFtAddress();
+        this.ftUtxoDataList = txData.getFtUtxoDataList();
     }
 
+    public String getScript() {
+        return script;
+    }
+
+    public void setScript(String script) {
+        this.script = script;
+    }
+
+    public String getFtAddress() {
+        return ftAddress;
+    }
+
+    public void setFtAddress(String ftAddress) {
+        this.ftAddress = ftAddress;
+    }
+
+    public List<FtUTXOData> getFtUtxoDataList() {
+        return ftUtxoDataList;
+    }
+
+    public void setFtUtxoDataList(List<FtUTXOData> ftUtxoDataList) {
+        this.ftUtxoDataList = ftUtxoDataList;
+    }
 
     public int getHtgChainId() {
         return htgChainId;

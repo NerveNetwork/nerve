@@ -68,9 +68,10 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
     }
 
     @Override
-    protected String _createMultiSignWithdrawTx(WithdrawalUTXO withdrawlUTXO, String signatureData, String to, long amount, String nerveTxHash) throws Exception {
+    protected String _createMultiSignWithdrawTx(WithdrawalUTXO withdrawlUTXO, String signatureData, String to, BigInteger _amount, String nerveTxHash, int assetId) throws Exception {
+        long amount = _amount.longValue();
         // calc the min number of signatures
-        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getByzantineCount(n);
 
         String txHex = BchUtxoUtil.createMultiSignWithdrawTx(
                 htgContext.getConverterCoreApi().getConverterConfig().getChainId(),
@@ -181,7 +182,7 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
     public String signWithdraw(String txHash, String toAddress, BigInteger value, Integer assetId) throws Exception {
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(txHash);
         // calc the min number of signatures
-        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getByzantineCount(n);
         boolean mainnet = htgContext.getConverterCoreApi().isNerveMainnet();
         if (htgContext.getConverterCoreApi().isLocalSign()) {
             String signatures = BchUtxoUtil.signWithdraw(
@@ -214,7 +215,7 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
     public Boolean verifySignWithdraw(String signAddress, String txHash, String toAddress, BigInteger amount, int assetId, String signature) throws Exception {
         WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(txHash);
         // calc the min number of signatures
-        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        int n = withdrawlUTXO.getPubs().size(), m = htgContext.getByzantineCount(n);
         return BchUtxoUtil.verifyWithdraw(
                 htgContext.getConverterCoreApi().getConverterConfig().getChainId(),
                 withdrawlUTXO,
@@ -350,14 +351,14 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
                 cloneWithdrawalUTXO.getFeeRate(),
                 nerveTxHash,
                 m, n, true, null, htgContext.getConverterCoreApi().isNerveMainnet());
-        int byzantineCount = htgContext.getConverterCoreApi().getByzantineCount(currentPubs.size());
+        int byzantineCount = htgContext.getByzantineCount(currentPubs.size());
         return verified >= byzantineCount;
     }
 
     @Override
     public long getWithdrawalFeeSize(long fromTotal, long transfer, long feeRate, int inputNum) {
         int n = htgContext.getConverterCoreApi().getVirtualBankSize();
-        int m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        int m = htgContext.getByzantineCount(n);
         return BchUtxoUtil.calcFeeMultiSignWithSplitGranularity(
                 fromTotal, transfer, feeRate, getSplitGranularity(), inputNum, 32, m, n);
     }
@@ -365,7 +366,7 @@ public class BchUtxoBitCoinApi extends BitCoinLibApi {
     @Override
     public long getChangeFeeSize(int utxoSize) {
         int n = htgContext.getConverterCoreApi().getVirtualBankSize();
-        int m = htgContext.getConverterCoreApi().getByzantineCount(n);
+        int m = htgContext.getByzantineCount(n);
         long size = BchUtxoUtil.calcFeeMultiSign(utxoSize, 1, 32, m, n);
         return size;
     }

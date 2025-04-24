@@ -330,6 +330,11 @@ public class ByzantineTransactionHelper {
         dto.setFee(txInfo.getFee());
         dto.setFeeTo(txInfo.getNerveFeeTo());
         dto.setExtend(txInfo.getExtend0());
+        if (depositTx.isDepositIIMainAndToken()) {
+            // Support simultaneous transfer intokenandmain
+            dto.setDepositII(true);
+            dto.setMainAmount(depositTx.getDepositIIMainAssetValue());
+        }
         return dto;
     }
 

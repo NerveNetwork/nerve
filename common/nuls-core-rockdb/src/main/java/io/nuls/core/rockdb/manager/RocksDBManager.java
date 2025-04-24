@@ -446,32 +446,6 @@ public class RocksDBManager {
     }
 
     /**
-     * Batch query specificationkeysofMapaggregate.
-     * batch query the Map set of the specified keys.
-     *
-     * @param table Database Table Name
-     * @param keys  Batch query keywords
-     * @return Batch query result key value pair set
-     */
-    public static Map<byte[], byte[]> multiGet(final String table, final List<byte[]> keys) {
-        if (!baseCheckTable(table)) {
-            Log.error("multiGet table={}: error", table);
-            return null;
-        }
-        if (keys == null || keys.size() == 0) {
-            return null;
-        }
-        try {
-            RocksDB db = TABLES.get(table);
-            return db.multiGet(keys);
-        } catch (Exception ex) {
-            Log.error("multiGet table={}: error", table);
-            Log.error(ex);
-            return null;
-        }
-    }
-
-    /**
      * Batch query transactions
      *
      * @param table
@@ -520,11 +494,7 @@ public class RocksDBManager {
         }
         try {
             RocksDB db = TABLES.get(table);
-            Map<byte[], byte[]> map = db.multiGet(keys);
-            if (map != null && map.size() > 0) {
-                list.addAll(map.values());
-            }
-            return list;
+            return db.multiGetAsList(keys);
         } catch (Exception ex) {
             Log.error("multiGetValueList table={}: error", table);
             Log.error(ex);
@@ -551,9 +521,11 @@ public class RocksDBManager {
         }
         try {
             RocksDB db = TABLES.get(table);
-            Map<byte[], byte[]> map = db.multiGet(keys);
-            if (map != null && map.size() > 0) {
-                list.addAll(map.keySet());
+            List<byte[]> resultList = db.multiGetAsList(keys);
+            for (int i = 0; i < keys.size(); i++) {
+                if (resultList.get(i) != null) {
+                    list.add(keys.get(i));
+                }
             }
             return list;
         } catch (Exception ex) {
@@ -670,10 +642,8 @@ public class RocksDBManager {
         options.setTableFormatConfig(tableOption);
 
         options.setMaxBackgroundCompactions(16);
-        options.setNewTableReaderForCompactionInputs(true);
         //For compressed input, openRocksDBPre reading of layers
         options.setCompactionReadaheadSize(128 * SizeUnit.KB);
-        options.setNewTableReaderForCompactionInputs(true);
 
         return options;
     }

@@ -76,37 +76,6 @@ public abstract class BitCoinLibConfirmTxHandler implements Runnable, BeanInitia
     protected abstract IBitCoinLibWalletApi walletApi();
     protected abstract boolean validateDepositTxConfirmedInBtcNet(String htgTxHash, boolean ifContractAsset) throws Exception;
     protected abstract BroadcastTxValidateStatus validateBroadcastTxConfirmedInBtcNet(HtgUnconfirmedTxPo po) throws Exception;
-    /*private boolean validateDepositTxConfirmedInBtcNet(String htgTxHash, boolean ifContractAsset) throws Exception {
-        String symbol = context().getConfig().getSymbol();
-        boolean validateTx = true;
-        do {
-            RawTransaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
-            if (htgTx.getConfirmations() == null || htgTx.getConfirmations().intValue() == 0) {
-                validateTx = false;
-                logger().error("[{}] Verify transaction [{}] Failed, tx not confirmed yet", symbol, htgTxHash);
-                break;
-            }
-        } while (false);
-        return validateTx;
-    }
-
-    private BroadcastTxValidateStatus validateBroadcastTxConfirmedInBtcNet(HtgUnconfirmedTxPo po) throws Exception {
-        String symbol = context().getConfig().getSymbol();
-        BroadcastTxValidateStatus status;
-        String htgTxHash = po.getTxHash();
-        do {
-            RawTransaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
-            if (htgTx.getConfirmations() == null || htgTx.getConfirmations().intValue() == 0) {
-                po.setSkipTimes(3);
-                status = BroadcastTxValidateStatus.RE_VALIDATE;
-                logger().error("[{}] Verify transaction [{}] Failed, tx not confirmed yet", symbol, htgTxHash);
-                break;
-            }
-            status = BroadcastTxValidateStatus.SUCCESS;
-        } while (false);
-        return status;
-    }*/
-
     protected NulsLogger logger() {
         return context().logger();
     }
@@ -304,16 +273,38 @@ public abstract class BitCoinLibConfirmTxHandler implements Runnable, BeanInitia
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
-                BtcUnconfirmedTxPo fchPo = (BtcUnconfirmedTxPo) po;
-                nerveTxHash = htgCallBackManager.getDepositTxSubmitter().depositTxSubmitOfBtcSys(
-                        htgTxHash,
-                        height,
-                        po.getFrom(),
-                        po.getNerveAddress(),
-                        po.getValue(),
-                        txTime,
-                        fchPo.getFee(),
-                        fchPo.getNerveFeeTo(), fchPo.getExtend0());
+                BtcUnconfirmedTxPo btcPo = (BtcUnconfirmedTxPo) po;
+                if (po.isDepositIIMainAndToken()) {
+                    // Recharge transactions for two types of assets simultaneously
+                    nerveTxHash = htgCallBackManager.getDepositTxSubmitter().depositIITxSubmitOfBtcSys(
+                            htgTxHash,
+                            height,
+                            po.getFrom(),
+                            po.getNerveAddress(),
+                            po.getValue(),
+                            txTime,
+                            po.getDecimals(),
+                            po.getContractAddress(),
+                            po.getAssetId(),
+                            po.getDepositIIMainAssetValue(),
+                            btcPo.getFee(),
+                            btcPo.getNerveFeeTo(),
+                            btcPo.getExtend0());
+                } else {
+                    nerveTxHash = htgCallBackManager.getDepositTxSubmitter().depositTxSubmitOfBtcSys(
+                            htgTxHash,
+                            height,
+                            po.getFrom(),
+                            po.getNerveAddress(),
+                            po.getValue(),
+                            txTime,
+                            po.getDecimals(),
+                            po.isIfContractAsset(),
+                            po.getContractAddress(),
+                            po.getAssetId(),
+                            btcPo.getFee(),
+                            btcPo.getNerveFeeTo(), btcPo.getExtend0());
+                }
             } while (false);
             // Update when there is a change in unconfirmed transaction dataDBdata
             boolean nerveTxHashNotBlank = StringUtils.isNotBlank(nerveTxHash);

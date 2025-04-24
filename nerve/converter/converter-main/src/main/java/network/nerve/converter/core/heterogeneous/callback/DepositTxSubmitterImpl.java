@@ -356,6 +356,11 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
             dto.setFee(txInfo.getFee());
             dto.setFeeTo(txInfo.getNerveFeeTo());
             dto.setExtend(txInfo.getExtend0());
+            if (depositTx.isDepositIIMainAndToken()) {
+                // Support simultaneous transfer intokenandmain
+                dto.setDepositII(true);
+                dto.setMainAmount(depositTx.getDepositIIMainAssetValue());
+            }
             Transaction tx = assembleTxService.createRechargeTxOfBtcSysWithoutSign(nerveChain, dto);
             Transaction confirmedTx = TransactionCall.getConfirmedTx(nerveChain, tx.getHash());
             if (confirmedTx != null) {
@@ -372,17 +377,41 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
     }
 
     @Override
-    public String depositTxSubmitOfBtcSys(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime, BigInteger fee, String feeTo, String extend) throws Exception {
+    public String depositTxSubmitOfBtcSys(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime, Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, BigInteger fee, String feeTo, String extend) throws Exception {
         // Assembly transaction
         RechargeTxOfBtcSysDTO dto = new RechargeTxOfBtcSysDTO();
         dto.setHtgTxHash(txHash);
         dto.setHtgFrom(from);
         dto.setHtgChainId(hChainId);
-        dto.setHtgAssetId(1);
+        dto.setHtgAssetId(assetId);
         dto.setHtgTxTime(txTime);
         dto.setHtgBlockHeight(blockHeight);
         dto.setTo(to);
         dto.setAmount(value);
+        dto.setFee(fee);
+        dto.setFeeTo(feeTo);
+        dto.setExtend(extend);
+        Transaction tx = assembleTxService.createRechargeTxOfBtcSys(nerveChain, dto);
+        if(tx == null) {
+            return null;
+        }
+        return tx.getHash().toHex();
+    }
+
+    @Override
+    public String depositIITxSubmitOfBtcSys(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime, Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, BigInteger mainAssetValue, BigInteger fee, String feeTo, String extend) throws Exception {
+        // Assembly transaction
+        RechargeTxOfBtcSysDTO dto = new RechargeTxOfBtcSysDTO();
+        dto.setHtgTxHash(txHash);
+        dto.setHtgFrom(from);
+        dto.setTo(to);
+        dto.setAmount(erc20Value);
+        dto.setHtgChainId(hChainId);
+        dto.setHtgAssetId(erc20AssetId);
+        dto.setHtgTxTime(txTime);
+        dto.setHtgBlockHeight(blockHeight);
+        dto.setDepositII(true);
+        dto.setMainAmount(mainAssetValue);
         dto.setFee(fee);
         dto.setFeeTo(feeTo);
         dto.setExtend(extend);

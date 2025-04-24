@@ -37,7 +37,27 @@ public class RechargeTxOfBtcSysDTO {
     BigInteger amount;
     BigInteger fee;
     String feeTo;
+
+    // Simultaneously rechargetokenandmain,mainAmount placed in the new fieldmainAmountin
+    boolean depositII;
+    BigInteger mainAmount;
     String extend;
+
+    public boolean isDepositII() {
+        return depositII;
+    }
+
+    public void setDepositII(boolean depositII) {
+        this.depositII = depositII;
+    }
+
+    public BigInteger getMainAmount() {
+        return mainAmount;
+    }
+
+    public void setMainAmount(BigInteger mainAmount) {
+        this.mainAmount = mainAmount;
+    }
 
     public String getHtgTxHash() {
         return htgTxHash;

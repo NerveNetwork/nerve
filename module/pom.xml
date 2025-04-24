@@ -12,9 +12,6 @@
     <artifactId>module</artifactId>
     <packaging>pom</packaging>
 
-    <properties>
-        <java.version>11</java.version>
-    </properties>
     <modules>
 <!--        <module>nuls-account</module>-->
 <!--        <module>nuls-block</module>-->

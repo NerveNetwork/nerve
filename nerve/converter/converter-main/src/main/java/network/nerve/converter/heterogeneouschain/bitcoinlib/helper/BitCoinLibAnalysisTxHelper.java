@@ -39,6 +39,8 @@ import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
 
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author: Mimi
@@ -60,6 +62,11 @@ public abstract class BitCoinLibAnalysisTxHelper implements BeanInitial {
     protected abstract AnalysisTxInfo analysisTxTypeInfo(Object _txInfo, long txTime, String blockHash);
     protected abstract long calcTxFee(Object _txInfo, BitCoinLibWalletApi htgWalletApi);
     protected abstract String fetchTxHash(Object _txInfo);
+
+    // In tbc network transactions, if the utxo of vin is a multi-signature address, then get the vout corresponding to its previous transaction to get its address and value
+    protected List fetchVinInfoOfMultiSign(List tx) throws Exception {
+        return Collections.EMPTY_LIST;
+    }
 
     public void analysisTx(Object txInfo, long txTime, long blockHeight, String blockHash) throws Exception {
         boolean isDepositTx = false;
@@ -94,9 +101,21 @@ public abstract class BitCoinLibAnalysisTxHelper implements BeanInitial {
         }
 
         if (isDepositTx) {
-            htgContext.logger().info("Listening to {} Network based MainAsset Recharge transaction [{}], from: {}, to: {}, value: {}, nerveAddress: {}",
-                    htgContext.getConfig().getSymbol(), htgTxHash,
-                    po.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
+            // 增加tbc erc20的日志打印
+            if (po.isDepositIIMainAndToken()) {
+                htgContext.logger().info("Listening to {} Network based ERC20/{} Simultaneously Recharge transaction [{}], from: {}, to: {}, erc20Value: {}, nerveAddress: {}, contract: {}, decimals: {}, mainAssetValue: {}",
+                        htgContext.getConfig().getSymbol(), htgContext.getConfig().getSymbol(), htgTxHash,
+                        po.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals(), po.getDepositIIMainAssetValue());
+            } else if (po.isIfContractAsset()) {
+                htgContext.logger().info("Listening to {} Network based ERC20 Recharge transaction [{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+                        htgContext.getConfig().getSymbol(), htgTxHash,
+                        po.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
+            } else {
+                htgContext.logger().info("Listening to {} Network based MainAsset Recharge transaction [{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+                        htgContext.getConfig().getSymbol(), htgTxHash,
+                        po.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
+            }
+
             // add by pierre at 2022/6/29 Add recharge pause mechanism
             if (htgContext.getConverterCoreApi().isPauseInHeterogeneousAsset(htgContext.HTG_CHAIN_ID(), po.getAssetId())) {
                 htgContext.logger().warn("[Recharge pause] transaction [{}]", htgTxHash);

@@ -44,6 +44,7 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
+import network.nerve.converter.model.bo.UTXONeed;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.po.WithdrawalAdditionalFeePO;
 import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
@@ -111,32 +112,41 @@ public class HeterogeneousAssetHelper {
         BigInteger amount = withdrawCoinTo.getAmount();
         // docking get utxos
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-        List<UTXOData> utxos = docking.getBitCoinApi().getUTXOs(docking.getCurrentMultySignAddress());
+        UTXONeed needUTXO = docking.getBitCoinApi().getNeedUTXO(docking.getCurrentMultySignAddress(), amount, assetInfo.getAssetId());
+        List<UTXOData> utxos = needUTXO.getUtxoDataList();
         chain.getLogger().info("hash: {}, addr: {}, utxo size: {}", txHash, docking.getCurrentMultySignAddress(), utxos.size());
         utxos.sort(ConverterUtil.BITCOIN_SYS_COMPARATOR);
         BigInteger feeRate = BigInteger.valueOf(docking.getBitCoinApi().getFeeRate());
-        BigInteger spend = amount;
-        BigInteger total = BigInteger.ZERO;
-
-        List<UTXOData> needUtxos = new ArrayList<>();
-        for (UTXOData utxo : utxos) {
-            chain.getLogger().info("utxo data: {}", utxo);
-            // check utxo locked
-            boolean lockedUTXO = docking.getBitCoinApi().isLockedUTXO(utxo.getTxid(), utxo.getVout());
-            if (lockedUTXO) {
-                continue;
-            }
-            total = total.add(utxo.getAmount());
-            needUtxos.add(utxo);
-            spend = amount.add(BigInteger.valueOf(docking.getBitCoinApi().getWithdrawalFeeSize(total.longValue(), amount.longValue(), feeRate.longValue(), needUtxos.size())).multiply(feeRate));
-            if (total.compareTo(spend) >= 0) {
+        List<UTXOData> needUtxos;
+        do {
+            if (heterogeneousChainId == AssetName.TBC.chainId()) {
+                // tbc not check, as check inner tbc codes: getNeedUTXO
+                needUtxos = utxos;
                 break;
             }
-        }
-        if (total.compareTo(spend) < 0) {
-            chain.getLogger().info("[{}] not enough utxos to withdraw", txHash);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
-        }
+            needUtxos = new ArrayList<>();
+            BigInteger spend = amount;
+            BigInteger total = BigInteger.ZERO;
+
+            for (UTXOData utxo : utxos) {
+                chain.getLogger().info("utxo data: {}", utxo);
+                // check utxo locked
+                boolean lockedUTXO = docking.getBitCoinApi().isLockedUTXO(utxo.getTxid(), utxo.getVout());
+                if (lockedUTXO) {
+                    continue;
+                }
+                total = total.add(utxo.getAmount());
+                needUtxos.add(utxo);
+                spend = amount.add(BigInteger.valueOf(docking.getBitCoinApi().getWithdrawalFeeSize(total.longValue(), amount.longValue(), feeRate.longValue(), needUtxos.size())).multiply(feeRate));
+                if (total.compareTo(spend) >= 0) {
+                    break;
+                }
+            }
+            if (total.compareTo(spend) < 0) {
+                chain.getLogger().info("[{}] not enough utxos to withdraw", txHash);
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+        } while (false);
 
         List<byte[]> pubs = docking.getBitCoinApi().getMultiSignAddressPubs(docking.getCurrentMultySignAddress()).stream().map(d -> HexUtil.decode(d)).collect(Collectors.toList());
         pubs.sort(new Comparator<byte[]>() {
@@ -153,6 +163,9 @@ public class HeterogeneousAssetHelper {
         txData.setFeeRate(docking.getBitCoinApi().getFeeRate());
         txData.setPubs(pubs);
         txData.setUtxoDataList(needUtxos);
+        txData.setScript(needUTXO.getScript());
+        txData.setFtAddress(needUTXO.getFtAddress());
+        txData.setFtUtxoDataList(needUTXO.getFtUTXODataList());
         return txData;
     }
 

@@ -36,6 +36,7 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.BindHeterogeneousContractMode;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
@@ -208,7 +209,8 @@ public class LedgerAssetRegisterHelper {
                         bindError = ConverterErrorCode.DUPLICATE_BIND;
                         break;
                     }
-                    if (nerveAssetDecimals != decimals) {
+                    // TBC asset dont check nerveAssetDecimals
+                    if (heterogeneousChainId != AssetName.TBC.chainId() && nerveAssetDecimals != decimals) {
                         bindError = ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY;
                         break;
                     }
@@ -267,7 +269,8 @@ public class LedgerAssetRegisterHelper {
                         bindError = ConverterErrorCode.HETEROGENEOUS_INFO_NOT_MATCH;
                         break;
                     }
-                    if (nerveAssetDecimals != _hAssetInfo.getDecimals()) {
+                    // TBC asset dont check nerveAssetDecimals
+                    if (heterogeneousChainId != AssetName.TBC.chainId() && nerveAssetDecimals != _hAssetInfo.getDecimals()) {
                         bindError = ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY;
                         break;
                     }

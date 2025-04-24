@@ -56,7 +56,8 @@ public enum ModuleE {
     QU("qu", Constant.QUOTATION, ModuleE.DOMAIN),
     CV("cv", Constant.CONVERTER, ModuleE.DOMAIN),
     SW("sw", Constant.SWAP, ModuleE.DOMAIN),
-    NC("nc", Constant.NERVE_CORE, ModuleE.DOMAIN);
+    NC("nc", Constant.NERVE_CORE, ModuleE.DOMAIN),
+    HT("nt", Constant.HETOOL, ModuleE.DOMAIN);
 
 
     public static final String DOMAIN = "Nuls";
@@ -104,6 +105,7 @@ public enum ModuleE {
         public static final String SWAP = "swap";
 
         public static final String NERVE_CORE = "nerve-core";
+        public static final String HETOOL = "hetool";
     }
 
     public final String abbr;
