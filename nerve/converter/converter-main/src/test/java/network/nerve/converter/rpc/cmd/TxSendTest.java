@@ -168,6 +168,7 @@ public class TxSendTest {
 
     /** TBC testnet */
     static String USDT_TBC = "1707b71efdc207a476e7fefd6f7fa880a2201032c2b1d0a3cc20118ded505da4";
+    static String DOGE_TBC = "29a753233bf4f3b546b5eacd0a8ec7a7a236bf7b987f51390a7cac90bb1d8bcf";
 
     /** Mint testnet */
     static String USDT_MINT = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
@@ -481,6 +482,7 @@ public class TxSendTest {
 
     @Before
     public void before() throws Exception {
+        password = "25eb1cb9-d19c-43d4-8899-32bef8b9b006";
         AddressTool.addPrefix(5, "TNVT");
         NoUse.mockModule();
         ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":8771");
@@ -513,6 +515,7 @@ public class TxSendTest {
     // Private key: CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2 / 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17 [Account 8] / tNULSeBaMrmiuHZg9c2JVAbLQydAxjNvuKRgFj
     @Test
     public void importPriKeyTest() {
+        String password = "nuls123456";//"nuls123456";
         // HF: 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
         //Public key: 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863
         //importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//Seed block address tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp, 0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03
@@ -530,7 +533,7 @@ public class TxSendTest {
         importPriKey("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b", password);//29 tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn
         importPriKey("B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF", password);//30 ETH Test network address tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ
         importPriKey("4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39", password);//31 Test network address tNULSeBaMrQaVh1V7LLvbKa5QSN54bS4sdbXaF, 0xc11D9943805e56b630A401D4bd9A29550353EFa1 [Account 9]
-        importPriKey(packageAddressPrivateKey, password);
+        //importPriKey(packageAddressPrivateKey, password);
         //=================================================================//
         importPriKey("e70ea2ebe146d900bf84bc7a96a02f4802546869da44a23c29f599c7e42001da", password);//32 TNVTdTSPQj7T5LiVmL974o2YRWa1YPJJzJHhn
         importPriKey("4c6b4c5d9b07e364d6b306d1afe0f2c37e15c64ac5151a395a4c570f00ce867d", password);//33 TNVTdTSPKy4iLwK6XC52VNqVSnk1vncF5Z2mu
@@ -623,6 +626,7 @@ public class TxSendTest {
         this.balanceInfoPrint("　Main asset NVT", new NerveAssetInfo(chainId, assetId), address, 8);
         this.balanceInfoPrint("asset TBC", new NerveAssetInfo(5, 4), address, 6);
         this.balanceInfoPrint("asset test_usdt", new NerveAssetInfo(5, 5), address, 18);
+        this.balanceInfoPrint("asset doge", new NerveAssetInfo(5, 6), address, 6);
         //this.balanceInfoPrint("asset USDTN", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("asset NVT_USDTN_LP", new NerveAssetInfo(5, 4), address, 18);
         //this.balanceInfoPrint("asset BNB", new NerveAssetInfo(5, 2), address, 18);
@@ -932,7 +936,7 @@ public class TxSendTest {
         String from = address31;
         String to = "14Wo6L9A62gdkBqEKw2A4PxC467jvjJAP2";
         // Main assets quantity
-        BigInteger value = new BigDecimal("0.0025").movePointRight(6).toBigInteger();
+        BigInteger value = new BigDecimal("0.001025").movePointRight(6).toBigInteger();
         //BigInteger value = BigInteger.valueOf(120000);
         BigInteger fee = new BigInteger(Long.valueOf(39_1000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
@@ -1448,6 +1452,19 @@ public class TxSendTest {
     }
 
     @Test
+    public void withdrawalDogeOnTBC() throws Exception {
+        int htgChainId = tbcContext.HTG_CHAIN_ID();
+        String contract = DOGE_TBC;
+        String from = address31;
+        String to = "14Wo6L9A62gdkBqEKw2A4PxC467jvjJAP2";
+        // USDTquantity 1.123456
+        BigInteger value = new BigDecimal("0.000456").scaleByPowerOfTen(6).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(20_0000_0000L).toString());
+        NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
     public void withdrawalUSD18() throws Exception {
         int htgChainId = mintContext.HTG_CHAIN_ID();
         String contract = USD18_MINT;
@@ -1819,7 +1836,8 @@ public class TxSendTest {
     @Test
     public void bindContractAssetReg() throws Exception {
 
-        bindERC20(tbcContext.HTG_CHAIN_ID(), "test_usdt", "1707b71efdc207a476e7fefd6f7fa880a2201032c2b1d0a3cc20118ded505da4", 6, 5, 5);
+        //bindERC20(tbcContext.HTG_CHAIN_ID(), "test_usdt", "1707b71efdc207a476e7fefd6f7fa880a2201032c2b1d0a3cc20118ded505da4", 6, 5, 5);
+        bindERC20(tbcContext.HTG_CHAIN_ID(), "doge", "29a753233bf4f3b546b5eacd0a8ec7a7a236bf7b987f51390a7cac90bb1d8bcf", 6, 5, 6);
         //bindERC20(kromaContext.HTG_CHAIN_ID(), "NVT", NVT_KROMA_MINTER, 8, 5, 1);
         //bindERC20(zetaContext.HTG_CHAIN_ID(), "NVT", NVT_ZETA_MINTER, 8, 5, 1);
         //bindERC20(x1Context.HTG_CHAIN_ID(), "NVT", NVT_X1_MINTER, 8, 5, 1);
@@ -2060,7 +2078,7 @@ public class TxSendTest {
 
     @Test
     public void chainAssetTxRegisterTest() throws Exception {
-        chainAssetTxRegister("test_usdt", 18);
+        chainAssetTxRegister("doge", 6);
         //chainAssetTxRegister("U2D", 18);
         //chainAssetTxRegister("U3D", 18);
         //chainAssetTxRegister("U4D", 18);
@@ -2235,6 +2253,7 @@ public class TxSendTest {
 
     @Test
     public void transfer() throws Exception {
+        String password = "nuls123456";//"nuls123456";
         Map transferMap = new HashMap();
         transferMap.put("chainId", chainId);
         transferMap.put("remark", "abc");
@@ -2390,7 +2409,7 @@ public class TxSendTest {
 
     @Test
     public void createAgent() throws Exception {
-        package6();
+        package7();
         Map<String, Object> params = new HashMap<>();
         params.put("agentAddress", agentAddress);
         params.put(Constants.CHAIN_ID, chainId);
@@ -2406,7 +2425,7 @@ public class TxSendTest {
 
     @Test
     public void stopAgent() throws Exception {
-        package6();
+        package7();
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.CHAIN_ID, chainId);
         params.put("address", agentAddress);

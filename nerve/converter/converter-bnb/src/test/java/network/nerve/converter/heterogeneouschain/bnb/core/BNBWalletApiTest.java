@@ -1423,9 +1423,10 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void getTxReceipt() throws Exception {
-        setMain();
+        //setMain();
+        setMainProxy();
         // Directly callingerc20contract
-        String directTxHash = "0xb4992925f9b5f534ec6a26ec89fd07220b3f258ff51de6efecb6cd2142cbfef9";
+        String directTxHash = "0x745e62e8ee3ea11d4802e492c06b2066a4a3c8d3e4cd01bec77ebe47d48fa359";
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
     }

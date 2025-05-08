@@ -671,6 +671,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public boolean isProtocol40() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_40_0;
     }
+    @Override
+    public boolean isProtocol41() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_41_0;
+    }
 
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;

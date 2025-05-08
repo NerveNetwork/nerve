@@ -97,6 +97,11 @@ public class HeToolCmd extends BaseCmd {
             resultData.put("value", signedTx);
             return success(resultData);
         } catch (Exception e) {
+            try {
+                logger().error("call params: {}", JSONUtils.obj2json(params));
+            } catch (Exception e1) {
+                logger().error(e1);
+            }
             logger().error(e);
             return failed(e.getMessage());
         }
@@ -134,6 +139,11 @@ public class HeToolCmd extends BaseCmd {
             resultData.put("value", map);
             return success(resultData);
         } catch (Exception e) {
+            try {
+                logger().error("call params: {}", JSONUtils.obj2json(params));
+            } catch (Exception e1) {
+                logger().error(e1);
+            }
             logger().error(e);
             return failed(e.getMessage());
         }
@@ -152,6 +162,11 @@ public class HeToolCmd extends BaseCmd {
             resultData.put("value", signedTx);
             return success(resultData);
         } catch (Exception e) {
+            try {
+                logger().error("call params: {}", JSONUtils.obj2json(params));
+            } catch (Exception e1) {
+                logger().error(e1);
+            }
             logger().error(e);
             return failed(e.getMessage());
         }
@@ -170,6 +185,11 @@ public class HeToolCmd extends BaseCmd {
             resultData.put("value", ftPrePreTxData);
             return success(resultData);
         } catch (Exception e) {
+            try {
+                logger().error("call params: {}", JSONUtils.obj2json(params));
+            } catch (Exception e1) {
+                logger().error(e1);
+            }
             logger().error(e);
             return failed(e.getMessage());
         }

@@ -175,7 +175,8 @@ height_1_36_0=62143155
 height_1_37_0=62800000
 height_1_38_0=69780000
 height_1_39_0=72654000
-height_1_40_0=74000000
+height_1_40_0=726540000
+height_1_41_0=7265400000
 
 [nuls-api]
 #httpServerStart ofip

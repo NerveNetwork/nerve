@@ -505,6 +505,12 @@ public class TbcBitCoinApi extends BitCoinLibApi  {
                 if (lockedUTXO) {
                     continue;
                 }
+                if (htgContext.getConverterCoreApi().isProtocol41()) {
+                    if (utxo.getVout() != 0) {
+                        // For tbc to ft transactions, utxo's vout must be equal to 0 (for security reasons)
+                        continue;
+                    }
+                }
                 if (utxo.getAmount().compareTo(tbcValue) >= 0) {
                     needTBC = utxo;
                     break;

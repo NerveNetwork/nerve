@@ -117,7 +117,7 @@ public class ChainManager {
             loadHeterogeneousCfgJson(chain);
             createScheduler(chain);
             chainMap.put(chainId, chain);
-            chain.getLogger().debug("Chain:{} init success..", chainId);
+            chain.getLogger().info("Chain:{} init success..", chainId);
             ProtocolLoader.load(chainId);
             if(chainId == converterConfig.getChainId()) {
                 ConverterContext.MAIN_CHAIN_LOGGER = chain.getLogger();
@@ -303,8 +303,10 @@ public class ChainManager {
             if (configMap == null || configMap.size() == 0) {
                 ConfigBean configBean = converterConfig;
                 if (configBean == null) {
+                    Log.error("Converter configBean is null");
                     return null;
                 }
+                Log.info("Save configBean: {}, {}, {}", configBean.getChainId(), configBean.getAssetId(), configBean.getEncoding());
                 configStorageService.save(configBean, configBean.getChainId());
                 configMap.put(configBean.getChainId(), configBean);
             }

@@ -274,7 +274,7 @@ public class TbcWalletApi extends BitCoinLibWalletApi {
             return txraw;
         } catch (Exception e) {
             getLog().error(e);
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -351,6 +351,7 @@ public class TbcWalletApi extends BitCoinLibWalletApi {
             }
             return map.get("result").toString();
         } catch (Exception e) {
+            getLog().error("error tx hex: {}", txHex);
             throw new RuntimeException(e);
         }
     }

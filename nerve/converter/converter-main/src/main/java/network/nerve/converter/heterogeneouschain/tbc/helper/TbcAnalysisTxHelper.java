@@ -95,7 +95,7 @@ public class TbcAnalysisTxHelper extends BitCoinLibAnalysisTxHelper {
                     continue;
                 }
                 String asm = scriptSig.getAsm();
-                if (asm.startsWith("1 d007000000000000")) {
+                if (asm.startsWith("1 ")) {
                     requestFtList.add(new RawInputRequest(tx, txInfo.getTxId(), input));
                     continue;
                 }
@@ -146,6 +146,9 @@ public class TbcAnalysisTxHelper extends BitCoinLibAnalysisTxHelper {
             for (String hash : hashSet) {
                 String data = HttpClientUtil.get(String.format(ftUrl, tbcWalletApi.rpc(), hash));
                 if (StringUtils.isNotBlank(data)) {
+                    if (data.contains("Internal Server Error")) {
+                        continue;
+                    }
                     FtTransferInfo ftTransferInfo = JSONUtils.json2pojo(data, FtTransferInfo.class);
                     ftMap.put(hash, ftTransferInfo);
                 }

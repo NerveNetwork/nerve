@@ -186,6 +186,7 @@ public interface IConverterCoreApi {
     boolean isProtocol37();
     boolean isProtocol38();
     boolean isProtocol40();
+    boolean isProtocol41();
 
     /**
      * Add task
