@@ -20,6 +20,7 @@
 
 package io.nuls.block.message.handler;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.common.ConfigBean;
 import io.nuls.common.NerveCoreConfig;
 import io.nuls.base.RPCUtil;
@@ -115,7 +116,7 @@ public class SmallBlockBZTHandler implements MessageProcessor {
         if (COMPLETE.equals(status) || CONSENSUS_COMPLETE.equals(status) || ERROR.equals(status) || CONSENSUS_ERROR.equals(status)) {
             return;
         }
-        logger.info("recieve smallBlockBZTMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
+        logger.info("recieve smallBlockBZTMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash() + " , " + AddressTool.getStringAddressByBytes(header.getPackingAddress(chainId)));
         SmallBlockCacher.cacheNode(blockHash, nodeId, true);
         //2.Received partial blocks,Transaction information is still missing,sendHashListMessageTo source node
         if (INCOMPLETE.equals(status) && !context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {

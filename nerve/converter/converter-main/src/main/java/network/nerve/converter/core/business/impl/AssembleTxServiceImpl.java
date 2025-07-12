@@ -2352,4 +2352,31 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         chain.getLogger().debug(tx.format(GeneralBusTxData.class));
         return tx;
     }
+
+    @Override
+    public Transaction createSkipTx(Chain chain, String from, String password, String nerveTxHash) throws NulsException {
+        GeneralBusTxData txData = new GeneralBusTxData();
+        txData.setType(2);
+        txData.setData(HexUtil.decode(nerveTxHash));
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = new Transaction(TxType.GENERAL_BUS);
+        tx.setTxData(txDataBytes);
+        tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
+
+        SignAccountDTO signAccountDTO = new SignAccountDTO(from, password);
+        byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
+        tx.setCoinData(coinData);
+        //autograph
+        ConverterSignUtil.signTx(chain.getChainId(), signAccountDTO, tx);
+        //broadcast
+        TransactionCall.newTx(chain, tx);
+
+        chain.getLogger().debug(tx.format(GeneralBusTxData.class));
+        return tx;
+    }
 }

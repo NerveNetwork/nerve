@@ -47,6 +47,7 @@ import network.nerve.converter.model.txdata.GeneralBusTxData;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
+import network.nerve.converter.utils.ConverterSignValidUtil;
 import network.nerve.converter.utils.ConverterUtil;
 
 import java.util.ArrayList;
@@ -99,9 +100,15 @@ public class CvGeneralBusProcessor implements TransactionProcessor {
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
             for (Transaction tx : txs) {
+                if (converterCoreApi.isProtocol42()) {
+                    // Signature verification(Seed Virtual Bank)
+                    ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
+                }
+
                 String hash = tx.getHash().toHex();
                 GeneralBusTxData txData = ConverterUtil.getInstance(tx.getTxData(), GeneralBusTxData.class);
-                if (txData.getType() == 1) {
+                int dataType = txData.getType();
+                if (dataType == 1) {
                     // check unlock utxo from
                     byte[] data = txData.getData();
                     if (data == null || data.length < NulsHash.HASH_LENGTH + 1) {
@@ -146,6 +153,32 @@ public class CvGeneralBusProcessor implements TransactionProcessor {
                             continue;
                         }
                     }
+                } else if (dataType == 2) {
+                    if (!converterCoreApi.isProtocol42()) {
+                        failsList.add(tx);
+                        // Withdrawal transactionshash
+                        errorCode = ConverterErrorCode.PROTOCOL_NOT_REACHED.getCode();
+                        log.error("On-chain data protocol not reached 42");
+                        continue;
+                    }
+                    // check unlock utxo from
+                    byte[] data = txData.getData();
+                    if (data == null || data.length < NulsHash.HASH_LENGTH) {
+                        failsList.add(tx);
+                        // Withdrawal transactionshash
+                        errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
+                        log.error("Original withdrawal transaction with additional transaction fees hash Not present! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
+                        continue;
+                    }
+                    String dataHex = HexUtil.encode(data);
+                    String basicTxHash = dataHex.substring(0, 64);
+                    Transaction basicTx = TransactionCall.getConfirmedTx(chain, basicTxHash);
+                    if (null == basicTx) {
+                        failsList.add(tx);
+                        errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
+                        chain.getLogger().error("The original transaction does not exist , hash:{}", basicTxHash);
+                        continue;
+                    }
                 }
             }
             result.put("txList", failsList);
@@ -186,6 +219,11 @@ public class CvGeneralBusProcessor implements TransactionProcessor {
                     if (docking != null) {
                         docking.getBitCoinApi().checkLockedUTXO(basicTxHash, List.of());
                     }
+                } else if (txData.getType() == 2) {
+                    byte[] data = txData.getData();
+                    String dataHex = HexUtil.encode(data);
+                    String basicTxHash = dataHex.substring(0, 64);
+                    converterCoreApi.addSkippedTransaction(basicTxHash);
                 }
                 chain.getLogger().info("[commit] GeneralBus transaction hash:{}, txData:{}", tx.getHash().toHex(), txData);
             }

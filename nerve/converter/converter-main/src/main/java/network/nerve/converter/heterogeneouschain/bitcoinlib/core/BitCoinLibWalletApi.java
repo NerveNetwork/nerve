@@ -51,6 +51,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EMPTY_STRING;
 
@@ -423,52 +424,91 @@ public class BitCoinLibWalletApi implements IBitCoinLibWalletApi, BeanInitial {
         return blockInfo.getTx();
     }
 
+    /**
+     * The interface is unstable and abandoned
+     */
+    @Deprecated
+    List<UTXOData> takeUTXOFromNabox(String address) {
+        String url = "http://api.v2.nabox.io/nabox-api/btc/utxo";
+        Map<String, Object> param = new HashMap<>();
+        param.put("language", "CHS");
+        param.put("chainId", 0);
+        param.put("address", address);
+        param.put("coinAmount", 0);
+        param.put("serviceCharge", 0);
+        param.put("utxoType", 1);
+        try {
+            String data = HttpClientUtil.post(url, param);
+            Map<String, Object> map = JSONUtils.json2map(data);
+            Object code = map.get("code");
+            if (code == null) {
+                getLog().error("get utxo error: empty code");
+                return Collections.EMPTY_LIST;
+            }
+            int codeValue = Integer.parseInt(code.toString());
+            if (codeValue != 1000) {
+                getLog().error("get utxo error: " + map.get("msg"));
+                return Collections.EMPTY_LIST;
+            }
+            Map dataMap = (Map) map.get("data");
+            List<Map> utxoList = (List<Map>) dataMap.get("utxo");
+            if (utxoList == null || utxoList.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            List<UTXOData> resultList = new ArrayList<>();
+            for (Map utxo : utxoList) {
+                boolean isSpent = (boolean) utxo.get("isSpent");
+                if (isSpent) {
+                    continue;
+                }
+                resultList.add(new UTXOData(
+                        utxo.get("txid").toString(),
+                        Integer.parseInt(utxo.get("vout").toString()),
+                        new BigInteger(utxo.get("satoshi").toString())
+                ));
+            }
+            return resultList;
+        } catch (Exception e) {
+            getLog().error("get utxo error: " + e.getMessage());
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    List<UTXOData> takeUTXOFromOKX(String address) {
+        try {
+
+            String url = "https://api.v2.nabox.io/nabox-api/ok/get/utxo/v2";
+            Map<String, Object> params = new HashMap<>();
+            params.put("chainIndex", "0");
+            params.put("address", address);
+            String post = HttpClientUtil.post(url, params);
+            getLog().info("[TakeUTXOFromOKX] addr: {}, response: {}", address, post);
+            Map<String, Object> map = JSONUtils.json2map(post);
+            List<Map> data = (List<Map>) map.get("data");
+            if (data == null || data.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            Map dataMap = data.get(0);
+            List<Map> utxoList = (List<Map>) dataMap.get("utxos");
+            if (utxoList == null || utxoList.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            List<UTXOData> resultList = utxoList.stream().map(utxo -> new UTXOData(
+                    (String) utxo.get("txHash"),
+                    Integer.parseInt(utxo.get("voutIndex").toString()),
+                    new BigDecimal(utxo.get("amount").toString()).movePointRight(8).toBigInteger()
+            )).collect(Collectors.toList());
+            return resultList;
+        } catch (Exception e) {
+            getLog().error("Take UTXO From OKX error, addr: " + address, e);
+            return Collections.EMPTY_LIST;
+        }
+    }
+
     public List<UTXOData> getAccountUTXOs(String address) {
         getLog().info("[{}] GetAccountUTXOs, addr: {}, mainnet: {}", htgContext.HTG_CHAIN_ID(), address, htgContext.getConverterCoreApi().isNerveMainnet());
         if (htgContext.getConverterCoreApi().isNerveMainnet()) {
-            String url = "http://api.v2.nabox.io/nabox-api/btc/utxo";
-            Map<String, Object> param = new HashMap<>();
-            param.put("language", "CHS");
-            param.put("chainId", 0);
-            param.put("address", address);
-            param.put("coinAmount", 0);
-            param.put("serviceCharge", 0);
-            param.put("utxoType", 1);
-            try {
-                String data = HttpClientUtil.post(url, param);
-                Map<String, Object> map = JSONUtils.json2map(data);
-                Object code = map.get("code");
-                if (code == null) {
-                    getLog().error("get utxo error: empty code");
-                    return Collections.EMPTY_LIST;
-                }
-                int codeValue = Integer.parseInt(code.toString());
-                if (codeValue != 1000) {
-                    getLog().error("get utxo error: " + map.get("msg"));
-                    return Collections.EMPTY_LIST;
-                }
-                Map dataMap = (Map) map.get("data");
-                List<Map> utxoList = (List<Map>) dataMap.get("utxo");
-                if (utxoList == null || utxoList.isEmpty()) {
-                    return Collections.EMPTY_LIST;
-                }
-                List<UTXOData> resultList = new ArrayList<>();
-                for (Map utxo : utxoList) {
-                    boolean isSpent = (boolean) utxo.get("isSpent");
-                    if (isSpent) {
-                        continue;
-                    }
-                    resultList.add(new UTXOData(
-                            utxo.get("txid").toString(),
-                            Integer.parseInt(utxo.get("vout").toString()),
-                            new BigInteger(utxo.get("satoshi").toString())
-                    ));
-                }
-                return resultList;
-            } catch (Exception e) {
-                getLog().error("get utxo error: " + e.getMessage());
-                return Collections.EMPTY_LIST;
-            }
+            return this.takeUTXOFromOKX(address);
         } else {
             String url = "https://mempool.space/testnet/api/address/%s/utxo";
             try {

@@ -141,6 +141,7 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode CHANGE_WAITING = ErrorCode.init(ModuleE.CV.getPrefix() + "_0113");
     ErrorCode BTC_DUST_AMOUNT = ErrorCode.init(ModuleE.CV.getPrefix() + "_0114");
     ErrorCode WITHDRAWAL_ZERO_AMOUNT = ErrorCode.init(ModuleE.CV.getPrefix() + "_0115");
+    ErrorCode PROTOCOL_NOT_REACHED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0116");
 
 
 

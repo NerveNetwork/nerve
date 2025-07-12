@@ -122,6 +122,7 @@ public class ChainManager {
             if(chainId == converterConfig.getChainId()) {
                 ConverterContext.MAIN_CHAIN_LOGGER = chain.getLogger();
                 converterCoreApi.setNerveChain(chain);
+                ConverterContext.converterCoreApi = converterCoreApi;
                 //TODO pierre test
                 //converterCoreApi.setCurrentHeterogeneousVersionII();
             }

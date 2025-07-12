@@ -28,6 +28,7 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import keyTools.KeyTools;
 import network.nerve.converter.btc.txdata.UTXOData;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
@@ -158,7 +159,11 @@ public class FchUtil {
         long length;
         length = txFixedLen + inputLength * inputNum + outPutLen * (outputNum + 1) + opReturnLen;
 
-        return length;
+        if (ConverterContext.converterCoreApi.isProtocol42()) {
+            return length + length / 20;
+        } else {
+            return length;
+        }
     }
 
     public static int calcSplitNumP2SH(long fromTotal, long transfer, long feeRate, long splitGranularity, int inputNum, int opReturnBytesLen, int m, int n) {

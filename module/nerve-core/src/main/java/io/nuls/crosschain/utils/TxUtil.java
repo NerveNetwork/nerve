@@ -233,10 +233,12 @@ public class TxUtil {
             String address = (String) packerInfo.get(ParamConstant.PARAM_ADDRESS);
             List<String> packers = (List<String>) packerInfo.get(ParamConstant.PARAM_PACK_ADDRESS_LIST);
             NulsHash convertHash = hash;
+            byte[] mainCtxBytes = null;
             if (!config.isMainNet()) {
                 //When the initiating chain is a parallel chain, protocol transfer is performed, converted to the main network protocol, and the transaction of the initiating chain is processedhashDeposit transactiontxDatain
                 Transaction mainCtx = TxUtil.friendConvertToMain(chain, ctx, TxType.CROSS_CHAIN);
                 convertHash = mainCtx.getHash();
+                mainCtxBytes = mainCtx.serialize();
                 convertCtxService.save(hash, mainCtx, chainId);
             }
             CtxStatusPO ctxStatusPO = new CtxStatusPO(ctx, TxStatusEnum.UNCONFIRM.getStatus());
@@ -267,7 +269,7 @@ public class TxUtil {
 
                     Map<String, Object> extend = new HashMap<>();
                     extend.put("method", "cc_ctx_sign");
-                    extend.put("txHex", HexUtil.encode(ctx.serialize()));
+                    extend.put("txHex", HexUtil.encode(mainCtxBytes));
                     P2PHKSignature p2PHKSignature = AccountCall.signDigest(address, password, convertHash.getBytes(), extend);
                     transactionSignature.getP2PHKSignatures().add(p2PHKSignature);
                     message.setSignature(p2PHKSignature.serialize());

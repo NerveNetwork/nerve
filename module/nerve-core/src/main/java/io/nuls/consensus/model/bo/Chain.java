@@ -290,7 +290,7 @@ public class Chain {
     }
 
     public void setConsonsusNode(boolean consonsusNode) {
-        Log.error("-=-=-=-=-Consensus state setting：{}",consonsusNode);
+//        Log.error("-=-=-=-=-Consensus state setting：{}",consonsusNode);
         this.consonsusNode = consonsusNode;
     }
 

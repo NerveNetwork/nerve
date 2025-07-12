@@ -58,6 +58,16 @@
         "handler": "OrderCancelConfirmProcessorV1",
         "packProduce": true,
         "packGenerate": true
+      },
+      {
+        "type": "234",
+        "systemTx": true,
+        "unlockTx": true,
+        "verifyFee": false,
+        "verifySignature": false,
+        "handler": "AdminOrderCancelProcessorV1",
+        "packProduce": true,
+        "packGenerate": true
       }
     ],
     "validMsgs": [],

@@ -264,6 +264,8 @@ public class HeterogeneousChainCmd extends BaseCmd {
                 rtMap.put("symbol", "POL");
             } else if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
                 rtMap.put("symbol", "KAIA");
+            } else if ((chainId == 9 && assetId == 692) || (chainId == 5 && assetId == 148)) {
+                rtMap.put("symbol", "A");
             }
             if (heterogeneousChainId == 119 && heterogeneousAssetId == 1) {
                 rtMap.put("decimals", 8);
@@ -1765,6 +1767,65 @@ public class HeterogeneousChainCmd extends BaseCmd {
             Transaction tx = assembleTxService.createUnlockUTXOTx(chain, address, password,
                     nerveTxHash,
                     forceUnlock, htgChainId == null ? null : Integer.parseInt(htgChainId.toString()));
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", tx.getHash().toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.SKIP_TX, version = 1.0, description = "unlock utxo")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "nerveTxHash", parameterType = "String", parameterDes = "nerveTxHash"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    })
+    )
+    public Response skipTx(Map params) {
+        Chain chain = null;
+        try {
+            if (!converterCoreApi.isSeedVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_SEED_VIRTUAL_BANK);
+            }
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("password"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            String nerveTxHash = (String) params.get("nerveTxHash");
+            String address = (String) params.get("address");
+            String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
+                throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
+            }
+            Transaction tx = assembleTxService.createSkipTx(chain, address, password,
+                    nerveTxHash);
             Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
             map.put("value", tx.getHash().toHex());
             return success(map);

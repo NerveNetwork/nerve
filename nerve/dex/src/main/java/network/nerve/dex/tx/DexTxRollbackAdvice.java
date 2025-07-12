@@ -54,8 +54,6 @@ public class DexTxRollbackAdvice implements CommonAdvice {
                 coinTradingProcessor.coinTradingRollback(tx);
             } else if (tx.getType() == TxType.TRADING_ORDER) {
                 tradingOrderProcessor.tradingOrderRollback(tx, i);
-            } else if (tx.getType() == TxType.TRADING_ORDER_CANCEL) {
-                orderCancelProcessor.cancelOrderRollback(tx);
             } else if (tx.getType() == TxType.TRADING_DEAL) {
                 tradingDealProcessor.tradingDealRollback(tx);
             } else if (tx.getType() == TxType.EDIT_COIN_TRADING) {

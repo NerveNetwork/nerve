@@ -107,6 +107,7 @@ public class TxSubsequentProcessPO implements Serializable {
     private transient int withdrawErrorTotalTimes;
     private transient int feeChangeVersion;
     private transient long timeForMakeUTXO;
+    private transient int withdrawAbnormalTimes;
 
     public long getTimeForMakeUTXO() {
         return timeForMakeUTXO;
@@ -135,6 +136,13 @@ public class TxSubsequentProcessPO implements Serializable {
     public void increaseWithdrawErrorTime() {
         this.withdrawErrorTimes++;
         this.withdrawErrorTotalTimes++;
+    }
+    public void increaseWithdrawAbnormalTime() {
+        this.withdrawAbnormalTimes++;
+    }
+
+    public int getWithdrawAbnormalTimes() {
+        return withdrawAbnormalTimes;
     }
 
     public boolean isWithdrawExceedErrorTime(int currentFeeChangeVersion, int limit) {

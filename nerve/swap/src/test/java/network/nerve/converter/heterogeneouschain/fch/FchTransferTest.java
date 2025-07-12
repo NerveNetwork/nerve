@@ -566,7 +566,7 @@ public class FchTransferTest {
 
     @Test
     public void getTxInfoTest() {
-        String txHash = "228ca97ea7c1871e09f345d8d6f42833e74d091064ff1a9ecd52fbc1f6e4f209";
+        String txHash = "c7040c7fdbbe8f445614df57a5f7499d72ddb9b680b9ed5c350db2f97c4d6140";
         ApipClient client = BlockchainAPIs.txByIdsPost(urlHead, new String[]{
                 txHash
         }, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", sessionKey);

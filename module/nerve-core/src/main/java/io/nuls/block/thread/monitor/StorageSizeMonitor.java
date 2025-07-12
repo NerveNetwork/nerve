@@ -163,7 +163,7 @@ public class StorageSizeMonitor extends BaseMonitor {
                 //2.clean up
                 for (Chain chain : deleteSet) {
                     BlockChainManager.deleteForkChain(chainId, chain, true);
-                    logger.info("remove fork chain, chain:" + chain);
+                    logger.info("remove fork chain, chain:" + chain.getChainId() + ", {}-{}", chain.getEndHeight(), chain.getEndHash().toHex());
                 }
                 break;
             }
@@ -171,7 +171,7 @@ public class StorageSizeMonitor extends BaseMonitor {
             if (StampedLock.isWriteLockStamp(stamp)) {
                 lock.unlockWrite(stamp);
             }
-            logger.info("forkChainsCleaner:End");
+            logger.info("forkChainsCleaner:End  :  {}", BlockChainManager.getForkChains(chainId).size());
         }
     }
 

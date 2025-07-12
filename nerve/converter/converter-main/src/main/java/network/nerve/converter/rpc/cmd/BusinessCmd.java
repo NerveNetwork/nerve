@@ -290,6 +290,8 @@ public class BusinessCmd extends BaseCmd {
                         addr.setSymbol("POL");
                     } else if (addr.getChainId() == 116) {
                         addr.setSymbol("KAIA");
+                    } else if (addr.getChainId() == 124) {
+                        addr.setSymbol("A");
                     } else {
                         IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(addr.getChainId());
                         if (heterogeneousDocking != null) {
@@ -327,9 +329,10 @@ public class BusinessCmd extends BaseCmd {
                         for (HeterogeneousAddressDTO addressDTO : heterogeneousAddresses) {
                             if (addressDTO.getChainId() == 106) {
                                 addressDTO.setSymbol("POL");
-                            } else
-                            if (addressDTO.getChainId() == 116) {
+                            } else if (addressDTO.getChainId() == 116) {
                                 addressDTO.setSymbol("KAIA");
+                            } else if (addressDTO.getChainId() == 124) {
+                                addressDTO.setSymbol("A");
                             }
                         }
                         dto.setHeterogeneousAddresses(cacheDto.getHeterogeneousAddresses());

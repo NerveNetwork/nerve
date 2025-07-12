@@ -59,8 +59,6 @@ public class DexTxCommitAdvice implements CommonAdvice {
                 coinTradingProcessor.coinTradingCommit(tx);
             } else if (tx.getType() == TxType.TRADING_ORDER) {
                 tradingOrderProcessor.tradingOrderCommit(tx, i);
-            } else if (tx.getType() == TxType.TRADING_ORDER_CANCEL) {
-                orderCancelProcessor.cancelOrderCommit(tx);
             } else if (tx.getType() == TxType.TRADING_DEAL) {
                 tradingDealProcessor.tradingDealCommit(tx);
             } else if (tx.getType() == TxType.EDIT_COIN_TRADING) {

@@ -29,6 +29,7 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.btc.txdata.UTXOData;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.heterogeneouschain.bchutxo.utils.addr.CashAddressFactory;
 import network.nerve.converter.heterogeneouschain.bchutxo.utils.addr.MainNetParamsForAddr;
@@ -172,7 +173,11 @@ public class BchUtxoUtil {
 
         int totalOpReturnLen = calcOpReturnLen(opReturnBytesLen);
         long length = 10 + inputLength * inputNum + (long) 43 * (outputNum + 1) + totalOpReturnLen;
-        return length;
+        if (ConverterContext.converterCoreApi.isProtocol42()) {
+            return length + length / 20;
+        } else {
+            return length;
+        }
     }
 
     public static long calcFeeMultiSignBak(int inputNum, int outputNum, int opReturnBytesLen, int m, int n) {

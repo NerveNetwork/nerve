@@ -107,7 +107,7 @@ public class TbcBitCoinApi extends BitCoinLibApi  {
             );
             txraw = map.get("txraw").toString();
             List amounts = (List) map.get("amounts");
-            list = amounts.stream().map(a -> new BigInteger(a.toString())).toList();
+            list = amounts.stream().map(a -> new BigDecimal(a.toString()).toBigInteger()).toList();
         } else {
             HtgERC20Po token = htgERC20Helper.getERC20ByAssetId(assetId);
             String contractId = token.getAddress();
@@ -135,7 +135,7 @@ public class TbcBitCoinApi extends BitCoinLibApi  {
             );
             txraw = map.get("txraw").toString();
             List amounts = (List) map.get("amounts");
-            list = amounts.stream().map(a -> new BigInteger(a.toString())).toList();
+            list = amounts.stream().map(a -> new BigDecimal(a.toString()).toBigInteger()).toList();
         }
         // calc the min number of signatures
         if (htgContext.getConverterCoreApi().isLocalSign()) {
@@ -226,7 +226,7 @@ public class TbcBitCoinApi extends BitCoinLibApi  {
             );
             String txraw = map.get("txraw").toString();
             List amounts = (List) map.get("amounts");
-            List<BigInteger> list = amounts.stream().map(a -> new BigInteger(a.toString())).toList();
+            List<BigInteger> list = amounts.stream().map(a -> new BigDecimal(a.toString()).toBigInteger()).toList();
             return TbcSignatureUtil.verifySignMultiTBC(
                     pub,
                     signData.getSignatures().stream().map(s -> HexUtil.encode(s)).toList(),
@@ -261,7 +261,7 @@ public class TbcBitCoinApi extends BitCoinLibApi  {
             );
             String txraw = map.get("txraw").toString();
             List amounts = (List) map.get("amounts");
-            List<BigInteger> list = amounts.stream().map(a -> new BigInteger(a.toString())).toList();
+            List<BigInteger> list = amounts.stream().map(a -> new BigDecimal(a.toString()).toBigInteger()).toList();
             return TbcSignatureUtil.verifySignMultiFT(
                     pub,
                     signData.getSignatures().stream().map(s -> HexUtil.encode(s)).toList(),

@@ -30,12 +30,10 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.btc.txdata.UTXOData;
 import network.nerve.converter.heterogeneouschain.bitcoinlib.core.BitCoinLibWalletApi;
-import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
 import network.nerve.converter.utils.jsonrpc.JsonRpcUtil;
 import network.nerve.converter.utils.jsonrpc.RpcResult;
 import org.apache.http.message.BasicHeader;
-import org.web3j.protocol.core.methods.response.Transaction;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -145,7 +143,7 @@ public class BchUtxoWalletApi extends BitCoinLibWalletApi {
         return apiKey;
     }
 
-    List<UTXOData> takeUTXOFromOKX(String address) {
+    List<UTXOData> takeUTXOFromOKLink(String address) {
         try {
             String apiKey = this.fetchApiKey();
 
@@ -153,7 +151,7 @@ public class BchUtxoWalletApi extends BitCoinLibWalletApi {
             List<BasicHeader> headers = new ArrayList<>();
             headers.add(new BasicHeader("Ok-Access-Key", apiKey));
             String s = HttpClientUtil.get(String.format(url, address), headers);
-            getLog().info("[TakeUTXOFromOKX] key: {}, addr: {}, response: {}", apiKey, address, s);
+            getLog().info("[TakeUTXOFromOKLink] key: {}, addr: {}, response: {}", apiKey, address, s);
             Map<String, Object> map = JSONUtils.json2map(s);
             List<Map> data = (List<Map>) map.get("data");
             if (data == null || data.isEmpty()) {
@@ -171,7 +169,38 @@ public class BchUtxoWalletApi extends BitCoinLibWalletApi {
             )).collect(Collectors.toList());
             return resultList;
         } catch (Exception e) {
-            getLog().error("TakeUTXOFromOKX error, addr: " + address, e);
+            getLog().error("Take UTXO From OKLink error, addr: " + address, e);
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    List<UTXOData> takeUTXOFromOKX(String address) {
+        try {
+
+            String url = "https://api.v2.nabox.io/nabox-api/ok/get/utxo/v2";
+            Map<String, Object> params = new HashMap<>();
+            params.put("chainIndex", "145");
+            params.put("address", address);
+            String post = HttpClientUtil.post(url, params);
+            getLog().info("[TakeUTXOFromOKX] addr: {}, response: {}", address, post);
+            Map<String, Object> map = JSONUtils.json2map(post);
+            List<Map> data = (List<Map>) map.get("data");
+            if (data == null || data.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            Map dataMap = data.get(0);
+            List<Map> utxoList = (List<Map>) dataMap.get("utxos");
+            if (utxoList == null || utxoList.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            List<UTXOData> resultList = utxoList.stream().map(utxo -> new UTXOData(
+                    (String) utxo.get("txHash"),
+                    Integer.parseInt(utxo.get("voutIndex").toString()),
+                    new BigDecimal(utxo.get("amount").toString()).movePointRight(8).toBigInteger()
+            )).collect(Collectors.toList());
+            return resultList;
+        } catch (Exception e) {
+            getLog().error("Take UTXO From OKX error, addr: " + address, e);
             return Collections.EMPTY_LIST;
         }
     }

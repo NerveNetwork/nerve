@@ -445,15 +445,15 @@ public class TrxWalletApiTest extends Base {
     public void sendTRC20WithdrawBySignDataTest() throws Exception {
         setMainTest();
         setMain();
-        String txKey = "0e4a998f625e39942b1041276a354b07e7069bb236fb93c91fe9e34650b30534";
+        String txKey = "b1c18d1d5294760494a30007f7e9615cad86d67853fc52c0c7933cedd56a4664";
         // Recipient Address
-        String toAddress = "TMKPjep6FqqsKnSijrfSkbBAsdYuTvE7m9";
+        String toAddress = "TFCziF4jJGf7naGXt7UUXiEwnJVXHciRrK";
         // Mint quantity
-        String value = "0.997";
+        String value = "274.329662";
         // tokencontract
         String erc20 = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
         int tokenDecimals = 6;
-        String signData = "3f71d98786e64583814c115dc031bd3c7a1cbb9025b8630bca7443c96f0b056b0d72c81d78c5b1fb223bb84dc8bbf40bbef1bf6ee21f471eaec5eb4ee051ee951cc95df08fb8d22b67a32bde75d45b53606fa18f07e14f54e0cf2ae61fdcabafc76143b79439ebbdacfe138bf2c5ad0c47ec85d688be7d0d0c3e44313b8d0a70c21c6668e50151b3db94b5d55b84466f2158555af300cea245a5efba51f57fa88f9d0dc30747990f93b68ee755ccafb3f395b32703b1d2a13ead6de6191e763605b01b816d2e6faf044884c8263f26beeb1bcad8e92dbdcc1de6cb17efc63ace87702432e614207ed04346f6d18172b646373f95ec0cc70444a06c0f904bed023606d71c8c326db466dab6cd9d7809ac32fcaf7898d69c6772d03459194c01cb3a13177b783ee693f3ee1fcfe5613a557ad9f195c9d73f4ee81211813bdbd001aafc178a1ced438f5d86d1a57afaedce17165cf5fe7c00046ceebdc73342503dd02cca6a180f4e2573275e34f4fd684a6117a1b6e98f5f59da8728c545173ad51e47372ec21b00402ad5e4ea754d6e8f32130c97069ba5beab4467f89b9fcb8da80880f82fc5261f47a4f2457f5be9e6c6e6917847660029d8c4458ba39d34948bff6662de9c1c56b943ce7d184164a992739c8b756e9e6ea714585a2e940bbf32260380f2e506646e4f74d42ef87f852c2e5e02fa3899c1dd8519b79b1905e58966c5c79807ba1c84c187fe24ff75de8829d7d2127574dfee4b57907a3b176ede2bcaf6b3592c990b12046eb2ac274f3ef27a10d89b6d9473bc5d18c04a59f17dfa5244a0f9389c1c32edd07c7b99d700998aae4ea8a07ec42560fb240b06796a2f0ca29b918e44250364335fc84337dc64df9cdbe33ba5a60fd0c56981bd1aed53eb49856ee7d00c1c";
+        String signData = "59def9319dfc7bf9eb0360e7247875dc0777d3adfa772091e462b134da6900d77fa234c9d0715f3cdde230eab589ded989ea70c1da01a830521ac344d82c2f151bff121306843722591167da563710b336337db2fcc6881fe29ce2079c959de8965a88cb1a97990ef2c261939445374c0aa3f4838028a8bd79fe445f7cdf8c1a161bfefbde4c20082189661983d085600d019db50a84e74ca2bd108591c38d6d1a755d6af06d90eae779646c1bd7daf5bcf71c53b0ae92442cb31bff4366a45d870d1b91b05363547c2e14b62a8936a7e40780c5ba6d05e60fbbac4cbe927824bdebf11ba3d3fa03de7a8355e6252401e6db50c7c875f3850915ad9e92ad905669e5971c45fe7fed26569d464d64d347aae54ef4f3dc24e829d963836c44188ffae7ad040c8f373420f7922d8db0c549a694ad5e663011ed67bf36288f34bb35638af5351b5d7eff8c243ed02ede89160d5fc33b53416a804c389fa1cb3cf0650d5d20b99b47dc89e4c034658eff4a843e2524bf2476fc04fd763a269f6ca1df4ec22e4da11cdfc44fd6649bede9bb84a418e5aed346697e3892efe61e4df01d0e02a7e522422722df7c0e591dd3e24cb6dfc5fd93f36af03539744d63640cb2c10c8ef6c0621b1aa893611007e488c737e53e154b88c8e6a3691dac6ec8c967ccce3dd8beb8f76c74a5d8035113faa7a392200cb97062988bcf3ce3799018e6e2be6fed54da921cff3f7b4fc0216c16f9413e74f386f1b55160b31610e6142f1292f19d322191565104ec414690c5ed6e7dda4a66ffa81376accfdf8215c494b6395166d07b43431b4083b656a90752df9b393f456adda7a6b2beb14fa3b7f7e1e11a2ba3397e403111d3693adc36e8f3e82b6b6582d13b927340065436bae892e6bed000a705e5af1c";
 
         String hash = this.sendTRC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
         System.out.println(String.format("ERC20Withdrawal%sPieces,hash: %s", value, hash));
@@ -830,15 +830,16 @@ public class TrxWalletApiTest extends Base {
     @Test
     public void getTxAndParseInput() throws Exception {
         setMain();
-        String txHash = "a904f0139eb4c2aa9396aa4584944598d262906105d4b9b6677ab4b688807be4";
+        String txHash = "51dcf34c3991b7cf23c25c782e0ddc581b57b7c742d5e7e4d5733614000887b2";
         Chain.Transaction tx = wrapper.getTransactionById(txHash);
         System.out.println(tx.getRawData().getContractCount());
         System.out.println(tx.toString());
         Chain.Transaction.Contract contract = tx.getRawData().getContract(0);
         Contract.TriggerSmartContract tg = Contract.TriggerSmartContract.parseFrom(contract.getParameter().getValue());
         String input = Numeric.toHexString(tg.getData().toByteArray());
-        List<Object> typeList = TrxUtil.parseInput(input, TrxConstant.INPUT_WITHDRAW);
-        System.out.println(Arrays.deepToString(typeList.toArray()));
+        System.out.println(input);
+        //List<Object> typeList = TrxUtil.parseInput(input, TrxConstant.INPUT_WITHDRAW);
+        //System.out.println(Arrays.deepToString(typeList.toArray()));
     }
 
     @Test
@@ -867,7 +868,7 @@ public class TrxWalletApiTest extends Base {
     @Test
     public void getTx() throws Exception {
         setMain();
-        String txHash = "8d0e702f85d492bd1e05671a70d5ab931be4c5b17ebe80019a87be9f138d7314";
+        String txHash = "b15da753d9ac3608fc4ba5df287cd13b8d0b455dcd4d137bf79184ea82cd54a0";
         Chain.Transaction tx = wrapper.getTransactionById(txHash);
         System.out.println(tx.getRet(0).getContractRet());
         System.out.println(tx.toString());
@@ -1327,14 +1328,15 @@ public class TrxWalletApiTest extends Base {
         }
         }*/
         setMain();
-        String txHash = "51accb61ebe0fa14a2f259d2224c580a63ce5df0df5b89e3ea12444605c84189";
-        String toAddress = "TWpetJ3ANyaYe2uKkae3Q5YB5pjqfodZt4";
-        String valueStr = "1028199075";
+        String txHash = "b1c18d1d5294760494a30007f7e9615cad86d67853fc52c0c7933cedd56a4664";
+        String toAddress = "TFCziF4jJGf7naGXt7UUXiEwnJVXHciRrK";
+        String valueStr = "274329662";
         BigInteger value = new BigInteger(valueStr);
-        Boolean isContractAsset = false;
-        String contractAddressERC20 = "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb";
+        Boolean isContractAsset = true;
+        String contractAddressERC20 = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
-        String signed10 = "e5af7b2772def4f4df57cf8fef0460957ac5a245ce2796499f68c9b4ecf3af5b311c1828dbc446d9fe67d03b68b9c63df2b6bc00fa12072f95765111c32b6bf71cc29b9cee786fdea44b87e609329c3b89b4bbd37cc8db6499410e1fd1ef203b1d281068ac4756416630139338d304564b9ab07526fdc80d26bff29388dc6ab93d1c96a722b42c3451aa7666dd6242fcc144dda4703e175efab4fea8783d18e2ca1e7b0b3f30135e5e423f2602511598eb54713d527cdf9fce13247ef79ce83794d61c1a22faacbaa8189a12cb5b3fec2a8cb6cecafc34aae5873aba42c2ea929302b06bec3532c711b7975528cf65172409882e715f18b7608bd7c761d866cba63e571bd31d6671505b3bbf484a56deedfd9d35fd484f1371bcdbe5b5ff06aeec2da6ac01ebe8d90b52d1ec6303e0dda5036c38a2244f13c23175b1f7f396a031e34b641c0dc3caa75af03a54e42f3ec61ad61298aca6d751727c74119f0f775d3309dffb1ab085df6ce27d140740bf91a387d73df25ab6e61588c77e3dace43834a1dff31bcca2633c7ff49f2207761fabb83caacb72aee9b8ec559f5108ad1e91ec43a99658cce664cbb3edacae1f422e2801d5d061a209ad2971afa2041398ee20b0cd321b2a13cab24fa3c9a081fe23043a33b40b490ab93520428f235bc2181abe4a264a51f207d776e1eb19e8900e123db1a2189c1580d66ae9dcaa8d8d5a7c3a61b2f81c1e7796651f772522f95e6d49f087bc458396f8538e897eb6b7d3c981a176dd4b3798195561b77d953d8b85b819972ebfb7a45db83e0d32f8bce7f44806125b2e1c12afb0cfc579cc5c9bc5fd55918a8e50ae848c25e272b93a0a80d61faae4d7646b3e3193c159722a6df3e0a4e0c4edd172daf01202b95abc078f59455ce9071b1b";
+        //String signed10 = "42047853f64ec004b5901c821b5b9d41978eff8825dd8fb346d7ab42e47e3b1c24eb60ee3684f93922f61f37b1c5d67136d461a1fb32053782e28eb1077d8fc51c91b05363547c2e14b62a8936a7e40780c5ba6d05e60fbbac4cbe927824bdebf11ba3d3fa03de7a8355e6252401e6db50c7c875f3850915ad9e92ad905669e5971c5d7eff8c243ed02ede89160d5fc33b53416a804c389fa1cb3cf0650d5d20b99b47dc89e4c034658eff4a843e2524bf2476fc04fd763a269f6ca1df4ec22e4da11c1aa893611007e488c737e53e154b88c8e6a3691dac6ec8c967ccce3dd8beb8f76c74a5d8035113faa7a392200cb97062988bcf3ce3799018e6e2be6fed54da921c98e54b991ca23abd628aa434a9cdb7f58af996d100c598e886b91740a2a159e175cc9f5237ed28ac210004afd252b82a92132c950e13f9607b5449b2911fe6a71cff121306843722591167da563710b336337db2fcc6881fe29ce2079c959de8965a88cb1a97990ef2c261939445374c0aa3f4838028a8bd79fe445f7cdf8c1a161bfefbde4c20082189661983d085600d019db50a84e74ca2bd108591c38d6d1a755d6af06d90eae779646c1bd7daf5bcf71c53b0ae92442cb31bff4366a45d870d1b2aa8db615aa84b9155bfe9cdec53910d5719c06b4e12dc696a6845bf70f4962d7c6e4f2725717253f6f2def000d7800dabf202f0dc50b67bf38779d661696aa81c45fe7fed26569d464d64d347aae54ef4f3dc24e829d963836c44188ffae7ad040c8f373420f7922d8db0c549a694ad5e663011ed67bf36288f34bb35638af5351bdfc44fd6649bede9bb84a418e5aed346697e3892efe61e4df01d0e02a7e522422722df7c0e591dd3e24cb6dfc5fd93f36af03539744d63640cb2c10c8ef6c0621b4083b656a90752df9b393f456adda7a6b2beb14fa3b7f7e1e11a2ba3397e403111d3693adc36e8f3e82b6b6582d13b927340065436bae892e6bed000a705e5af1c59def9319dfc7bf9eb0360e7247875dc0777d3adfa772091e462b134da6900d77fa234c9d0715f3cdde230eab589ded989ea70c1da01a830521ac344d82c2f151b4de965c4a4a76211e5522240a1d9940bd646a339543bea900613b14f388457ba3ec0bb27d8641d5567ec55ade178672ab1479988772c12934deff2dd42a5cd1a1cff3f7b4fc0216c16f9413e74f386f1b55160b31610e6142f1292f19d322191565104ec414690c5ed6e7dda4a66ffa81376accfdf8215c494b6395166d07b43431b";
+        String signed10 = "59def9319dfc7bf9eb0360e7247875dc0777d3adfa772091e462b134da6900d77fa234c9d0715f3cdde230eab589ded989ea70c1da01a830521ac344d82c2f151bff121306843722591167da563710b336337db2fcc6881fe29ce2079c959de8965a88cb1a97990ef2c261939445374c0aa3f4838028a8bd79fe445f7cdf8c1a161bfefbde4c20082189661983d085600d019db50a84e74ca2bd108591c38d6d1a755d6af06d90eae779646c1bd7daf5bcf71c53b0ae92442cb31bff4366a45d870d1b91b05363547c2e14b62a8936a7e40780c5ba6d05e60fbbac4cbe927824bdebf11ba3d3fa03de7a8355e6252401e6db50c7c875f3850915ad9e92ad905669e5971c45fe7fed26569d464d64d347aae54ef4f3dc24e829d963836c44188ffae7ad040c8f373420f7922d8db0c549a694ad5e663011ed67bf36288f34bb35638af5351b5d7eff8c243ed02ede89160d5fc33b53416a804c389fa1cb3cf0650d5d20b99b47dc89e4c034658eff4a843e2524bf2476fc04fd763a269f6ca1df4ec22e4da11cdfc44fd6649bede9bb84a418e5aed346697e3892efe61e4df01d0e02a7e522422722df7c0e591dd3e24cb6dfc5fd93f36af03539744d63640cb2c10c8ef6c0621b1aa893611007e488c737e53e154b88c8e6a3691dac6ec8c967ccce3dd8beb8f76c74a5d8035113faa7a392200cb97062988bcf3ce3799018e6e2be6fed54da921cff3f7b4fc0216c16f9413e74f386f1b55160b31610e6142f1292f19d322191565104ec414690c5ed6e7dda4a66ffa81376accfdf8215c494b6395166d07b43431b4083b656a90752df9b393f456adda7a6b2beb14fa3b7f7e1e11a2ba3397e403111d3693adc36e8f3e82b6b6582d13b927340065436bae892e6bed000a705e5af1c";
         for (int i = 0; i < 10; i++) {
             //String signed = "94cb881c719d18933bbb35c6583bee4f9453632f26ccb0db5ddbdef841fdb8563b0f04afc9c46d888a9826ee74a12ee249738d1d9e0fe222c1154bfc9cfd8e001b";
             //String signed = "3489ae647e79f041c40c5e4d040fb1dcf36b844cb910b45ed4e6d1659b9d7dd80055fcfb6232f922a01ca27e3500530e56b64293c106e938a98eb480732604a11c";
@@ -1344,6 +1346,7 @@ public class TrxWalletApiTest extends Base {
             String vHash = TrxUtil.encoderWithdraw(context, txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION());
             System.out.println(String.format("[Verify signature] Withdrawal data: %s, %s, %s, %s, %s, %s", txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION()));
             System.out.println(String.format("[Verify signature] WithdrawalvHash: %s", vHash));
+            System.out.println(String.format("[Verify signature] Withdrawal sign data: %s", signed));
             byte[] hashBytes = org.web3j.utils.Numeric.hexStringToByteArray(vHash);
 
             signed = Numeric.cleanHexPrefix(signed);

@@ -200,6 +200,8 @@ public class TxType {
      */
     public static final int ORDER_CANCEL_CONFIRM = 233;
 
+    public static final int TRADING_ORDER_CANCEL_ADMIN = 234;
+
     /**
      * confirm Virtual Bank Change Transaction
      */

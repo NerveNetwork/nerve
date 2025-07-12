@@ -1025,7 +1025,11 @@ public class BitCoinLibUtil {
             }
             length = 12 + inputLength * inputNum + (long) 43 * (outputNum + 1) + totalOpReturnLen;
         }
-        return length;
+        if (ConverterContext.converterCoreApi.isProtocol42()) {
+            return length + length / 20;
+        } else {
+            return length;
+        }
     }
 
     /**

@@ -117,7 +117,7 @@ public class DexService {
                 tx.setBlockHeight(blockHeight);
                 index = i;
 
-                if (tx.getType() == TxType.TRADING_ORDER_CANCEL) {
+                if (tx.getType() == TxType.TRADING_ORDER_CANCEL || tx.getType() == TxType.TRADING_ORDER_CANCEL_ADMIN) {
                     //Record the cancellation of pending orders during this packaging processorderHashRevoking the order will no longer result in price matching transactions
                     orderCancel = new TradingOrderCancel();
                     orderCancel.parse(new NulsByteBuffer(tx.getTxData()));

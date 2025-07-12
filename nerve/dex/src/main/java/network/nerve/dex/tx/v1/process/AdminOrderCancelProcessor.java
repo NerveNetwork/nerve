@@ -9,16 +9,17 @@ import io.nuls.core.core.annotation.Component;
 import network.nerve.dex.manager.DexManager;
 import network.nerve.dex.storage.TradingOrderCancelStorageService;
 import network.nerve.dex.storage.TradingOrderStorageService;
+import network.nerve.dex.tx.v1.validate.AdminOrderCancelValidator;
 import network.nerve.dex.tx.v1.validate.OrderCancelValidator;
-import network.nerve.dex.util.LoggerUtil;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Cancel delegated order processing
  */
-@Component("OrderCancelProcessorV1")
-public class OrderCancelProcessor implements TransactionProcessor {
+@Component("AdminOrderCancelProcessorV1")
+public class AdminOrderCancelProcessor implements TransactionProcessor {
 
     @Autowired
     private TradingOrderStorageService orderStorageService;
@@ -27,16 +28,16 @@ public class OrderCancelProcessor implements TransactionProcessor {
     @Autowired
     private DexManager dexManager;
     @Autowired
-    private OrderCancelValidator orderCancelValidator;
+    private AdminOrderCancelValidator orderCancelValidator;
 
     @Override
     public int getType() {
-        return TxType.TRADING_ORDER_CANCEL;
+        return TxType.TRADING_ORDER_CANCEL_ADMIN;
     }
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
-        return orderCancelValidator.validateTxs(txs);
+        return orderCancelValidator.validateTxs(chainId,txs);
     }
 
     @Override

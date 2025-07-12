@@ -72,6 +72,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -108,6 +109,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Autowired
     private VirtualBankStorageService virtualBankStorageService;
 
+    private Set<String> utxoExecuted = ConcurrentHashMap.newKeySet();
     private Map<Integer, NerveAssetInfo> htgMainAssetMap = new HashMap<>(16);
     private Map<NerveAssetInfo, AssetName> htgMainAssetByNerveMap = new HashMap<>(16);
     private Set<String> skipTransactions = new HashSet<>();
@@ -216,6 +218,9 @@ public class ConverterCoreApi implements IConverterCoreApi {
             skipTransactions.add("960ed1c4253e9be5077474aabe4cd58e7d51cfb496a395c4fd6c3136849be20c");
             skipTransactions.add("84a3120bce337cb0088b151c09ecca54f828c94b3eaed1d025a2a67132738fbd");
             skipTransactions.add("82153d88055b7053c22d0531141538ecb185d128b147dc4213fdc77cf02c0e10");
+            // add on 2025 06/12
+            skipTransactions.add("642ffc6f77ed368e8021cc281b63f66caaa1d18aa52ba1532d2d62ce1adc1f89");
+            skipTransactions.add("a82bbd0da203b75df3c366472160214151a582393e07a4de2b73693d257467f2");
         }
         if (nerveChain.getChainId() == 5) {
             skipTransactions.add("ccfb73d0a36be1632ed32c1a7442b47ea203c3639fda62b8eda67d24865d88c9");
@@ -263,6 +268,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
             return;
         }
         this.fchToDogePrice = fchToDogePrice;
+    }
+
+    @Override
+    public Set<String> getUtxoExecuted() {
+        return utxoExecuted;
     }
 
     @Override
@@ -676,6 +686,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_41_0;
     }
 
+    @Override
+    public boolean isProtocol42() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_42_0;
+    }
+
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
         AssetName[] values = AssetName.values();
@@ -814,6 +829,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean skippedTransaction(String nerveTxHash) {
         return skipTransactions.contains(nerveTxHash);
+    }
+
+    @Override
+    public void addSkippedTransaction(String nerveTxHash) {
+        skipTransactions.add(nerveTxHash);
     }
 
     @Override

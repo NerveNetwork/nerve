@@ -1562,12 +1562,13 @@ public class BnbWalletApiTest extends Base {
         //        // tokencontract
         //        String erc20 = "0x5d7f9c9f3f901f2c1b576b8d81bd4165647855a4";
         //        int tokenDecimals = 18;
+        // https://bscscan.com/address/0x0b6d7735e0430d48675cba2955e87ccb0cd754cf
         setMainProxy();
         String contractAddress = "0x0b6d7735e0430d48675cba2955e87ccb0cd754cf";
-        BigInteger convertAmount = new BigDecimal("993929.538461538461538461").movePointRight(18).toBigInteger();
+        BigInteger convertAmount = new BigDecimal("210785820.490070420624598507").movePointRight(18).toBigInteger();
         //BigInteger convertAmount = new BigDecimal("1").toBigInteger();
         String from = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
-        String to = "0x3d24072c93c051e1241e682b05156915f9a6dd08";
+        String to = "0x95689ce4c594a9b313836060f170346d7dc7bfd2";
         //String to = "0x0000000000000000000000000000000000000000";
 
         Function function = new Function(

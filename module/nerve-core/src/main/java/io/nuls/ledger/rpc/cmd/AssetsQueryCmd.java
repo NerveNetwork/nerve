@@ -115,6 +115,11 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
                 if ((assetChainId == 9 && assetId == 448) || (assetChainId == 5 && assetId == 118)) {
                     asset.setSymbol("KAIA");
                 }
+            } else
+            if ((chainId == 9 && context.getLatestHeight() >= 75365514) || (chainId == 5 && context.getLatestHeight() >= 58629654)) {
+                if ((assetChainId == 9 && assetId == 692) || (assetChainId == 5 && assetId == 148)) {
+                    asset.setSymbol("A");
+                }
             }
             rtMap = asset.toMap();
         } catch (Exception e) {

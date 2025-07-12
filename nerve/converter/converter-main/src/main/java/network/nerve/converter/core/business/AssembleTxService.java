@@ -397,4 +397,8 @@ public interface AssembleTxService {
                                  String password,
                                  String nerveTxHash,
                                  int forceUnlock, Integer htgChainId) throws NulsException;
+    Transaction createSkipTx(Chain chain,
+                                 String from,
+                                 String password,
+                                 String nerveTxHash) throws NulsException;
 }

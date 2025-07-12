@@ -64,8 +64,8 @@ public abstract class BitCoinLibAnalysisTxHelper implements BeanInitial {
     protected abstract String fetchTxHash(Object _txInfo);
 
     // In tbc network transactions, if the utxo of vin is a multi-signature address, then get the vout corresponding to its previous transaction to get its address and value
-    protected List fetchVinInfoOfMultiSign(List tx) throws Exception {
-        return Collections.EMPTY_LIST;
+    protected List fetchVinInfoOfMultiSign(List txs) throws Exception {
+        return txs;
     }
 
     public void analysisTx(Object txInfo, long txTime, long blockHeight, String blockHash) throws Exception {

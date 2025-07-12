@@ -171,6 +171,12 @@ public class ConverterController {
             if (data != null) {
                 data.put("symbol", "KAIA");
             }
+        } else
+        if (chainId == 124) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("symbol", "A");
+            }
         }
         return ResultUtil.getJsonRpcResult(result);
     }
@@ -335,6 +341,12 @@ public class ConverterController {
             if (data != null) {
                 data.put("symbol", "KAIA");
             }
+        } else
+        if ((chainId == 9 && assetId == 692) || (chainId == 5 && assetId == 148)) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("symbol", "A");
+            }
         }
         return ResultUtil.getJsonRpcResult(result);
     }
@@ -377,6 +389,14 @@ public class ConverterController {
             if (dataList != null) {
                 for (Map data : dataList) {
                     data.put("symbol", "KAIA");
+                }
+            }
+        } else
+        if ((chainId == 9 && assetId == 692) || (chainId == 5 && assetId == 148)) {
+            List<Map> dataList = (List<Map>) result.getData();
+            if (dataList != null) {
+                for (Map data : dataList) {
+                    data.put("symbol", "A");
                 }
             }
         }
@@ -698,6 +718,34 @@ public class ConverterController {
             params1.put("htgChainId", params.get(i++));
         }
         Result<Map<String, Object>> result = converterTools.commonRequest("cv_unlock_utxo", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("skipTx")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "nerveTxHash", parameterType = "String", parameterDes = "nerveTxHash"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
+    })
+    @ResponseData(name = "Return value", description = "Return a Map object", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
+    })
+    )
+    public RpcResult skipTx(List<Object> params) {
+        VerifyUtils.verifyParams(params, 5);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        String nerveTxHash = (String) params.get(i++);
+        String address = (String) params.get(i++);
+        String password = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("nerveTxHash", nerveTxHash);
+        params1.put("address", address);
+        params1.put("password", password);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_skip_tx", params1);
         return ResultUtil.getJsonRpcResult(result);
     }
 

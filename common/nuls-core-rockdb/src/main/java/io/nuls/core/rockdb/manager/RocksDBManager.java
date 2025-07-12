@@ -113,7 +113,10 @@ public class RocksDBManager {
         }
 
         Options options = getCommonOptions(false);
-        return RocksDB.open(options, dbPath);
+        RocksDB rocksDB = RocksDB.open(options, dbPath);
+//        rocksDB.compactRange();
+//        rocksDB.flush(new FlushOptions().setWaitForFlush(true));
+        return rocksDB;
     }
 
     /**
@@ -629,15 +632,15 @@ public class RocksDBManager {
         Options options = new Options();
 
         options.setCreateIfMissing(createIfMissing);
-        /**
-         * Optimize reading performance plan
-         */
+
         options.setAllowMmapReads(true);
-        options.setCompressionType(CompressionType.NO_COMPRESSION);
+        options.setCompressionType(CompressionType.LZ4_COMPRESSION);
         options.setMaxOpenFiles(-1);
         BlockBasedTableConfig tableOption = new BlockBasedTableConfig();
-        tableOption.setNoBlockCache(true);
-        tableOption.setBlockRestartInterval(4);
+        tableOption.setBlockCacheSize(1024 * 1024 * 1024); // 1024MB
+        tableOption.setNoBlockCache(false);
+
+        tableOption.setBlockRestartInterval(16);
         tableOption.setFilterPolicy(new BloomFilter(10, true));
         options.setTableFormatConfig(tableOption);
 

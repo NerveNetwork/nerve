@@ -21,12 +21,13 @@ public class LegerController {
 
     @Autowired
     private LegderTools legderTools;
+
     @RpcMethod("getAssetInfo")
     public RpcResult getAssetInfo(List<Object> params) {
-        if(params.size()<3){
+        if (params.size() < 3) {
             return RpcResult.paramError("parmas is inValid,chainId,assetChainId,assetId");
         }
-        int chainId,assetChainId,assetId;
+        int chainId, assetChainId, assetId;
         try {
             chainId = (int) params.get(0);
             assetChainId = (int) params.get(1);
@@ -35,7 +36,7 @@ public class LegerController {
             return RpcResult.paramError("[chainId] is inValid");
         }
 
-        Result<Map> result = legderTools.getAssetInfo(chainId,assetChainId,assetId);
+        Result<Map> result = legderTools.getAssetInfo(chainId, assetChainId, assetId);
         RpcResult rpcResult = new RpcResult();
         if (result.isFailed()) {
             return rpcResult.setError(new RpcResultError(result.getStatus(), result.getMessage(), null));
@@ -46,76 +47,85 @@ public class LegerController {
                 data.put("assetSymbol", "POL");
                 data.put("assetName", "POL");
             }
-        } else
-
-        //MATIC_KIRA_LP
-        //NERVE  |  ID: 9-769
-        if (chainId == 9 && assetId == 769) {
+        } else if (chainId == 9 && assetId == 769) {
+            //MATIC_KIRA_LP
+            //NERVE  |  ID: 9-769
             Map<String, Object> data = result.getData();
             if (data != null) {
                 data.put("assetSymbol", "POL_KIRA_LP");
                 data.put("assetName", "POL_KIRA_LP");
             }
-        } else
-        //MATIC_XBNCH_LP
-        //NERVE  |  ID: 9-664
-        if (chainId == 9 && assetId == 664) {
+        } else if (chainId == 9 && assetId == 664) {
+            //MATIC_XBNCH_LP
+            //NERVE  |  ID: 9-664
             Map<String, Object> data = result.getData();
             if (data != null) {
                 data.put("assetSymbol", "POL_XBNCH_LP");
                 data.put("assetName", "POL_XBNCH_LP");
             }
-        } else
-        //NULS_MATIC_LP
-        //NERVE  |  ID: 9-348
-        if (chainId == 9 && assetId == 348) {
+        } else if (chainId == 9 && assetId == 348) {
+            //NULS_MATIC_LP
+            //NERVE  |  ID: 9-348
             Map<String, Object> data = result.getData();
             if (data != null) {
                 data.put("assetSymbol", "NULS_POL_LP");
                 data.put("assetName", "NULS_POL_LP");
             }
-        } else
-        //NVT_MATIC_LP
-        //NERVE  |  ID: 9-424
-        if (chainId == 9 && assetId == 424) {
+        } else if (chainId == 9 && assetId == 424) {
+            //NVT_MATIC_LP
+            //NERVE  |  ID: 9-424
             Map<String, Object> data = result.getData();
             if (data != null) {
                 data.put("assetSymbol", "NVT_POL_LP");
                 data.put("assetName", "NVT_POL_LP");
             }
-        } else
-        if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
+        } else if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
             Map<String, Object> data = result.getData();
             if (data != null) {
                 data.put("assetSymbol", "KAIA");
                 data.put("assetName", "KAIA");
             }
-        } else
-        //FTM_KLAY_LP
-        //NERVE  |  ID: 9-657
-        if (chainId == 9 && assetId == 657) {
+        } else if (chainId == 9 && assetId == 657) {
+            //FTM_KLAY_LP
+            //NERVE  |  ID: 9-657
             Map<String, Object> data = result.getData();
             if (data != null) {
                 data.put("assetSymbol", "FTM_KAIA_LP");
                 data.put("assetName", "FTM_KAIA_LP");
             }
-        } else
-        //NULS_KLAY_LP
-        //NERVE  |  ID: 9-502
-        if (chainId == 9 && assetId == 502) {
+        } else if (chainId == 9 && assetId == 502) {
+            //NULS_KLAY_LP
+            //NERVE  |  ID: 9-502
             Map<String, Object> data = result.getData();
             if (data != null) {
                 data.put("assetSymbol", "NULS_KAIA_LP");
                 data.put("assetName", "NULS_KAIA_LP");
             }
-        } else
-        //NVT_KLAY_LP
-        //NERVE  |  ID: 9-649
-        if (chainId == 9 && assetId == 649) {
+        } else if (chainId == 9 && assetId == 649) {
+            //NVT_KLAY_LP
+            //NERVE  |  ID: 9-649
             Map<String, Object> data = result.getData();
             if (data != null) {
                 data.put("assetSymbol", "NVT_KAIA_LP");
                 data.put("assetName", "NVT_KAIA_LP");
+            }
+        } else if ((chainId == 9 && assetId == 692) || (chainId == 5 && assetId == 148)) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "A");
+                data.put("assetName", "A");
+            }
+        } else if (chainId == 9 && assetId == 695) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "NVT_A_LP");
+                data.put("assetName", "NVT_A_LP");
+            }
+        } else if (chainId == 9 && assetId == 768) {
+            Map<String, Object> data = result.getData();
+            if (data != null) {
+                data.put("assetSymbol", "A_KIRA_LP");
+                data.put("assetName", "A_KIRA_LP");
             }
         }
         return rpcResult.setResult(result.getData());
@@ -162,9 +172,10 @@ public class LegerController {
         int assetId = (int) data.get("assetId");
         if ((chainId == 9 && assetId == 160) || (chainId == 5 && assetId == 34)) {
             data.put("symbol", "POL");
-        } else
-        if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
+        } else if ((chainId == 9 && assetId == 448) || (chainId == 5 && assetId == 118)) {
             data.put("symbol", "KAIA");
+        } else if ((chainId == 9 && assetId == 692) || (chainId == 5 && assetId == 148)) {
+            data.put("symbol", "A");
         }
         return RpcResult.success(result.getData());
     }

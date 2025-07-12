@@ -36,6 +36,7 @@ import network.nerve.converter.btc.txdata.UTXOData;
 import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
@@ -77,6 +78,8 @@ public class WithdrawalUTXOsProcessor implements TransactionProcessor {
     private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
     @Autowired
     private HeterogeneousChainInfoStorageService heterogeneousChainInfoStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
@@ -178,6 +181,7 @@ public class WithdrawalUTXOsProcessor implements TransactionProcessor {
                 WithdrawalUTXOTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalUTXOTxData.class);
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHtgChainId());
                 docking.getBitCoinApi().saveWithdrawalUTXOs(txData);
+                converterCoreApi.getUtxoExecuted().remove(txData.getNerveTxHash());
                 chain.getLogger().info("[commit] withdrawal UTXOs transactions hash: {}, withdrawal hash: {}", tx.getHash().toHex(), txData.getNerveTxHash());
             }
             return true;

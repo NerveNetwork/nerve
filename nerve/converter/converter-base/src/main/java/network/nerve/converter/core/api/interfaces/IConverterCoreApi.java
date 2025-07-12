@@ -41,6 +41,8 @@ import java.util.Set;
  * @date: 2020-05-08
  */
 public interface IConverterCoreApi {
+    Set<String> getUtxoExecuted();
+
     /**
      * obtainNerveThe current block height of the network
      */
@@ -187,6 +189,7 @@ public interface IConverterCoreApi {
     boolean isProtocol38();
     boolean isProtocol40();
     boolean isProtocol41();
+    boolean isProtocol42();
 
     /**
      * Add task
@@ -199,6 +202,7 @@ public interface IConverterCoreApi {
     List<Runnable> getHtgWaitingTxInvokeDataHandlers();
 
     boolean skippedTransaction(String nerveTxHash);
+    void addSkippedTransaction(String nerveTxHash);
 
     ConverterConfig getConverterConfig();
 

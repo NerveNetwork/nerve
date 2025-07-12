@@ -134,6 +134,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     pendingTxQueue.remove();
                     continue;
                 }
+                if (pendingPO.getWithdrawAbnormalTimes() > 50) {
+                    pendingTxQueue.remove();
+                    continue;
+                }
 
                 //if (this.isP35ChangeTx(nerveTxHash)) {
                 //    pendingPO = this.checkUpdateChangeTxForP35(pendingPO);
@@ -284,6 +288,14 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 if (TxType.CHANGE_VIRTUAL_BANK != pendingPO.getTx().getType()) {
                     TxSubsequentProcessPO po = chain.getPendingTxQueue().poll();
                     chain.getPendingTxQueue().addLast(po);
+                    if (e instanceof NulsException) {
+                        if (ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW.equals(((NulsException) e).getErrorCode())) {
+                            return;
+                        }
+                    }
+                    if (TxType.WITHDRAWAL == pendingPO.getTx().getType()) {
+                        pendingPO.increaseWithdrawAbnormalTime();
+                    }
                 } else {
                     /**
                      * Currently processing virtual bank changes(Exception thrown), Just go from behind and place a transaction that is not a virtual bank change at the beginning of the team
@@ -306,11 +318,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 chain.getLogger().error(ex);
             }
 
-            if (e instanceof NulsException) {
-                if (ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW.equals(((NulsException) e).getErrorCode())) {
-                    return;
-                }
-            }
             chain.getLogger().error(e);
         }
     }
@@ -804,6 +811,15 @@ public class CfmTxSubsequentProcessTask implements Runnable {
 
     private boolean seedPackerOrderCall(TxSubsequentProcessPO pendingPO, int htgChainId, String currentMultiSignAddress, Map<String, VirtualBankDirector> mapVirtualBank, SeedPackerOrder seedPackerOrder) throws Exception {
         Transaction tx = pendingPO.getTx();
+        String txHash = tx.getHash().toHex();
+        String key = txHash;
+        if (converterCoreApi.getUtxoExecuted().contains(key)) {
+            return false;
+        }
+        seedPackerOrder.call(chain, tx, htgChainId, currentMultiSignAddress, mapVirtualBank);
+        converterCoreApi.getUtxoExecuted().add(txHash);
+        return false;
+        /*
         // check if AA,BB or CC
         SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
         if (signAccountDTO == null) {
@@ -818,6 +834,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         if (order == 0) {
             // AA call
             seedPackerOrder.call(chain, tx, htgChainId, currentMultiSignAddress, mapVirtualBank);
+            converterCoreApi.getUtxoExecuted().add(txHash);
             return false;
         } else {
             // BB + 5min to call
@@ -828,10 +845,11 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             } else if (pendingPO.getTimeForMakeUTXO() <= System.currentTimeMillis()) {
                 // BB or CC call
                 seedPackerOrder.call(chain, tx, htgChainId, currentMultiSignAddress, mapVirtualBank);
+                converterCoreApi.getUtxoExecuted().add(txHash);
                 return false;
             }
         }
-        return false;
+        return false;*/
     }
 
     private boolean checkManagerChangeUTXOTx(TxSubsequentProcessPO pendingPO, int htgChainId, String currentMultiSignAddress) throws Exception {
@@ -848,6 +866,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         }
         return this.makeManagerChangeUTXOTx(pendingPO, htgChainId, currentMultiSignAddress);
     }
+
 
 
     private boolean makeManagerChangeUTXOTx(TxSubsequentProcessPO pendingPO, int htgChainId, String currentMultiSignAddress) throws Exception {
@@ -1086,6 +1105,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 }
                 if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
                     WithdrawalTotalFeeInfo totalFeeInfo = assembleTxService.calculateWithdrawalTotalFee(chain, tx);
+                    if (totalFeeInfo.getFee().compareTo(BigInteger.ZERO) == 0) {
+                        chain.getLogger().info("[withdraw] Tx {} 0 fee. remove it, chainId: {}", txHash, docking.getChainId());
+                        return true;
+                    }
                     boolean enoughFeeOfWithdraw;
                     // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
                     if (totalFeeInfo.isNvtAsset()) {

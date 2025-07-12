@@ -160,7 +160,7 @@
     "decimal": 18,
     "simple": "NVT_USDTN_LP",
     "weight": 200,
-    "stopHeight": 0
+    "stopHeight": 77200000
   },
   {
     "assetId": "232",
@@ -169,7 +169,7 @@
     "decimal": 18,
     "simple": "NULS_NVT_LP",
     "weight": 200,
-    "stopHeight": 0
+    "stopHeight": 77200000
   },
   {
     "assetId": "250",
@@ -187,7 +187,7 @@
     "decimal": 18,
     "simple": "NVT_BNB_LP",
     "weight": 200,
-    "stopHeight": 0
+    "stopHeight": 77200000
   },
   {
     "assetId": "672",
@@ -196,7 +196,7 @@
     "decimal": 18,
     "simple": "NVT-ETHN-LP",
     "weight": 200,
-    "stopHeight": 0
+    "stopHeight": 77200000
   },
   {
     "assetId": "510",
@@ -205,6 +205,33 @@
     "decimal": 18,
     "simple": "NVT-USDCN-LP",
     "weight": 200,
+    "stopHeight": 77200000
+  },
+  {
+    "assetId": "894",
+    "oracleKey": "USDTNBTCLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "USDTN_BTC_LP",
+    "weight": 50,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "895",
+    "oracleKey": "ETHNBTCLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "ETHN_BTC_LP",
+    "weight": 50,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "896",
+    "oracleKey": "USDCNBTCLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "USDCN_BTC_LP",
+    "weight": 50,
     "stopHeight": 0
   },
   {

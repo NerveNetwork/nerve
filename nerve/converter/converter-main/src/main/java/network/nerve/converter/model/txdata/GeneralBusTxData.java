@@ -33,12 +33,11 @@ import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
 
-/**
- * Additional withdrawal handling feeTxData
- * @author: Loki
- * @date: 2020/9/25
- */
 public class GeneralBusTxData extends BaseNulsData {
+    /**
+     * type==1 Check and unlock abnormally locked UTXOs of heterogeneous chains of UTXO
+     * type==2 Remove abnormal transactions from the cfmTask queue
+     */
     private int type;
     private byte[] data;
 

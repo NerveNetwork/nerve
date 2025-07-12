@@ -418,10 +418,10 @@ public class BlockServiceImpl implements BlockService {
         if (needLock) {
             l = lock.writeLock();
         }
-        logger.info("====startSaveBlock height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash.toHex(), isRecPocNet, download, nodeId);
+//        logger.info("====startSaveBlock height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash.toHex(), isRecPocNet, download, nodeId);
         try {
             if (block.getHeader().getHeight() > 0 && block.getHeader().getHeight() <= context.getLatestHeight()) {
-                logger.info("=====Block has been saved height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash.toHex(), isRecPocNet, download, nodeId);
+//                logger.info("=====Block has been saved height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash.toHex(), isRecPocNet, download, nodeId);
                 return true;
             }
             //Default does not perform Byzantine verification
