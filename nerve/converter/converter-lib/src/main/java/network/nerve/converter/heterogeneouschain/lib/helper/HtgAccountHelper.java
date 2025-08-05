@@ -46,7 +46,7 @@ public class HtgAccountHelper implements BeanInitial {
     //    this.htgContext = (HtgContext) beanMap.get("htgContext");
     //}
 
-    public String sign(String data, HtgContext htgContext) throws NulsException {
+    /*public String sign(String data, HtgContext htgContext) throws NulsException {
         HtgAccount account = (HtgAccount) htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
         if (account == null) {
             return null;
@@ -56,5 +56,5 @@ public class HtgAccountHelper implements BeanInitial {
         byte[] signBytes = nEckey.sign(data.getBytes(StandardCharsets.UTF_8));
         String sign = HexUtil.encode(signBytes);
         return sign;
-    }
+    }*/
 }

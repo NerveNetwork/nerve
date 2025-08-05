@@ -189,6 +189,7 @@ public class QuotationBootstrap extends RpcModule {
             quConfig.setProtocol31Height(Long.parseLong(map.get("protocol31Height").toString()));
             quConfig.setProtocol34Height(Long.parseLong(map.get("protocol34Height").toString()));
             quConfig.setProtocol40Height(Long.parseLong(map.get("protocol40Height").toString()));
+            quConfig.setProtocol43Height(Long.parseLong(map.get("protocol43Height").toString()));
 
         } catch (Exception e) {
             Log.error(e);
@@ -237,6 +238,7 @@ public class QuotationBootstrap extends RpcModule {
         QuotationContext.protocol31Height = quConfig.getProtocol31Height();
         QuotationContext.protocol34Height = quConfig.getProtocol34Height();
         QuotationContext.protocol40Height = quConfig.getProtocol40Height();
+        QuotationContext.protocol43Height = quConfig.getProtocol43Height();
 
         LoggerUtil.LOG.info("Get quote start time: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
         LoggerUtil.LOG.info("Get quote end time(Starting time of final quotation statistics): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);

@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2017-2018 nuls.io
+ * Copyright (c) 2019-2022 nerve.network
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,56 +25,65 @@
 package network.nerve.quotation.rpc.querier.impl;
 
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.log.Log;
-import io.nuls.core.log.logback.NulsLogger;
-import io.nuls.core.model.StringUtils;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.rpc.querier.Querier;
 import network.nerve.quotation.util.HttpRequestUtil;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
+import static network.nerve.quotation.constant.QuotationConstant.ANCHOR_TOKEN_AKC;
+
 /**
- * goDEXGet price
- *
  * @author: Loki
- * @date: 2020/6/16
+ * @date: 2019/12/10
  */
 @Component
-public class AssetSystemQuerier implements Querier {
+public class Aiby2Querier implements Querier {
 
-    /**
-     * Obtain transaction pair price interface
-     */
-    private final String CMD = "price/";
+    private String CMD_FORMAT = "/v1/quotation/allspotticker";
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        String symbol = anchorToken.toUpperCase();
-        symbol = symbol.replace("-USDT", "");
-        String url = baseurl + CMD + symbol;
-        try {
-            String data = HttpRequestUtil._httpRequest(chain, url);
-            if (StringUtils.isBlank(data)) {
-                return null;
-            }
-            BigDecimal res = new BigDecimal(data);
-            chain.getLogger().info("AS Obtaining transaction pairs[{}]price:{}", symbol, res);
-            return res;
-        } catch (Throwable e) {
-            chain.getLogger().error("AS, Calling interfaces {}, anchorToken:{} Failed to obtain price", url, symbol);
+        if (!ANCHOR_TOKEN_AKC.equals(anchorToken)) {
             return null;
         }
-    }
+        String[] split = anchorToken.split("-");
+        anchorToken = split[0].trim() + "_" + split[1].trim();
+        String symbol = anchorToken.toLowerCase();
+        String url = baseurl + CMD_FORMAT;
 
+        try {
+            Map<String, Object> data = HttpRequestUtil.httpRequest(chain, url);
+            if (null == data) {
+                return null;
+            }
+            List<Map> list = (List<Map>) data.get("ticker");
+            if (list == null) {
+                return null;
+            }
+            String last_price = null;
+            for (Map map : list) {
+                String _symbol = (String) map.get("symbol");
+                if (_symbol == null) {
+                    continue;
+                }
+                if (_symbol.equalsIgnoreCase(symbol)) {
+                    last_price = (String) map.get("last");
+                    break;
+                }
+            }
 
-    public static void main(String[] args) {
-        AssetSystemQuerier querier = new AssetSystemQuerier();
-        Chain chain = new Chain();
-        NulsLogger logger = new NulsLogger(Log.BASIC_LOGGER.getLogger());
-        chain.setLogger(logger);
-        BigDecimal result = querier.tickerPrice(chain,"https://assets.nabox.io/api/","NVT-USDT");
-        System.out.println(result.toString());
+            if (null == last_price) {
+                return null;
+            }
+            BigDecimal res = new BigDecimal(last_price);
+            chain.getLogger().info("Aiby2 Obtaining transaction pairs [{}] price: {}", symbol, res);
+            return res;
+        } catch (Throwable e) {
+            chain.getLogger().error("Aiby2, Calling interfaces {}, anchorToken: {} Failed to obtain price", url, anchorToken);
+            return null;
+        }
     }
 }

@@ -422,11 +422,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public Map<String, Integer> currentVirtualBanksBalanceOrder(int hChainId) {
         Map<String, VirtualBankDirectorDTO> cacheMap = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.stream().collect(Collectors.toMap(VirtualBankDirectorDTO::getSignAddress, Function.identity(), (key1, key2) -> key2));
-        try {
+        /*try {
             logger().info("ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST: {}", JSONUtils.obj2json(cacheMap));
         } catch (Exception e) {
             logger().error(e);
-        }
+        }*/
         Map<String, BigDecimal> balanceMap = new HashMap<>();
         Map<String, Integer> resultMap = new HashMap<>();
         Map<String, VirtualBankDirector> map = nerveChain.getMapVirtualBank();
@@ -464,7 +464,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
         for (Map.Entry<String, BigDecimal> entry : list) {
             resultMap.put(entry.getKey(), i++);
         }
-        nerveChain.getLogger().info("Current Bank Order: {}, balanceMap: {}", resultMap, balanceMap);
+        //nerveChain.getLogger().info("Current Bank Order: {}, balanceMap: {}", resultMap, balanceMap);
         return resultMap;
     }
 
@@ -689,6 +689,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean isProtocol42() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_42_0;
+    }
+
+    @Override
+    public boolean isProtocol43() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_43_0;
     }
 
     private void loadHtgMainAsset() {

@@ -33,11 +33,13 @@ import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.crypto.KeccakHash;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -50,8 +52,28 @@ import java.util.*;
 @Component
 public class SignatureUtil {
 
+    private static final String PREFIX = "Tip: You are signing a NerveNetwork transaction. Please confirm your transaction information carefully. Once the transaction is broadcast on the blockchain, there is no way to cancel your transaction.\n\n提示：您正在签署一笔NerveNetwork交易，请仔细确认您的交易信息。交易一旦在区块链上广播，将无法取消。\n\nTransaction Hash:\n%s";
+    private static final String MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n";
     private static final int MAIN_CHAIN_ID = 1;
 
+    public static byte[] personalHash(String txHash) {
+        String personalData = String.format(PREFIX, txHash);
+        return getEthereumMessageHash(personalData.getBytes(StandardCharsets.UTF_8));
+    }
+
+    static byte[] getEthereumMessagePrefix(int messageLength) {
+        return MESSAGE_PREFIX.concat(String.valueOf(messageLength)).getBytes();
+    }
+
+    static byte[] getEthereumMessageHash(byte[] message) {
+        byte[] prefix = getEthereumMessagePrefix(message.length);
+
+        byte[] result = new byte[prefix.length + message.length];
+        System.arraycopy(prefix, 0, result, 0, prefix.length);
+        System.arraycopy(message, 0, result, prefix.length, message.length);
+
+        return HexUtil.decode(KeccakHash.keccak(result));
+    }
     /**
      * Verify the correctness of all signatures in the transaction
      *
@@ -64,14 +86,73 @@ public class SignatureUtil {
             if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
                 throw new NulsException(new Exception());
             }
+            byte[] txHashBytes = tx.getHash().getBytes();
+            if (!tx.isMultiSignTx()) {
+                TransactionSignature transactionSignature = new TransactionSignature();
+                transactionSignature.parse(tx.getTransactionSignature(), 0);
+                if ((transactionSignature.getP2PHKSignatures() == null || transactionSignature.getP2PHKSignatures().isEmpty())) {
+                    throw new NulsException(new Exception("Transaction unsigned ！"));
+                }
+                // add personal data
+                for (P2PHKSignature signature : transactionSignature.getP2PHKSignatures()) {
+                    if (!ECKey.verify(txHashBytes, signature.getSignData().getSignBytes(), signature.getPublicKey())) {
+                        throw new NulsException(new Exception("Transaction signature error !"));
+                    }
+                }
+            } else {
+                MultiSignTxSignature transactionSignature = new MultiSignTxSignature();
+                transactionSignature.parse(tx.getTransactionSignature(), 0);
+                if ((transactionSignature.getP2PHKSignatures() == null || transactionSignature.getP2PHKSignatures().isEmpty())) {
+                    throw new NulsException(new Exception("Transaction unsigned ！"));
+                }
+                List<P2PHKSignature> validSignatures = transactionSignature.getValidSignature();
+                int validCount = 0;
+                // add personal data
+                for (P2PHKSignature signature : validSignatures) {
+                    if (ECKey.verify(txHashBytes, signature.getSignData().getSignBytes(), signature.getPublicKey())) {
+                        validCount++;
+                    }
+                }
+                if (validCount < transactionSignature.getM()) {
+                    throw new NulsException(new Exception("Transaction signature error !"));
+                }
+            }
+
+        } catch (NulsException e) {
+            Log.error("TransactionSignature parse error!");
+            throw e;
+        }
+        return true;
+    }
+
+    public static boolean validateTransactionSigntureForPersonalSign(int chainId, Transaction tx) throws NulsException {
+        // Determine hard fork,Need a height
+        try {
+            if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
+                throw new NulsException(new Exception());
+            }
+            String txHash = tx.getHash().toHex();
+            byte[] txHashBytes = tx.getHash().getBytes();
+            byte[] personalHash = null;
             if (!tx.isMultiSignTx()) {
                 TransactionSignature transactionSignature = new TransactionSignature();
                 transactionSignature.parse(tx.getTransactionSignature(), 0);
                 if ((transactionSignature.getP2PHKSignatures() == null || transactionSignature.getP2PHKSignatures().size() == 0)) {
                     throw new NulsException(new Exception("Transaction unsigned ！"));
                 }
+                // add personal data
+                byte[] dataBytes = txHashBytes;
+                Byte type = transactionSignature.getType();
+                if (type != null && type == 1) {
+                    if (personalHash == null) {
+                        personalHash = personalHash(txHash);
+                    }
+                    if (personalHash != null) {
+                        dataBytes = personalHash;
+                    }
+                }
                 for (P2PHKSignature signature : transactionSignature.getP2PHKSignatures()) {
-                    if (!ECKey.verify(tx.getHash().getBytes(), signature.getSignData().getSignBytes(), signature.getPublicKey())) {
+                    if (!ECKey.verify(dataBytes, signature.getSignData().getSignBytes(), signature.getPublicKey())) {
                         throw new NulsException(new Exception("Transaction signature error !"));
                     }
                 }
@@ -84,8 +165,19 @@ public class SignatureUtil {
                 }
                 List<P2PHKSignature> validSignatures = transactionSignature.getValidSignature();
                 int validCount = 0;
+                // add personal data
+                byte[] dataBytes = txHashBytes;
+                Byte type = transactionSignature.getType();
+                if (type != null && type == 1) {
+                    if (personalHash == null) {
+                        personalHash = personalHash(txHash);
+                    }
+                    if (personalHash != null) {
+                        dataBytes = personalHash;
+                    }
+                }
                 for (P2PHKSignature signature : validSignatures) {
-                    if (ECKey.verify(tx.getHash().getBytes(), signature.getSignData().getSignBytes(), signature.getPublicKey())) {
+                    if (ECKey.verify(dataBytes, signature.getSignData().getSignBytes(), signature.getPublicKey())) {
                         validCount++;
                     }
                 }
@@ -106,7 +198,7 @@ public class SignatureUtil {
      *
      * @param tx transaction
      */
-    public static boolean ctxSignatureValid(int chainId, Transaction tx) throws NulsException {
+    /*public static boolean ctxSignatureValid(int chainId, Transaction tx) throws NulsException {
         if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
             throw new NulsException(new Exception());
         }
@@ -137,7 +229,7 @@ public class SignatureUtil {
             throw new NulsException(new Exception("Transaction signature error !"));
         }
         return true;
-    }
+    }*/
 
     /**
      * Cross chain transaction verification signature
@@ -179,27 +271,27 @@ public class SignatureUtil {
         return false;
     }
 
-    public static void main(String[] args) throws NulsException {
+    /*public static void main(String[] args) throws NulsException {
         byte[] hash = HexUtil.decode("02002103200bda89e4116392aa5b939d739e6c9358600c0f8c1790dd4f284591b285de70143130362e35352e3234342e3136303a3137303031210308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260143130362e39312e3230352e3231303a3137303031");
         byte[] bytes = HexUtil.decode("210308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db7819826046304402206964e8b8cfb0b2879cddc837ed849a0a7d50d4e65b16e890e7057e262bc79a8e0220350319ba333d99358aa792f7cd8ec2c2133ed89654dde657284d102019fd5c68");
         P2PHKSignature _sign = new P2PHKSignature();
         _sign.parse(bytes, 0);
         boolean b = ECKey.verify(hash,_sign.getSignData().getSignBytes(),_sign.getPublicKey());
         System.out.println(b);
-    }
+    }*/
 
     /**
      * Determine if a certain address exists in the transaction
      *
      * @param tx transaction
      */
-    public static boolean containsAddress(Transaction tx, byte[] address, int chainId) throws NulsException {
+    /*public static boolean containsAddress(Transaction tx, byte[] address, int chainId) throws NulsException {
         Set<String> addressSet = getAddressFromTX(tx, chainId);
         if (addressSet == null || addressSet.size() == 0) {
             return false;
         }
         return addressSet.contains(AddressTool.getStringAddressByBytes(address));
-    }
+    }*/
 
     /**
      * Obtain transaction signature address

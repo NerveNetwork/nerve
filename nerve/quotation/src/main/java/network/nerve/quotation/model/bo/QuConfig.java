@@ -84,6 +84,15 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     private long protocol31Height;
     private long protocol34Height;
     private long protocol40Height;
+    private long protocol43Height;
+
+    public long getProtocol43Height() {
+        return protocol43Height;
+    }
+
+    public void setProtocol43Height(long protocol43Height) {
+        this.protocol43Height = protocol43Height;
+    }
 
     public long getProtocol40Height() {
         return protocol40Height;

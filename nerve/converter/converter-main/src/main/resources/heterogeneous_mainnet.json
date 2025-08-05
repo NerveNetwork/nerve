@@ -900,5 +900,27 @@
     "protocolVersion": 40,
     "priceKey": "TBC_PRICE",
     "filterAddresses": "jvBaMk4qKjXaQFYgBmS7HkwwktsYDdBxfa"
+  },
+  {
+    "chainId": 143,
+    "chainIdOnHtgNetwork": 9070,
+    "type": 1,
+    "symbol": "AKC",
+    "decimals": 18,
+    "commonRpcAddress": "https://rpc2-mainnet.akashicrecords.io",
+    "mainRpcAddress": "https://rpc2-mainnet.akashicrecords.io",
+    "orderRpcAddresses": "https://rpc2-mainnet.akashicrecords.io",
+    "standbyRpcAddresses": "https://rpc2-mainnet.akashicrecords.io",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 3,
+    "txBlockConfirmationsOfWithdraw": 1,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "blockQueuePeriod": 5,
+    "confirmTxQueuePeriod": 10,
+    "waitingTxQueuePeriod": 10,
+    "protocolVersion": 43,
+    "priceKey": "AKC_PRICE",
+    "filterAddresses": "0x3250dabb584f7fea1bafaff6000ffbbd2f419a15"
   }
 ]

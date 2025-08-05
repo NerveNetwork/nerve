@@ -1,12 +1,17 @@
-package network.nerve.converter.heterogeneouschain.avax.core;
+package network.nerve.converter.heterogeneouschain.akc;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsException;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
-import network.nerve.converter.heterogeneouschain.avax.base.Base;
+import network.nerve.converter.heterogeneouschain.base.Base;
+import network.nerve.converter.heterogeneouschain.base.BeanUtilTest;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
@@ -18,40 +23,76 @@ import org.junit.Test;
 import org.web3j.abi.*;
 import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.*;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.*;
+import org.web3j.rlp.RlpEncoder;
+import org.web3j.rlp.RlpList;
+import org.web3j.rlp.RlpType;
 import org.web3j.utils.Numeric;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
-public class AvaxWalletApiTest extends Base {
+public class AkcWalletApiTest extends Base {
+
+    String testEthRpcAddress = "https://rpc2-mainnet.akashicrecords.io";
+    int testChainId = 9070;
+    String mainEthRpcAddress = "https://rpc2-mainnet.akashicrecords.io";
+    int mainChainId = 9070;
+    @Override
+    protected String testEthRpcAddress() {
+        return testEthRpcAddress;
+    }
+
+    @Override
+    protected String mainEthRpcAddress() {
+        return mainEthRpcAddress;
+    }
+
+    @Override
+    protected int testChainId() {
+        return testChainId;
+    }
+
+    @Override
+    protected int mainChainId() {
+        return mainChainId;
+    }
 
     protected String from;
     protected String fromPriKey;
     protected String erc20Address;
     protected int erc20Decimals;
 
-    static String USDT_AVAX = "0xf3392C7b8d47694c10564C85736d6B0643b1761E";
-    static String USD18_AVAX = "0xbBF80744c94C85d65B08290860df6ff04089F050";
-    static String NVT_AVAX_MINTER = "0x8B3b22C252F431a75644E544FCAf67E390A206F4";
+    /** Akc testnet */
+    static String USDT_AKC = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
+    static String USD18_AKC = "0x21615a84D8D834ca598a59D8E5C810128403DfaE";
+    static String NVT_AKC_MINTER = "0xE6b360C49A316fcc71d55B3074160ee043a7BD8B";
 
     protected void setErc20USDT() {
-        erc20Address = USDT_AVAX;
+        erc20Address = USDT_AKC;
         erc20Decimals = 6;
     }
     protected void setErc20USD18() {
-        erc20Address = USD18_AVAX;
+        erc20Address = USD18_AKC;
         erc20Decimals = 18;
     }
     protected void setErc20NVT() {
-        erc20Address = NVT_AVAX_MINTER;
+        erc20Address = NVT_AKC_MINTER;
         erc20Decimals = 8;
+    }
+
+    protected void setAccount_3012() {
+        from = "0xf173805F1e3fE6239223B17F0807596Edc283012";
+        fromPriKey = "d15fdd6030ab81cee6b519645f0c8b758d112cd322960ee910f65ad7dbb03c2b";
     }
 
     protected void setAccount_c684() {
@@ -63,12 +104,50 @@ public class AvaxWalletApiTest extends Base {
         fromPriKey = "4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39";
     }
 
+    protected void setAccount_2617() {
+        from = "0x7A9a9223830e58A53F47972255a99eDBA0332617";
+        fromPriKey = pMap.get(from.toLowerCase()).toString();
+    }
+
+    protected void setAccount_5996() {
+        from = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
+        fromPriKey = pMap.get(from.toLowerCase()).toString();
+    }
+
+    Map<String, Object> pMap;
+    String packageAddressPrivateKeyZP;
+    String packageAddressPrivateKeyNE;
+    String packageAddressPrivateKeyHF;
     @Before
     public void before() {
+        try {
+            String path = new File(AkcWalletApiTest.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getPath();
+            String pData = IoUtils.readBytesToString(new File(path + File.separator + "ethwp.json"));
+            pMap = JSONUtils.json2map(pData);
+            String packageAddressZP = "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV";
+            String packageAddressNE = "TNVTdTSPMGoSukZyzpg23r3A7AnaNyi3roSXT";
+            String packageAddressHF = "TNVTdTSPV7WotsBxPc4QjbL8VLLCoQfHPXWTq";
+            packageAddressPrivateKeyZP = pMap.get(packageAddressZP).toString();
+            packageAddressPrivateKeyNE = pMap.get(packageAddressNE).toString();
+            packageAddressPrivateKeyHF = pMap.get(packageAddressHF).toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
+    protected void setLocalNewTest() {
+        list = new ArrayList<>();
+        list.add(packageAddressPrivateKeyZP);// 0x2804A4296211Ab079AED4e12120808F1703841b3
+        list.add(packageAddressPrivateKeyNE);// 0x4202726a119F7784085B04264BfF716267a51032
+        list.add(packageAddressPrivateKeyHF);// 0x4dAE32e287D43Ba6F6fE9323864e67A9c66B47e6
+        //list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
+        //list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
+        this.multySignContractAddress = "0x50074F4Bc4bC955622b49de16Fc6E3C1c73afBcA";
+        init();
     }
 
     protected void setDev() {
+        // ["0xbe7fbb51979e0b0b70c48284e895e228290d9f73", "0xcb1fa0c0b7b4d57848bddaa4276ce0776a3215d2", "0x54103606d9fcdb40539d06344c8f8c6367ffc9b8"]
         list = new ArrayList<>();
         list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// 0xbe7fbb51979e0b0b70c48284e895e228290d9f73
         list.add("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75");// 0xcb1fa0c0b7b4d57848bddaa4276ce0776a3215d2
@@ -88,37 +167,66 @@ public class AvaxWalletApiTest extends Base {
         list.add("4c6b4c5d9b07e364d6b306d1afe0f2c37e15c64ac5151a395a4c570f00ce867d");// 0x49467643f1b6459caf316866ecef9213edc4fdf2
         list.add("2fea28f438a104062e4dcd79427282573053a6b762e68b942055221462c46f02");// 0x5e57d62ab168cd69e0808a73813fbf64622b3dfd
 
-        list.add("08407198c196c950afffd326a00321a5ea563b3beaf640d462f3a274319b753d");// 0x7dc432b48d813b2579a118e5a0d2fee744ac8e02 16
-        this.multySignContractAddress = "";
+        this.multySignContractAddress = "0x2eDCf5f18D949c51776AFc42CDad667cDA2cF862";
         init();
     }
     protected void setLocalTest() {
         list = new ArrayList<>();
-        list.add("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5");// 0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03
-        list.add("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f");// 0xD16634629C638EFd8eD90bB096C216e7aEc01A91
-        list.add("fbcae491407b54aa3904ff295f2d644080901fda0d417b2b427f5c1487b2b499");// 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
-        list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
-        list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
-        list.add("CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2");// 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
-        list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
-        list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
+        list.add(pMap.get("0x2804a4296211ab079aed4e12120808f1703841b3").toString());// 0x2804a4296211ab079aed4e12120808f1703841b3
+        list.add(pMap.get("0x4202726a119f7784085b04264bff716267a51032").toString());// 0x4202726a119f7784085b04264bff716267a51032
+        list.add(pMap.get("0x4dae32e287d43ba6f6fe9323864e67a9c66b47e6").toString());// 0x4dae32e287d43ba6f6fe9323864e67a9c66b47e6
+        //list.add("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5");// 0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03
+        //list.add("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f");// 0xD16634629C638EFd8eD90bB096C216e7aEc01A91
+        //list.add("fbcae491407b54aa3904ff295f2d644080901fda0d417b2b427f5c1487b2b499");// 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
+        //list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
+        //list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
+        //list.add("CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2");// 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
+        //list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
+        //list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
         list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
-        this.multySignContractAddress = "0xdd35003eD2118D997F3404C9C17eb20dfea0f767";
-        // spare: 0xB29A26df2702B10BFbCf8cd52914Ad1fc99A4540
+
+        list.add("4100e2f88c3dba08e5000ed3e8da1ae4f1e0041b856c09d35a26fb399550f530");// 0x847772e7773061c93d0967c56f2e4b83145c8cb2
+        list.add("bec819ef7d5beeb1593790254583e077e00f481982bce1a43ea2830a2dc4fdf7");// 0x4273e90fbfe5fca32704c02987d938714947a937
+        list.add("ddddb7cb859a467fbe05d5034735de9e62ad06db6557b64d7c139b6db856b200");// 0x9f14432b86db285c76589d995aab7e7f88b709df
+        list.add("4efb6c23991f56626bc77cdb341d64e891e0412b03cbcb948aba6d4defb4e60a");// 0x42868061f6659e84414e0c52fb7c32c084ce2051
+        list.add("3dadac00b523736f38f8c57deb81aa7ec612b68448995856038bd26addd80ec1");// 0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af
+        list.add("27dbdcd1f2d6166001e5a722afbbb86a845ef590433ab4fcd13b9a433af6e66e");// 0x9dc0ec60c89be3e5530ddbd9cf73430e21237565
+        list.add("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b");// 0x6392c7ed994f7458d60528ed49c2f525dab69c9a
+        list.add("B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF");// 0xfa27c84ec062b2ff89eb297c24aaed366079c684
+        list.add("4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39");// 0xc11d9943805e56b630a401d4bd9a29550353efa1
+        list.add("e70ea2ebe146d900bf84bc7a96a02f4802546869da44a23c29f599c7e42001da");// 0x3091e329908da52496cc72f5d5bbfba985bccb1f
+        list.add("4c6b4c5d9b07e364d6b306d1afe0f2c37e15c64ac5151a395a4c570f00ce867d");// 0x49467643f1b6459caf316866ecef9213edc4fdf2
+        //list.add("2fea28f438a104062e4dcd79427282573053a6b762e68b942055221462c46f02");// 0x5e57d62ab168cd69e0808a73813fbf64622b3dfd
+
+        this.multySignContractAddress = "0x26A724F86648F13CAdAA3B8A4C7ad1834Cb825c9";
         init();
+        setMain();
     }
+    /*
+        "0x847772e7773061c93d0967c56f2e4b83145c8cb2",
+        "0x4273e90fbfe5fca32704c02987d938714947a937",
+        "0x9f14432b86db285c76589d995aab7e7f88b709df",
+        "0x42868061f6659e84414e0c52fb7c32c084ce2051",
+        "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af",
+        "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565",
+        "0x6392c7ed994f7458d60528ed49c2f525dab69c9a",
+        "0xfa27c84ec062b2ff89eb297c24aaed366079c684",
+        "0xc11d9943805e56b630a401d4bd9a29550353efa1",
+        "0x3091e329908da52496cc72f5d5bbfba985bccb1f",
+        "0x49467643f1b6459caf316866ecef9213edc4fdf2",
+        "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd",
+     */
     protected void setBeta() {
         list = new ArrayList<>();
         list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 0x1a9f8b818a73b0f9fde200cd88c42b626d2661cd
         list.add("6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492");// 0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac
         list.add("d48b870f2cf83a739a134cd19015ed96d377f9bc9e6a41108ac82daaca5465cf");// 0x3c2ff003ff996836d39601ca22394a58ca9c473b
-        // 0xae00574bdc6bbd40612ec024e2536cc0784f73e4
-        // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        this.multySignContractAddress = "0x74A163fCd791Ec7AaB2204ffAbf1A1DFb8854883";
+        this.multySignContractAddress = "0x5e7E2AbAa58e108f5B9D5D30A76253Fa8Cb81f9d";
         init();
     }
 
     public void init() {
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         this.address = Credentials.create(list.get(0)).getAddress();
         this.priKey = list.get(0);
     }
@@ -145,9 +253,13 @@ public class AvaxWalletApiTest extends Base {
 
     @Test
     public void erc20TotalSupplyTest() throws Exception {
-        setMain();
-        BigInteger totalSupply = this.erc20TotalSupply("0x54e4622DC504176b3BB432dCCAf504569699a7fF");
+        //setMain();
+        BigInteger totalSupply = this.erc20TotalSupply("0x8B3b22C252F431a75644E544FCAf67E390A206F4");
         System.out.println(totalSupply);
+        BigInteger decimals = this.erc20Decimals("0x8B3b22C252F431a75644E544FCAf67E390A206F4");
+        System.out.println(decimals);
+
+
         /*BigInteger totalSupply1 = this.erc20TotalSupply("0xae7FccFF7Ec3cf126cd96678ADAE83a2b303791C");
         System.out.println(totalSupply1);
         BigInteger totalSupply2 = this.erc20TotalSupply("0x856129092C53f5E2e4d9DB7E04c961580262D0AE");
@@ -169,23 +281,39 @@ public class AvaxWalletApiTest extends Base {
     }
 
     /**
-     * Transfer to multiple signed contractsethanderc20（Used for testing withdrawals）
+     * Transfer inerc20
      */
     @Test
-    public void transferMainAssetAndERC20() throws Exception {
-        BigInteger gasPrice = htgContext.getEthGasPrice();
+    public void transferERC20() throws Exception {
+        setLocalNewTest();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // initialization account
-        setAccount_EFa1();
-        // MainAssetquantity
-        String sendAmount = "0.1";
-        String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
-        System.out.println(String.format("towards[%s]Transfer%sindividualMainAsset, transactionhash: %s", multySignContractAddress, sendAmount, txHash));
+        setAccount_2617();
         // ERC20
-        String tokenAddress = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
-        String tokenAmount = "100";
-        int tokenDecimals = 6;
-        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
-        System.out.println(String.format("towards[%s]Transfer%sindividualERC20(USDI), transactionhash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
+        setErc20USDT();
+        String tokenAddress = erc20Address;
+        int tokenDecimals = erc20Decimals;
+        String tokenAmount = "50000000";
+        String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        if (token.hasError()) {
+            System.err.println(String.format("【fail】towards [%s] Transfer %s individual ERC20(USDT), transaction hash: %s", to, tokenAmount, token.getError().getMessage()));
+        } else {
+            System.out.println(String.format("towards [%s] Transfer %s individual ERC20(USDT), transaction hash: %s", to, tokenAmount, token.getTransactionHash()));
+        }
+
+        TimeUnit.SECONDS.sleep(3);
+        setErc20USD18();
+        tokenAddress = erc20Address;
+        tokenDecimals = erc20Decimals;
+        tokenAmount = "50000000";
+        to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
+        token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        if (token.hasError()) {
+            System.err.println(String.format("【fail】towards [%s] Transfer %s individual ERC20(USD18), transaction hash: %s", to, tokenAmount, token.getError().getMessage()));
+        } else {
+            System.out.println(String.format("towards [%s] Transfer %s individual ERC20(USD18), transaction hash: %s", to, tokenAmount, token.getTransactionHash()));
+        }
     }
 
     /**
@@ -193,18 +321,18 @@ public class AvaxWalletApiTest extends Base {
      */
     @Test
     public void depositMainAssetByCrossOut() throws Exception {
-        setLocalTest();
-        htgContext.setEthGasPrice(new BigDecimal("25").scaleByPowerOfTen(9).toBigInteger());
+        setLocalNewTest();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // initialization account
-        setAccount_EFa1();
+        setAccount_5996();
         // MainAssetquantity
-        String sendAmount = "2";
+        String sendAmount = "0.01";
         // Nerve Receiving address
-        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, HtgConstant.ZERO_ADDRESS);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount, multySignContractAddress);
-        System.out.println(String.format("MainAssetRecharge[%s], hash: %s", sendAmount, hash));
+        System.out.println(String.format("MainAsset Recharge [%s], hash: %s", sendAmount, hash));
     }
 
     @Test
@@ -221,18 +349,17 @@ public class AvaxWalletApiTest extends Base {
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
-        setLocalTest();
-        htgContext.setEthGasPrice(new BigDecimal("25").scaleByPowerOfTen(9).toBigInteger());
+        setLocalNewTest();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // initialization account
-        setAccount_EFa1();
+        setAccount_5996();
         // ERC20 Transfer quantity
-        String sendAmount = "3.123456";
-        // initialization ERC20 Address information
-        setErc20USDT();
-        //setErc20NVT();
-        //setErc20USD18();
+        //String sendAmount = "1.123456"; setErc20USDT();
+        //String sendAmount = "1234.123456789123456789"; setErc20USD18();
+        String sendAmount = "20.12345678"; setErc20NVT();
+
         // Nerve Receiving address
-        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
 
         BigInteger convertAmount = new BigDecimal(sendAmount).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger();
         Function allowanceFunction = new Function("allowance",
@@ -245,36 +372,68 @@ public class AvaxWalletApiTest extends Base {
             String approveAmount = "99999999";
             Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
-            System.out.println(String.format("erc20Authorization recharge[%s], authorizationhash: %s", approveAmount, authHash));
+            System.out.println(String.format("erc20 Authorization recharge [%s], authorization hash: %s", approveAmount, authHash));
             while (htgWalletApi.getTxReceipt(authHash) == null) {
-                System.out.println("wait for8Second query[ERC20authorization]Transaction packaging results");
+                System.out.println("wait for 8 Second query [ERC20 authorization] Transaction packaging results");
                 TimeUnit.SECONDS.sleep(8);
             }
             TimeUnit.SECONDS.sleep(8);
             BigInteger tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             while (tempAllowanceAmount.compareTo(convertAmount) < 0) {
-                System.out.println("wait for8Second query[ERC20authorization]Transaction limit");
+                System.out.println("wait for 8 Second query [ERC20 authorization] Transaction limit");
                 TimeUnit.SECONDS.sleep(8);
                 tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             }
         }
-        System.out.println("[ERC20authorization]The limit has met the conditions");
+        System.out.println("[ERC20 authorization] The limit has met the conditions");
         // crossOut erc20Transfer
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
-        System.out.println(String.format("erc20Recharge[%s], Rechargehash: %s", sendAmount, hash));
+        System.out.println(String.format("erc20 Recharge[%s], Recharge hash: %s", sendAmount, hash));
+    }
+
+    @Test
+    public void depositByCrossOutIITest() throws Exception {
+        setLocalNewTest();
+        //setBeta();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        // initialization account
+        setAccount_5996();
+        // Main asset expenses
+        String mainValue = "0.01";
+        // ERC20 Transfer quantity
+        String sendAmount = "2.15";
+        // initialization ERC20 Address information
+        setErc20NVT();
+        // Nerve Receiving address
+        String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
+
+        BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
+        BigInteger mainValueBi = new BigDecimal(mainValue).movePointRight(18).toBigInteger();
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, null);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, mainValueBi, multySignContractAddress);
+
+        System.out.println(String.format("CrossOutII[%s], transactionhash: %s", sendAmount, hash));
+    }
+
+    @Test
+    public void crossOutIIEventTest() throws Exception {
+        String data = "0x0000000000000000000000003083f7ed267dca41338de3401c4e054db2a1cd2f00000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000003b0233800000000000000000000000006d948b9dd21f4beb14eddd19aa8fa94d32f02d1500000000000000000000000000000000000000000000000131fd12c7cba2000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000025544e56546454535046506f76327842414d52536e6e664577586a4544545641415346456836000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002465396465623031342d653336382d346662382d396437312d32366431346364363730633500000000000000000000000000000000000000000000000000000000";
+        List<Object> eventResult = HtgUtil.parseEvent(data, HtgConstant.EVENT_CROSS_OUT_II_FUNDS);
+        System.out.println(JSONUtils.obj2PrettyJson(eventResult));
+        System.out.println(Numeric.toHexString((byte[]) eventResult.get(5)));
+        System.out.println(new String((byte[]) eventResult.get(5), "UTF8"));
     }
 
     @Test
     public void getBalance() throws Exception {
-        //setLocalTest();
+        setLocalNewTest();
         //setAccount_EFa1();
-        //erc20BalancePrint("NVT", from, NVT_AVAX_MINTER, 8);
-        //erc20BalancePrint("USDT", from, USDT_AVAX, 6);
+        //erc20BalancePrint("NVT", from, NVT_ZETA_MINTER, 8);
+        //erc20BalancePrint("USDT", from, USDT_ZETA, 6);
         //balancePrint(from, 18);
-        //balancePrint(multySignContractAddress, 18);
-        setMainData();
-        balancePrint("0xd87F2ad3EF011817319FD25454FC186CA71B3B56", 18);
+        balancePrint(multySignContractAddress, 18);
+        balancePrint("0x7A9a9223830e58A53F47972255a99eDBA0332617", 18);
     }
 
     protected void balancePrint(String address, int decimals) throws Exception {
@@ -291,17 +450,14 @@ public class AvaxWalletApiTest extends Base {
 
     @Test
     public void registerERC20Minter() throws Exception {
-        // Official website data
-        setMain();
-        // GasPriceprepare
-        long gasPriceGwei = 100L;
-        BigInteger gasPrice = BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9));
+        setLocalNewTest();
+        BigInteger gasPrice = htgWalletApi.getCurrentGasPrice();
         // Super account, load credentials, use private key
         Credentials credentials = Credentials.create("");
         // Multiple contract addresses
-        String contractAddress = "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624";
+        String contractAddress = "0x5e7e2abaa58e108f5b9d5d30a76253fa8cb81f9d";
         // RegisteredERC20MinterContract address
-        String erc20Minter = "0x7b6F71c8B123b38aa8099e0098bEC7fbc35B8a13";
+        String erc20Minter = "0x969ac7dd8289ebfd876cce968843d055b0adf951";
 
         EthGetTransactionCount transactionCount = htgWalletApi.getWeb3j().ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.PENDING).sendAsync().get();
         BigInteger nonce = transactionCount.getTransactionCount();
@@ -318,7 +474,7 @@ public class AvaxWalletApiTest extends Base {
         RawTransaction rawTransaction = RawTransaction.createTransaction(
                 nonce,
                 gasPrice,
-                BigInteger.valueOf(50000L),
+                BigInteger.valueOf(500000L),
                 contractAddress, encodedFunction
         );
         //autographTransactionHere, we need to sign the transaction
@@ -353,14 +509,13 @@ public class AvaxWalletApiTest extends Base {
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setMainData() throws Exception {
+    protected void setMainData() {
         setMain();
-        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
         // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        list.add("08ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
         list.add("");// Public key: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
         list.add("");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
         this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
@@ -371,36 +526,39 @@ public class AvaxWalletApiTest extends Base {
      */
     @Test
     public void managerAdd() throws Exception {
-        setMain();
-        setMainData();
+        setDev();
         // GasPriceprepare
-        long gasPriceGwei = 1L;
-        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         String txKey = "aaa1000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{
-                "0xb12a6716624431730c3ef55f80c458371954fa52", "0x1f13e90daa9548defae45cd80c135c183558db1f",
-                "0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1", "0x15cb37aa4d55d5a0090966bef534c89904841065",
-                "0x66fb6d6df71bbbf1c247769ba955390710da40a5", "0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88",
-                "0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1", "0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d",
-                "0xaff68cd458539a16b932748cf4bdd53bf196789f", "0xc8dcc24b09eed90185dbb1a5277fd0a389855dae",
-                "0xa28035bb5082f5c00fa4d3efc4cb2e0645167444", "0x10c17be7b6d3e1f424111c8bddf221c9557728b0"
+                "0x847772e7773061c93d0967c56f2e4b83145c8cb2", "0x6392c7ed994f7458d60528ed49c2f525dab69c9a",
+                "0x4273e90fbfe5fca32704c02987d938714947a937", "0xfa27c84ec062b2ff89eb297c24aaed366079c684",
+                "0x9f14432b86db285c76589d995aab7e7f88b709df", "0xc11d9943805e56b630a401d4bd9a29550353efa1",
+                "0x42868061f6659e84414e0c52fb7c32c084ce2051", "0x3091e329908da52496cc72f5d5bbfba985bccb1f",
+                "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af", "0x49467643f1b6459caf316866ecef9213edc4fdf2",
+                "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"
         };
         String[] removes = new String[]{};
         int txCount = 1;
-        int signCount = list.size();
+        int signCount = 3;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     @Test
     public void allContractManagerSet() throws Exception {
-        setBeta();
+        setLocalNewTest();
+        boolean queryBalance = false;
         System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(multySignContractAddress);
         System.out.println(String.format("size : %s", all.size()));
         for (String address : all) {
-            BigDecimal balance = htgWalletApi.getBalance(address).movePointLeft(18);
-            System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
+            if (queryBalance) {
+                BigDecimal balance = htgWalletApi.getBalance(address).movePointLeft(18);
+                System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
+            } else {
+                System.out.print(String.format("address %s", address));
+            }
             System.out.println();
         }
     }
@@ -436,11 +594,28 @@ public class AvaxWalletApiTest extends Base {
      */
     @Test
     public void managerAdd10By4Managers() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        // 49261765750000000
+        // 84688410000000000
         String txKey = "aaa0000000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{"0x9f14432b86db285c76589d995aab7e7f88b709df", "0x42868061f6659e84414e0c52fb7c32c084ce2051", "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af", "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565", "0x6392c7ed994f7458d60528ed49c2f525dab69c9a", "0xfa27c84ec062b2ff89eb297c24aaed366079c684", "0xc11d9943805e56b630a401d4bd9a29550353efa1", "0x3091e329908da52496cc72f5d5bbfba985bccb1f", "0x49467643f1b6459caf316866ecef9213edc4fdf2", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
+        String[] adds = new String[]{
+                "0x847772e7773061c93d0967c56f2e4b83145c8cb2",
+                "0x4273e90fbfe5fca32704c02987d938714947a937",
+                "0x9f14432b86db285c76589d995aab7e7f88b709df",
+                "0x42868061f6659e84414e0c52fb7c32c084ce2051",
+                "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af",
+                "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565",
+                "0x6392c7ed994f7458d60528ed49c2f525dab69c9a",
+                "0xfa27c84ec062b2ff89eb297c24aaed366079c684",
+                "0xc11d9943805e56b630a401d4bd9a29550353efa1",
+                "0x3091e329908da52496cc72f5d5bbfba985bccb1f",
+                "0x49467643f1b6459caf316866ecef9213edc4fdf2",
+                "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"
+        };
         String[] removes = new String[]{};
         int txCount = 1;
-        int signCount = 4;
+        int signCount = 3;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
@@ -463,15 +638,17 @@ public class AvaxWalletApiTest extends Base {
      */
     @Test
     public void managerReplace1By10Managers() throws Exception {
-        setUpgradeMain();
+        setLocalNewTest();
         // GasPriceprepare
-        long gasPriceGwei = 20L;
-        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
-        String[] adds = new String[]{"0xaff68cd458539a16b932748cf4bdd53bf196789f"};
-        String[] removes = new String[]{"0xf08877ba2b11f9f7d3912bba36cc2b21447b1b42"};
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3c1";
+        String[] adds = new String[]{};
+        String[] removes = new String[]{
+                "0xd29e172537a3fb133f790ebe57ace8221cb8024f",
+                "0x8f05ae1c759b8db56ff8124a89bb1305ece17b65"
+        };
         int txCount = 1;
-        int signCount = 10;
+        int signCount = 5;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
@@ -481,7 +658,11 @@ public class AvaxWalletApiTest extends Base {
      */
     @Test
     public void managerReplace1By15Managers() throws Exception {
-        String txKey = "ccc0000000000000000000000000000000000000000000000000000000000000";
+        setDev();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        String txKey = "ccc0000000000000000000000000000000000000000000000000000000000001";
+        //String[] adds = new String[]{"0x7dc432b48d813b2579a118e5a0d2fee744ac8e02"};
+        //String[] removes = new String[]{"0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
         String[] adds = new String[]{"0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
         String[] removes = new String[]{"0x7dc432b48d813b2579a118e5a0d2fee744ac8e02"};
         int txCount = 1;
@@ -508,8 +689,10 @@ public class AvaxWalletApiTest extends Base {
      */
     @Test
     public void ethWithdrawBy10Managers() throws Exception {
+        setLocalTest();
+        //setAccount_5996();
         String txKey = "eee0000000000000000000000000000000000000000000000000000000000000";
-        String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
+        String toAddress = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         String value = "0.02";
         int signCount = 10;
         String hash = this.sendMainAssetWithdraw(txKey, toAddress, value, signCount);
@@ -517,31 +700,37 @@ public class AvaxWalletApiTest extends Base {
     }
 
     /**
-     * erc20Withdrawal,10Signatures
+     * Based on existing signature data Send transaction - Withdrawal of main assets
      */
     @Test
-    public void erc20WithdrawBy10Managers() throws Exception {
-        String txKey = "fff0000000000000000000000000000000000000000000000000000000000000";
+    public void sendMainAssetWithdrawBySignDataTest() throws Exception {
+        setBeta();
+        // Preparing to send withdrawalKAVATransactions,nerveTxHash: 82c4799d737085d54daf2595336651b08b67f5d08147759bc32afe3ad1425663, signatureData: d51f3c0d4b844aa8c1705a9494af8b89d9b1b24494c4d179d48949605344a5e86b83ce890ee3c3e461a0ecda2fe61e486766f07d9980e432553a57d59611198d1bf6c0e6cdf9a8eb040ef1f490d19e6b9e2628d88f45227bcf948a04b536a386c02638cf00161cc55203d72e9c5019fe76be5a063a1dd79c18f8ec99aef765d95e1c
+        String txKey = "82c4799d737085d54daf2595336651b08b67f5d08147759bc32afe3ad1425663";
+        // Recipient Address
         String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        String value = "20";
-        String erc20 = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
-        int tokenDecimals = 6;
-        int signCount = 10;
-        String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
+        // Mint quantity
+        String value = "0.001";
+        String signData = "d51f3c0d4b844aa8c1705a9494af8b89d9b1b24494c4d179d48949605344a5e86b83ce890ee3c3e461a0ecda2fe61e486766f07d9980e432553a57d59611198d1bf6c0e6cdf9a8eb040ef1f490d19e6b9e2628d88f45227bcf948a04b536a386c02638cf00161cc55203d72e9c5019fe76be5a063a1dd79c18f8ec99aef765d95e1c";
+
+        String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
+        System.out.println(String.format("Withdrawal%sPieces,hash: %s", value, hash));
     }
 
     /**
-     * erc20Withdrawal,15Signatures
+     * erc20Withdrawal, multiple signatures
      */
     @Test
-    public void erc20WithdrawBy15Managers() throws Exception {
-        String txKey = "ggg0000000000000000000000000000000000000000000000000000000000000";
-        String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        String value = "30";
-        String erc20 = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
-        int tokenDecimals = 6;
-        int signCount = 15;
+    public void erc20WithdrawByManyManagers() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        setErc20USDT();
+        String txKey = "fff0000000000000000000000000000000000000000000000000000000000005";
+        String toAddress = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
+        String value = "0.191234";
+        String erc20 = erc20Address;
+        int tokenDecimals = erc20Decimals;
+        int signCount = 10;
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
         System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
@@ -607,7 +796,7 @@ public class AvaxWalletApiTest extends Base {
 
     @Test
     public void txInputCrossOutDecoderTest() throws JsonProcessingException {
-        String input = "0x0889d1f00000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000bebc20000000000000000000000000025ebbac2ca9db0c1d6f0fc959bbc74985417bab00000000000000000000000000000000000000000000000000000000000000025544e565464545350526e586b446961677937656e7469314b4c37354e553541784339735141000000000000000000000000000000000000000000000000000000";
+        String input = "0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000205361666545524332303a206c6f772d6c6576656c2063616c6c206661696c6564";
         List<Object> typeList = HtgUtil.parseInput(input, HtgConstant.INPUT_CROSS_OUT);
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
 
@@ -681,63 +870,6 @@ public class AvaxWalletApiTest extends Base {
         System.out.println(String.format("signatures: 0x%s", signaturesResult));
     }
 
-    /**
-     * Based on existing signature data Send transaction - Withdrawal of main assets
-     */
-    @Test
-    public void sendMainAssetWithdrawBySignDataTest() throws Exception {
-        setMainData();
-        // Preparing to send withdrawalAVAXTransactions,nerveTxHash: ea00b0c5a05db475407e5aaf07d591984991e7fba53fb6bad6cfd6f5138ce588, toAddress: 0x4ac062430c71ea3293dca4cff969b6fadf67f8b2, value: 36622013795192558058, assetId: 1, signatureData: c0f4ea22d28257ff1bc9393be8da9a76e0519007fec0831ff4e26b4fd2c1a0cc5cc4d2564c86f9551396990856ada0b8548fdd659dda9fb5521514ee963d37191b95eeeaf153b35faf677f99b38f92ecbe05fe2d31de1b73fe47de8fcc76694e8d7a7e6d499a868a82dc7f99d04596f8384fb92cc48e94a0289e65ccfdda0b54841bf1e2bb951deee6150f7a33126828e5cfce3a73899dac8d628bc7ff6b7fdf258a27bb07bc63393c437a800f3b8e45c0c2d141c99d1f87f9dc9c4b4923fa1f32fb1cc4d148c385c26512a1a5a3a4dd8096a60c7ecda627ab88503cc6ba12b158492f0e0c8043faac09108ec89e3d3b51d802a46fc13474e1b5a789460d0c4e6bb4d51cd07bee8a89a939da7e4f383ecd48e3f04bfc08f736339f863e5d4b0abaa5d1253dc2af708a900ebe0b95bdadd4813eec34912a69b8f9ef30f4f9abb33a14a8ca1b8c17daf8649eb92b98ca210e6d20935682dcf8f5dcb8132cad179acab42f2a864451ea58c51697df7dac82dfdd0271e73e02faf77012a3e84347b4f91ba0c62b1c41600f6469eec2102d1d291592349738b1529f4a96ef701ea7b3430647dc21601cd0af06d315cd97ee61ab0e9a4aeca0b3917b36e651ce822b9635467d66c49f1c2694b509da06c89263cd92a4815b0a2d10a825c3d5dc651b88f3a06b89adee153c4457512365e5d9b62322c571ca129ea9507f214978b1e8d27c6dcd9fd8ab3a1c35cb312917fa16ba7aa85cbd34a201f4c7fd655d69f7864de71b76814eae30891adf5af61626a6680b1d9af19c3ec642bd4d888c14f5c3a54a1c27ad059faf471cdd3b28e1f5e248e0e6804789a0d643185a60d755b16a355d1fa73f1d02695b17026a6b212ad770cb612976ccb87fc29358f860ca50c8654387342b6de198ccc41c
-        String txKey = "ea00b0c5a05db475407e5aaf07d591984991e7fba53fb6bad6cfd6f5138ce588";
-        // Recipient Address
-        String toAddress = "0x4ac062430c71ea3293dca4cff969b6fadf67f8b2";
-        // quantity
-        String value = "36.622013795192558058";
-        String signData = "c0f4ea22d28257ff1bc9393be8da9a76e0519007fec0831ff4e26b4fd2c1a0cc5cc4d2564c86f9551396990856ada0b8548fdd659dda9fb5521514ee963d37191b95eeeaf153b35faf677f99b38f92ecbe05fe2d31de1b73fe47de8fcc76694e8d7a7e6d499a868a82dc7f99d04596f8384fb92cc48e94a0289e65ccfdda0b54841bf1e2bb951deee6150f7a33126828e5cfce3a73899dac8d628bc7ff6b7fdf258a27bb07bc63393c437a800f3b8e45c0c2d141c99d1f87f9dc9c4b4923fa1f32fb1cc4d148c385c26512a1a5a3a4dd8096a60c7ecda627ab88503cc6ba12b158492f0e0c8043faac09108ec89e3d3b51d802a46fc13474e1b5a789460d0c4e6bb4d51cd07bee8a89a939da7e4f383ecd48e3f04bfc08f736339f863e5d4b0abaa5d1253dc2af708a900ebe0b95bdadd4813eec34912a69b8f9ef30f4f9abb33a14a8ca1b8c17daf8649eb92b98ca210e6d20935682dcf8f5dcb8132cad179acab42f2a864451ea58c51697df7dac82dfdd0271e73e02faf77012a3e84347b4f91ba0c62b1c41600f6469eec2102d1d291592349738b1529f4a96ef701ea7b3430647dc21601cd0af06d315cd97ee61ab0e9a4aeca0b3917b36e651ce822b9635467d66c49f1c2694b509da06c89263cd92a4815b0a2d10a825c3d5dc651b88f3a06b89adee153c4457512365e5d9b62322c571ca129ea9507f214978b1e8d27c6dcd9fd8ab3a1c35cb312917fa16ba7aa85cbd34a201f4c7fd655d69f7864de71b76814eae30891adf5af61626a6680b1d9af19c3ec642bd4d888c14f5c3a54a1c27ad059faf471cdd3b28e1f5e248e0e6804789a0d643185a60d755b16a355d1fa73f1d02695b17026a6b212ad770cb612976ccb87fc29358f860ca50c8654387342b6de198ccc41c";
-
-        String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
-        System.out.println(String.format("Withdrawal%sPieces,hash: %s", value, hash));
-    }
-
-    /**
-     * Based on existing signature data Send transaction - erc20Withdrawal
-     */
-    @Test
-    public void sendERC20WithdrawBySignDataTest() throws Exception {
-        setMainData();
-        String txKey = "091ca1bb20286daa3711d49c721c0933ecc56d8a921fc0c61187a0666c95a77b";
-        // Recipient Address
-        String toAddress = "0x29581c6c55CC71B567BcE9b1B5418B373A42a06C";
-        // quantity
-        String value = "5000";
-        // tokencontract
-        String erc20 = "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7";
-        int tokenDecimals = 6;
-        String signData = "c9e4f63329a56f183eb3ecfa9bc449282fc21233585aca75ced7a4bf4f1f39a66f943c904b96a37328b250bd46ae254b3ea240d028b2730f355c3985b614a4411b0c921ebf0a7a34b46d04fd1ab6b5a539b231b58a67a168d246198fa78d96d2b04a757ab70061761bf9b50875f5a7b3179bf7262686c50376d7b1f5a889902cfa1b0ef31310be9efb2dce0e3fb60dd25f6af736ac36cb0caf83d64a25914f6b81b54b902cc7bc1e54c0beeda822864d364a981373950afffe936b1046082597e5f21c3df987a9245ce761b2c365364ac9fb199b57c3beb0557ec04c0801a044ab50c303696ab626571b76ee7d20db7b762b08dee20530f68304df833631e9cdb8f3e61b217a0118d9e83d4eb56e2090debd742e52447d2cd2a12b7ec87fdb5e2fb9b54863034f96856dd79a07f172072e9bc1cce8aa84d1f4b40854e6e6ed0fe4f923da1cef59575146ba990cef5e4e4c0400c4c9f972f61dc376bd6300b0deda3a042d2375088bb494aae512f108ea482d215f306de5737d0ce0fcc08e368ced521b94591c2920626353ae05934f7a3c2d962b975e0bb781d4774a7972a83a6fc7c15792761a67d5e659b7b41d6bc9c009d5e14e86eaeff6cbcb306f7cfe1537cd643f02681bf6621df526b586f7c3cdaae4e9a21d8204ab0e0480968daebd555bacbe77618b171905a8258dab3a0ef322bc703e7b6583ec594b436fc041d8756548330b7fbf1ce5a797110d6cd6929d405ff9617cccc9e0a3313232eb6445d8bee5b2212aa954725e8869ba3197f4e6936bd65c54a18f80caf91bcc32b5776f290d65c0d431bf1c9b2f9b2bd4433b9893a071ea6791569f667fb38bfff8fd8fb8dcc103657863b37c05b7f2afcc30b31d5637a07c58e89ba13d2cd514db23aa5a704dfba81c48551b";
-
-        String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
-        System.out.println(String.format("ERC20Withdrawal%sPieces,hash: %s", value, hash));
-    }
-
-    @Test
-    public void withdrawEstimateGasTest() throws Exception {
-        setMainData();
-        String fromAddress = "0x0Eb9e4427a0Af1Fa457230bEF3481d028488363E";
-        String contract = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
-
-        String txKey = "091ca1bb20286daa3711d49c721c0933ecc56d8a921fc0c61187a0666c95a77b";
-        String toAddress = "0x29581c6c55CC71B567BcE9b1B5418B373A42a06C";
-        BigInteger value = new BigDecimal("5000").movePointRight(6).toBigInteger();
-        String erc20 = "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7";
-        String signData = "c9e4f63329a56f183eb3ecfa9bc449282fc21233585aca75ced7a4bf4f1f39a66f943c904b96a37328b250bd46ae254b3ea240d028b2730f355c3985b614a4411b0c921ebf0a7a34b46d04fd1ab6b5a539b231b58a67a168d246198fa78d96d2b04a757ab70061761bf9b50875f5a7b3179bf7262686c50376d7b1f5a889902cfa1b0ef31310be9efb2dce0e3fb60dd25f6af736ac36cb0caf83d64a25914f6b81b54b902cc7bc1e54c0beeda822864d364a981373950afffe936b1046082597e5f21c3df987a9245ce761b2c365364ac9fb199b57c3beb0557ec04c0801a044ab50c303696ab626571b76ee7d20db7b762b08dee20530f68304df833631e9cdb8f3e61b217a0118d9e83d4eb56e2090debd742e52447d2cd2a12b7ec87fdb5e2fb9b54863034f96856dd79a07f172072e9bc1cce8aa84d1f4b40854e6e6ed0fe4f923da1cef59575146ba990cef5e4e4c0400c4c9f972f61dc376bd6300b0deda3a042d2375088bb494aae512f108ea482d215f306de5737d0ce0fcc08e368ced521b94591c2920626353ae05934f7a3c2d962b975e0bb781d4774a7972a83a6fc7c15792761a67d5e659b7b41d6bc9c009d5e14e86eaeff6cbcb306f7cfe1537cd643f02681bf6621df526b586f7c3cdaae4e9a21d8204ab0e0480968daebd555bacbe77618b171905a8258dab3a0ef322bc703e7b6583ec594b436fc041d8756548330b7fbf1ce5a797110d6cd6929d405ff9617cccc9e0a3313232eb6445d8bee5b2212aa954725e8869ba3197f4e6936bd65c54a18f80caf91bcc32b5776f290d65c0d431bf1c9b2f9b2bd4433b9893a071ea6791569f667fb38bfff8fd8fb8dcc103657863b37c05b7f2afcc30b31d5637a07c58e89ba13d2cd514db23aa5a704dfba81c48551b";
-        Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, value, true, erc20, signData);
-        // estimateGasLimit
-        EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, function, BigInteger.ZERO);
-        //BigInteger estimateGas = estimateGasObj.getAmountUsed();
-        System.out.println(JSONUtils.obj2PrettyJson(estimateGasObj.getAmountUsed()));
-        System.out.println(JSONUtils.obj2PrettyJson(estimateGasObj.getError()));
-    }
-
     @Test
     public void verifySign() {
         String vHash = "0x3bd2e6b75230eef9cfee5240e3dbb656410bff53c59e08e48eb07eef62b904dd";
@@ -777,6 +909,11 @@ public class AvaxWalletApiTest extends Base {
 
     @Test
     public void arrayTest() {
+        String asd = "574662112133559816364767";
+        String asd1 = "274154958571019704221046";
+        String asd2 = "300507153562540112143721";
+        System.out.println(new BigInteger(asd1).add(new BigInteger(asd2)));
+
         String[] arr = new String[]{"aa", "bb", "cc", "dd", "ee", "ff", "gg", "hh", "ii"};
         // aa, "", cc, "", ee
         arr[1] = "";
@@ -844,9 +981,9 @@ public class AvaxWalletApiTest extends Base {
 
     @Test
     public void calGasPriceTest() {
-        BigDecimal nvtUsd = new BigDecimal("0.16");
-        BigDecimal nvtAmount = new BigDecimal(21_00000000L);
-        BigDecimal ethUsd = new BigDecimal("360.16");
+        BigDecimal nvtUsd = new BigDecimal("0.09");
+        BigDecimal nvtAmount = new BigDecimal(5_00000000L);
+        BigDecimal ethUsd = new BigDecimal("4317.16");
         int assetId = 2;
         BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         System.out.println(price.movePointLeft(9).toPlainString());
@@ -861,34 +998,46 @@ public class AvaxWalletApiTest extends Base {
 
     @Test
     public void getBlockHeight() throws Exception {
-        setMain();
+        //setMain();
+        //setTestProxy();
         System.out.println(htgWalletApi.getBlockHeight());
     }
 
     @Test
+    public void getNonce() throws Exception {
+        //setMain();
+        //setTestProxy();
+        System.out.println(htgWalletApi.getNonce("0x7A9a9223830e58A53F47972255a99eDBA0332617"));
+    }
+
+    @Test
     public void getChainId() throws Exception {
-        setMain();
+        //setMain();
         System.out.println(htgWalletApi.getWeb3j().ethChainId().send().getChainId());
     }
 
     @Test
     public void getTx() throws Exception {
+        //setMain();
         // Directly callingerc20contract
-        String directTxHash = "0xaf084fbdebe990a477513c43cd4928dd5eab7767f67f8fefdabac81f6edf3e38";
+        String directTxHash = "0x632549564ff27b312256fa21a4d86f2bd65e7832a52d819286ee482f42fdb2ce";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(JSONUtils.obj2PrettyJson(tx));
     }
 
     @Test
     public void getTxReceipt() throws Exception {
-        String directTxHash = "0x531d7ee163ef7e258036d701e730a5bc784a589999e4bfaf1d193700ac429bdf";
+        //setMain();
+        String directTxHash = "0x632549564ff27b312256fa21a4d86f2bd65e7832a52d819286ee482f42fdb2ce";
+        Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+        System.out.println(tx.getGas());
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
-        System.out.println(txReceipt);
+        System.out.println(String.format("gas used: %s, gas price: %s", txReceipt.getGasUsed(), new BigDecimal(tx.getGasPrice()).movePointLeft(9).stripTrailingZeros().toPlainString()));
     }
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        setMain();
+        setMainProxy();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
@@ -896,10 +1045,10 @@ public class AvaxWalletApiTest extends Base {
 
     @Test
     public void symboltest() throws Exception {
-        setMain();
+        //setMain();
         // usdt 0xb6D685346106B697E6b2BbA09bc343caFC930cA3
         // nvt 0x8B3b22C252F431a75644E544FCAf67E390A206F4
-        String contractAddress = "0xe176ebe47d621b984a73036b9da5d834411ef734";
+        String contractAddress = "0x9b8510ac9b1cf5ac146f81553e92c861920da05b";
         List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getSymbolERC20Function());
         if (symbolResult.isEmpty()) {
             return;
@@ -920,6 +1069,19 @@ public class AvaxWalletApiTest extends Base {
         }
         String decimals = decimalsResult.get(0).getValue().toString();
         System.out.println(decimals);
+    }
+
+    @Test
+    public void isMinterERC20Test() throws Exception {
+        String contractAddress = "0x5e7E2AbAa58e108f5B9D5D30A76253Fa8Cb81f9d";
+        List<Type> result = htgWalletApi.callViewFunction(contractAddress,
+                HtgUtil.getIsMinterERC20Function("0x969ac7dd8289ebfd876cce968843d055b0adf951"));
+        if (result.isEmpty()) {
+            return;
+        }
+        String r = result.get(0).getValue().toString();
+        System.out.println(r);
+
     }
 
     @Test
@@ -950,6 +1112,301 @@ public class AvaxWalletApiTest extends Base {
                 latestNonce);
         System.out.println(txHash);
     }
+
+    @Test
+    public void approveZeroTest() throws Exception {
+        setBeta();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        // initialization account
+        setAccount_EFa1();
+        // initialization ERC20 Address information
+        setErc20USDT();
+        // erc20authorization
+        String approveAmount = "0";
+        Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
+        String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
+        System.out.println(String.format("erc20authorization[%s], authorizationhash: %s", approveAmount, authHash));
+    }
+
+    private BigInteger erc20Decimals(String contract) {
+        try {
+            Function decimals = new Function(
+                    "decimals",
+                    List.of(),
+                    List.of(new TypeReference<Uint8>() {}));
+            List<Type> typeList = htgWalletApi.callViewFunction(contract, decimals);
+            return new BigInteger(typeList.get(0).getValue().toString());
+        } catch (Exception e) {
+            Log.error("contract[{}] error[{}]", contract, e.getMessage());
+            return BigInteger.ZERO;
+        }
+    }
+
+
+    /**
+     * Transfer ineth
+     */
+    @Test
+    public void transferMainAsset() throws Exception {
+        setLocalNewTest();
+        List<String> tos = new ArrayList<>();
+        // dev net
+        tos.add("0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996");
+        tos.add("0x4202726a119f7784085b04264bff716267a51032");
+
+        // test net
+        //tos.add("0x4F50AB8Ae16d0643C9dad2cc9debbb0E9F714507");
+        //tos.add("0x6c2039B5fDaE068baD4931E8Cc0b8E3a542937ac");
+        //tos.add("0x3c2ff003fF996836d39601cA22394A58ca9c473b");
+
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        BigInteger gasPrice = htgContext.getEthGasPrice();
+        System.out.println(String.format("current price: %s", new BigDecimal(gasPrice).movePointLeft(9).stripTrailingZeros().toPlainString()));
+        // initialization account
+        setAccount_2617();
+        // MainAssetquantity
+        String sendAmount = "1.1";
+        for (String to : tos) {
+            String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), htgContext.GAS_LIMIT_OF_MAIN_ASSET(), gasPrice);
+            System.out.println(String.format("towards [%s] Transfer %s individual MainAsset, transaction hash: %s", to, sendAmount, txHash));
+            TimeUnit.SECONDS.sleep(2);
+        }
+    }
+
+    @Test
+    public void registerMinterERC20EstimateGasTest() throws Exception {
+        // Multiple contract addresses
+        String contractAddress = "0xA8e8c840e92d10dF3514A00491f50B6277aF215f";
+        // RegisteredERC20MinterContract address
+        String erc20Minter = "0x9b8510ac9b1cf5ac146f81553e92c861920da05b";
+
+        //establishRawTransactionTrading partner
+        Function function = new Function(
+                "registerMinterERC20",
+                List.of(new Address(erc20Minter)),
+                List.of(new TypeReference<Type>() {
+                })
+        );
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0xf173805F1e3fE6239223B17F0807596Edc283012",
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void crossOutEstimateGasTest() throws Exception {
+        setMain();
+        // Multiple contract addresses
+        String contractAddress = "0x54C4A99Ee277eFF14b378405b6600405790d5045";
+        String from = "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F";
+        String to = "aaa";
+        BigInteger convertAmount = new BigDecimal("0.05").movePointRight(18).toBigInteger();
+        String token = "0xe491d740595fe59d894ca1f3c7bf9f1144366aaa";
+
+        //establishRawTransactionTrading partner
+        Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, token);
+
+        String encodedFunction = FunctionEncoder.encode(crossOutFunction);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                from,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void estimateGasTest() throws Exception {
+        // Multiple contract addresses
+        String contractAddress = "0xfb3b78d16163124c5b4adefcc8fe9aac8546fd4b";
+
+        String encodedFunction = "0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000205361666545524332303a206c6f772d6c6576656c2063616c6c206661696c6564";
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F",
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void erc20TransferEstimateGasTest() throws Exception {
+        setLocalNewTest();
+        setErc20USD18();
+        String contractAddress = erc20Address;
+        BigInteger convertAmount = new BigDecimal("0.05").movePointRight(18).toBigInteger();
+        String from = "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F";
+        String to = "0x54C4A99Ee277eFF14b378405b6600405790d5045";
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                from,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        //EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        //if(estimateGas.getResult() != null) {
+        //    System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        //} else {
+        //    System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        //}
+        EthCall send = htgWalletApi.getWeb3j().ethCall(tx, DefaultBlockParameterName.LATEST).send();
+        if(send.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, details: %s", send.getResult(), JSONUtils.obj2PrettyJson(send)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(send.getError()));
+        }
+    }
+
+    @Test
+    public void erc20TransferFromEstimateGasTest() throws Exception {
+        setMain();
+        String contractAddress = "0xe491d740595fe59d894ca1f3c7bf9f1144366aaa";
+        BigInteger convertAmount = new BigDecimal("0.05").movePointRight(18).toBigInteger();
+        String from = "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F";
+        String to = "0x54C4A99Ee277eFF14b378405b6600405790d5045";
+        String caller = to;
+
+        Function function = new Function(
+                "transferFrom",
+                Arrays.asList(new Address(from), new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                caller,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void testSign() throws NulsException {
+        String hex = "2102b1a35aaff6df61bccd63c2812479fcbd5e89ca45b93233cb97b753eca2e22a2046304402203c5dd64dd8acfc5f55536241cd3ea50481319e52069a693db465bc486f037b9102204897efc2558991bfa5ed278feab5b32a1590b3b2b356581ef07b9ac956a3490b";
+        TransactionSignature signature = new TransactionSignature();
+        signature.parse(HexUtil.decode(hex), 0);
+        System.out.println(signature.getP2PHKSignatures().size());
+    }
+
+    @Test
+    public void txL1GasUsedTest() throws Exception {
+        List<String> list = new ArrayList<>();
+        list.add("0x3c86a6c7577dde4ddc99c89ab30016d2c4804376ee05333b1f8a8f66b80d426e");
+        list.add("0x75ea1e8269ed9b56b102dbaa5881590a6fe0fcca60e32ad9705d24f955f14368");
+        list.add("0xf491e191e2e9076544a1930665c76a640759f54227965ce322b945464a9e5eef");
+        for (String txHash : list) {
+            Transaction tx = htgWalletApi.getTransactionByHash(txHash);
+            getL1GasUsedOnScroll(tx);
+        }
+    }
+
+    private void getL1GasUsedOnScroll(Transaction tx) {
+        String data = "";
+        if (StringUtils.isNotBlank(tx.getInput()) && !"0x".equals(tx.getInput().toLowerCase())) {
+            data = tx.getInput();
+        }
+        RawTransaction rawTx = RawTransaction.createTransaction(
+                tx.getNonce(),
+                tx.getGasPrice(),
+                tx.getGas(),
+                tx.getTo(),
+                tx.getValue(),
+                data);
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(tx.getV());
+        Sign.SignatureData signatureData = new Sign.SignatureData(buffer.array(), Numeric.hexStringToByteArray(tx.getR()), Numeric.hexStringToByteArray(tx.getS()));
+        List<RlpType> values = TransactionEncoder.asRlpValues(rawTx, signatureData);
+        RlpList rlpList = new RlpList(values);
+        byte[] rawTxEncode = RlpEncoder.encode(rlpList);
+        int _total = 0;
+        int _length = rawTxEncode.length;
+        for (int i = 0; i < _length; i++) {
+            if (rawTxEncode[i] == 0) {
+                _total += 4;
+            } else {
+                _total += 16;
+            }
+        }
+        System.out.println(_total);
+        /**
+         * testnet
+         */
+        int result = _total + 2100;
+        System.out.println("testnet: " + result);
+        /**
+         * mainnet
+         */
+        result = _total + 188;
+        System.out.println("mainnet: " + result);
+    }
+
 
     static class MockHtgERC20Helper extends HtgERC20Helper {
         @Override

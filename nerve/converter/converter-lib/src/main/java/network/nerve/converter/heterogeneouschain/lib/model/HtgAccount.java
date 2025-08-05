@@ -26,8 +26,6 @@ package network.nerve.converter.heterogeneouschain.lib.model;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.model.bo.HeterogeneousAccount;
 import org.ethereum.crypto.ECKey;
-import org.web3j.crypto.Credentials;
-import org.web3j.utils.Numeric;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -43,7 +41,6 @@ public class HtgAccount extends HeterogeneousAccount implements Serializable {
     private String compressedPublicKey;
 
     private transient int mod;
-    private transient int bankSize;
 
     public HtgAccount() {
     }
@@ -91,11 +88,4 @@ public class HtgAccount extends HeterogeneousAccount implements Serializable {
         this.mod = mod;
     }
 
-    public int getBankSize() {
-        return bankSize;
-    }
-
-    public void setBankSize(int bankSize) {
-        this.bankSize = bankSize;
-    }
 }

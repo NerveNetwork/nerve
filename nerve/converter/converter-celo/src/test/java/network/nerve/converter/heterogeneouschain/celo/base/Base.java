@@ -111,11 +111,11 @@ public class Base {
         htgContext.getConfig().setChainIdOnHtgNetwork(44787);
     }
 
+    String mainEthRpcAddress = "https://rpc.ankr.com/celo";
     protected void setMain() {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://forno.celo.org";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
@@ -126,7 +126,6 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://forno.celo.org";
         final OkHttpClient.Builder builder =
                 new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
         OkHttpClient okHttpClient = builder.build();

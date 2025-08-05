@@ -2,6 +2,8 @@ package io.nuls.base.data;
 
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
+import io.nuls.base.signture.MultiSignTxSignature;
+import io.nuls.base.signture.SignatureUtil;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
@@ -13,6 +15,8 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+
+import static io.nuls.base.signture.SignatureUtil.personalHash;
 
 /**
  * @author: Charlie
@@ -111,5 +115,41 @@ public class TransactionTest {
         }
 
 
+    }
+
+    @Test
+    public void desTest() throws Exception {
+        String hex = "3f00891b8b682430323630316334622d303432342d346366322d616531642d65633439346236323162373445c273df0c000000000000000000000000000000000000000000000000000000000500019393d5936cf79b3b480b52f9652c2f2bf04d270000b51c8b680202000100050001008c01170500019393d5936cf79b3b480b52f9652c2f2bf04d270002000100809698000000000000000000000000000000000000000000000000000000000008848dcf7b3e50564600011705000466cd07a8df31c9c4e56d681c62ba5d69e98ca7dd02000100809698000000000000000000000000000000000000000000000000000000000000000000000000006a2103c08a1dc38138e28be8af6268da3d3bb58db64fd13c8cd2bc9870ac4ad59787b5463044022007b5bbefb974e263465f40af1fcd318764f07bcdce54d6981343cf18555afb5c022007706c73580b7b291d3583ab88d7c063ce1f302837f228d60f8b9719ebc4f01301";
+        Transaction tx = new Transaction();
+        tx.parse(HexUtil.decode(hex), 0);
+        System.out.println(String.format("txHash: %s", tx.getHash().toHex()));
+        String transactionSignatureJson = null;
+        if(tx.getTransactionSignature() != null) {
+            if (!tx.isMultiSignTx()) {
+                TransactionSignature ts = new TransactionSignature();
+                ts.parse(tx.getTransactionSignature(), 0);
+                transactionSignatureJson = ts.toString();
+            } else {
+                MultiSignTxSignature mts = new MultiSignTxSignature();
+                mts.parse(tx.getTransactionSignature(), 0);
+                transactionSignatureJson = mts.toString();
+            }
+            boolean b = SignatureUtil.validateTransactionSigntureForPersonalSign(5, tx);
+            System.out.println("verify: " + b);
+        }
+        System.out.println(transactionSignatureJson);
+
+    }
+
+    @Test
+    public void verifyPersonSign() {
+        String hash = "34f8b1e2d1931babe91a9209bd2a69e50dab16f1c73a8d267187d601c7cac809";
+        byte[] personalHash = personalHash(hash);
+        System.out.println("personalHash: " + HexUtil.encode(personalHash));
+        String pub = "03c08a1dc38138e28be8af6268da3d3bb58db64fd13c8cd2bc9870ac4ad59787b5";
+        String signData = "30450221009785553ceadd66e9de84e4c19af84e537d10e98ab956f144b47220a2241bf455022017962a4de5a5060cc5c983355e5794009f9984949aec755f195ac006437ab7ed";
+        boolean verify = ECKey.verify(
+                personalHash, HexUtil.decode(signData), HexUtil.decode(pub));
+        System.out.println(verify);
     }
 }

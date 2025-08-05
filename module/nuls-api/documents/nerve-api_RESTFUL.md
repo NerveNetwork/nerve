@@ -136,7 +136,32 @@ We provide`Postman`Import files for interface debugging tools(`JSON-RPC`and`REST
 
 
 Interface List
-----
+--------------
+### 0.1 Get version information
+#### Cmd: /version
+_**Detailed description: Get version information**_
+#### HttpMethod: GET
+
+#### parameter list
+No parameters
+
+#### Return value
+| Field Name             | Field type | Parameter Description                                      |
+| ---------------------- |:----------:| ---------------------------------------------------------- |
+| currentProtocolVersion |   string   | The co signals currently running on the network            |
+| localProtocolVersion   |   string   | The highest supported protocol number for the current node |
+| clientVersion          |   string   | The program version number of the current node             |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
 ### 0.1 Obtain information related to this chain
 #### Cmd: /api/info
 _**Detailed description: Obtain information related to this chain**_
@@ -146,15 +171,15 @@ _**Detailed description: Obtain information related to this chain**_
 No parameters
 
 #### Return value
-| Field Name             |  Field type  | Parameter Description         |
-| --------------- |:------:| ------------ |
-| chainId         | string | This chain'sID        |
-| assetId         | string | This chain defaults to the main asset'sID   |
-| inflationAmount | string | The initial quantity of the default main asset in this chain |
-| agentChainId    | string | The chain of consensus assets in this chainID   |
-| agentAssetId    | string | The consensus assets of this chainID    |
-| addressPrefix   | string | Prefix for this chain address       |
-| symbol          | string | Main asset symbol of this chain      |
+| Field Name      | Field type | Parameter Description                                        |
+| --------------- |:----------:| ------------------------------------------------------------ |
+| chainId         |   string   | This chain'sID                                               |
+| assetId         |   string   | This chain defaults to the main asset'sID                    |
+| inflationAmount |   string   | The initial quantity of the default main asset in this chain |
+| agentChainId    |   string   | The chain of consensus assets in this chainID                |
+| agentAssetId    |   string   | The consensus assets of this chainID                         |
+| addressPrefix   |   string   | Prefix for this chain address                                |
+| symbol          |   string   | Main asset symbol of this chain                              |
 #### Example request data: 
 
 _**request path:**_
@@ -187,15 +212,15 @@ _**Detailed description: The created account exists in the local wallet**_
 #### HttpMethod: POST
 
 #### parameter list
-| Parameter Name      |  Parameter type  | Parameter Description               | Is it mandatory to fill in |
-| -------- |:------:| ------------------ |:----:|
-| count    | string | Number of new accounts created,Value[1-10000] |  yes   |
-| password | string | Account password               |  yes   |
+| Parameter Name | Parameter type | Parameter Description                         | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------------------------------- |:--------------------------:|
+| count          |     string     | Number of new accounts created,Value[1-10000] |            yes             |
+| password       |     string     | Account password                              |            yes             |
 
 #### Return value
-| Field Name  |      Field type       | Parameter Description |
-| ---- |:---------------:| ---- |
-| list | list&lt;string> | Account address |
+| Field Name |   Field type    | Parameter Description |
+| ---------- |:---------------:| --------------------- |
+| list       | list&lt;string> | Account address       |
 #### Example request data: 
 
 _**request path:**_
@@ -236,17 +261,17 @@ _**Detailed description: Change account password**_
 ```
 
 #### parameter list
-| Parameter Name                                                         |           Parameter type            | Parameter Description     | Is it mandatory to fill in |
-| ----------------------------------------------------------- |:-------------------------:| -------- |:----:|
-| address                                                     |          string           | Account address     |  yes   |
-| form                                                        | accountupdatepasswordform | Account Password Information Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password    |          string           | Original password     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newPassword |          string           | New password      |  yes   |
+| Parameter Name                                              |      Parameter type       | Parameter Description             | Is it mandatory to fill in |
+| ----------------------------------------------------------- |:-------------------------:| --------------------------------- |:--------------------------:|
+| address                                                     |          string           | Account address                   |            yes             |
+| form                                                        | accountupdatepasswordform | Account Password Information Form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password    |          string           | Original password                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newPassword |          string           | New password                      |            yes             |
 
 #### Return value
-| Field Name   |  Field type   | Parameter Description   |
-| ----- |:-------:| ------ |
-| value | boolean | Is the modification successful |
+| Field Name | Field type | Parameter Description          |
+| ---------- |:----------:| ------------------------------ |
+| value      |  boolean   | Is the modification successful |
 #### Example request data: 
 
 _**request path:**_
@@ -286,16 +311,16 @@ _**Detailed description: Only the private key of an existing account in the loca
 ```
 
 #### parameter list
-| Parameter Name                                                      |        Parameter type         | Parameter Description     | Is it mandatory to fill in |
-| -------------------------------------------------------- |:-------------------:| -------- |:----:|
-| address                                                  |       string        | Account address     |  yes   |
-| form                                                     | accountpasswordform | Account Password Information Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |       string        | password       |  yes   |
+| Parameter Name                                           |   Parameter type    | Parameter Description             | Is it mandatory to fill in |
+| -------------------------------------------------------- |:-------------------:| --------------------------------- |:--------------------------:|
+| address                                                  |       string        | Account address                   |            yes             |
+| form                                                     | accountpasswordform | Account Password Information Form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |       string        | password                          |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description |
-| ----- |:------:| ---- |
-| value | string | Private key   |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Private key           |
 #### Example request data: 
 
 _**request path:**_
@@ -336,17 +361,17 @@ _**Detailed description: When importing a private key, you need to enter a passw
 ```
 
 #### parameter list
-| Parameter Name                                                       |           Parameter type            | Parameter Description                           | Is it mandatory to fill in |
-| --------------------------------------------------------- |:-------------------------:| ------------------------------ |:----:|
-| form                                                      | accountprikeypasswordform | Import account form based on private key                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priKey    |          string           | Private key                             |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password  |          string           | password                             |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;overwrite |          boolean          | Whether to overwrite the account: false:Do not overwrite import, true:Overwrite import |  yes   |
+| Parameter Name                                            |      Parameter type       | Parameter Description                                                                  | Is it mandatory to fill in |
+| --------------------------------------------------------- |:-------------------------:| -------------------------------------------------------------------------------------- |:--------------------------:|
+| form                                                      | accountprikeypasswordform | Import account form based on private key                                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priKey    |          string           | Private key                                                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password  |          string           | password                                                                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;overwrite |          boolean          | Whether to overwrite the account: false:Do not overwrite import, true:Overwrite import |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description |
-| ----- |:------:| ---- |
-| value | string | Account address |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Account address       |
 #### Example request data: 
 
 _**request path:**_
@@ -379,15 +404,15 @@ _**Detailed description: according tokeyStoreImport account**_
 #### HttpMethod: POST
 
 #### parameter list
-| Parameter Name                                                      |    Parameter type     | Parameter Description       | Is it mandatory to fill in |
-| -------------------------------------------------------- |:-----------:| ---------- |:----:|
-| Import account based on private key                                                 | inputstream | Import account form based on private key |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Import account based on private key | inputstream | Import account form based on private key |  yes   |
+| Parameter Name                                                                      | Parameter type | Parameter Description                    | Is it mandatory to fill in |
+| ----------------------------------------------------------------------------------- |:--------------:| ---------------------------------------- |:--------------------------:|
+| Import account based on private key                                                 |  inputstream   | Import account form based on private key |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Import account based on private key |  inputstream   | Import account form based on private key |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description |
-| ----- |:------:| ---- |
-| value | string | Account address |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Account address       |
 #### Example request data: 
 
 _**request path:**_
@@ -414,16 +439,16 @@ _**Detailed description: according tokeystoreFile path import account**_
 ```
 
 #### parameter list
-| Parameter Name                                                      |           Parameter type            | Parameter Description                 | Is it mandatory to fill in |
-| -------------------------------------------------------- |:-------------------------:| -------------------- |:----:|
-| form                                                     | accountkeystoreimportform | according tokeystoreFile path import account form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path     |          string           | localkeystoreFile path       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |          string           | password                   |  yes   |
+| Parameter Name                                           |      Parameter type       | Parameter Description                             | Is it mandatory to fill in |
+| -------------------------------------------------------- |:-------------------------:| ------------------------------------------------- |:--------------------------:|
+| form                                                     | accountkeystoreimportform | according tokeystoreFile path import account form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path     |          string           | localkeystoreFile path                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |          string           | password                                          |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description |
-| ----- |:------:| ---- |
-| value | string | Account address |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Account address       |
 #### Example request data: 
 
 _**request path:**_
@@ -469,20 +494,20 @@ _**Detailed description: according tokeystoreString import account**_
 ```
 
 #### parameter list
-| Parameter Name                                                                                                                 |             Parameter type              | Parameter Description                | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------------- |:-----------------------------:| ------------------- |:----:|
-| form                                                                                                                | accountkeystorejsonimportform | according tokeystoreString import account form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keystore                                                            |            object             | keystorecharacter string         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address             |            string             | Account address                |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPrivateKey |            string             | Encrypted private key              |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKey              |            string             | Public key                  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prikey              |            string             | Private key                  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password                                                            |            string             | password                  |  yes   |
+| Parameter Name                                                                                                      |        Parameter type         | Parameter Description                          | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------------- |:-----------------------------:| ---------------------------------------------- |:--------------------------:|
+| form                                                                                                                | accountkeystorejsonimportform | according tokeystoreString import account form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keystore                                                            |            object             | keystorecharacter string                       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address             |            string             | Account address                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPrivateKey |            string             | Encrypted private key                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKey              |            string             | Public key                                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prikey              |            string             | Private key                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password                                                            |            string             | password                                       |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description |
-| ----- |:------:| ---- |
-| value | string | Account address |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Account address       |
 #### Example request data: 
 
 _**request path:**_
@@ -529,17 +554,17 @@ _**Detailed description: Account backup, exportAccountKeyStoreFile to specified 
 ```
 
 #### parameter list
-| Parameter Name                                                      |         Parameter type          | Parameter Description           | Is it mandatory to fill in |
-| -------------------------------------------------------- |:---------------------:| -------------- |:----:|
-| address                                                  |        string         | Account address           |  yes   |
-| form                                                     | accountkeystorebackup | keystoneExport Information Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |        string         | password             |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path     |        string         | File path           |  yes   |
+| Parameter Name                                           |    Parameter type     | Parameter Description           | Is it mandatory to fill in |
+| -------------------------------------------------------- |:---------------------:| ------------------------------- |:--------------------------:|
+| address                                                  |        string         | Account address                 |            yes             |
+| form                                                     | accountkeystorebackup | keystoneExport Information Form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |        string         | password                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path     |        string         | File path                       |            yes             |
 
 #### Return value
-| Field Name  |  Field type  | Parameter Description    |
-| ---- |:------:| ------- |
-| path | string | Exported file path |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| path       |   string   | Exported file path    |
 #### Example request data: 
 
 _**request path:**_
@@ -581,17 +606,17 @@ _**Detailed description: The alias format is1-20A combination of lowercase lette
 ```
 
 #### parameter list
-| Parameter Name                                                      |     Parameter type     | Parameter Description     | Is it mandatory to fill in |
-| -------------------------------------------------------- |:------------:| -------- |:----:|
-| form                                                     | setaliasform | Account alias setting form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address  |    string    | Account address     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias    |    string    | alias       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |    string    | Account password     |  yes   |
+| Parameter Name                                           | Parameter type | Parameter Description      | Is it mandatory to fill in |
+| -------------------------------------------------------- |:--------------:| -------------------------- |:--------------------------:|
+| form                                                     |  setaliasform  | Account alias setting form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address  |     string     | Account address            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias    |     string     | alias                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |     string     | Account password           |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description        |
-| ----- |:------:| ----------- |
-| value | string | Setting up alias transactionshash |
+| Field Name | Field type | Parameter Description             |
+| ---------- |:----------:| --------------------------------- |
+| value      |   string   | Setting up alias transactionshash |
 #### Example request data: 
 
 _**request path:**_
@@ -633,22 +658,22 @@ _**Detailed description: According to the asset chainIDAnd assetsID, query the b
 ```
 
 #### parameter list
-| Parameter Name                                                          |    Parameter type     | Parameter Description   | Is it mandatory to fill in |
-| ------------------------------------------------------------ |:-----------:| ------ |:----:|
-| balanceDto                                                   | balanceform | Account Balance Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |     int     | The chain of assetsID |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |     int     | assetID   |  yes   |
+| Parameter Name                                               | Parameter type | Parameter Description | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:--------------:| --------------------- |:--------------------------:|
+| balanceDto                                                   |  balanceform   | Account Balance Form  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |      int       | The chain of assetsID |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |      int       | assetID               |            yes             |
 
 #### Return value
-| Field Name           |  Field type  | Parameter Description                      |
-| ------------- |:------:| ------------------------- |
-| total         | string | Total balance                       |
-| freeze        | string | Lock in amount                      |
-| available     | string | Available balance                      |
-| timeLock      | string | Time lock amount                    |
-| consensusLock | string |  Consensus locking amount                   |
-| nonce         | string | Account assetsnoncevalue                |
-| nonceType     |  int   | 1：Confirmednoncevalue,0：unacknowledgednoncevalue |
+| Field Name    | Field type | Parameter Description                            |
+| ------------- |:----------:| ------------------------------------------------ |
+| total         |   string   | Total balance                                    |
+| freeze        |   string   | Lock in amount                                   |
+| available     |   string   | Available balance                                |
+| timeLock      |   string   | Time lock amount                                 |
+| consensusLock |   string   |  Consensus locking amount                        |
+| nonce         |   string   | Account assetsnoncevalue                         |
+| nonceType     |    int     | 1：Confirmednoncevalue,0：unacknowledgednoncevalue |
 #### Example request data: 
 
 _**request path:**_
@@ -695,16 +720,16 @@ _**Detailed description: Verify if the address format is correct**_
 ```
 
 #### parameter list
-| Parameter Name                                                     |        Parameter type         | Parameter Description     | Is it mandatory to fill in |
-| ------------------------------------------------------- |:-------------------:| -------- |:----:|
-| form                                                    | validateaddressform | Account alias setting form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;chainId |         int         | chainID      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address |       string        | Account address     |  yes   |
+| Parameter Name                                          |   Parameter type    | Parameter Description      | Is it mandatory to fill in |
+| ------------------------------------------------------- |:-------------------:| -------------------------- |:--------------------------:|
+| form                                                    | validateaddressform | Account alias setting form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;chainId |         int         | chainID                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address |       string        | Account address            |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description |
-| ----- |:------:| ---- |
-| value | string | true |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | true                  |
 #### Example request data: 
 
 _**request path:**_
@@ -746,21 +771,21 @@ _**Detailed description: The created account will not be saved to the wallet,The
 ```
 
 #### parameter list
-| Parameter Name                                                      |       Parameter type        | Parameter Description       | Is it mandatory to fill in |
-| -------------------------------------------------------- |:-----------------:| ---------- |:----:|
-| form                                                     | accountcreateform | Offline batch creation of account forms |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count    |        int        | Number of new accounts created     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prefix   |      string       | Address prefix       |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |      string       | Account password       |  yes   |
+| Parameter Name                                           |  Parameter type   | Parameter Description                   | Is it mandatory to fill in |
+| -------------------------------------------------------- |:-----------------:| --------------------------------------- |:--------------------------:|
+| form                                                     | accountcreateform | Offline batch creation of account forms |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count    |        int        | Number of new accounts created          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prefix   |      string       | Address prefix                          |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |      string       | Account password                        |            yes             |
 
 #### Return value
-| Field Name                                                                 |      Field type       | Parameter Description         |
-| ------------------------------------------------------------------- |:---------------:| ------------ |
-| list                                                                | list&lt;object> | accountkeystorelist |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address             |     string      | Account address         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKey              |     string      | Public key           |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prikey              |     string      | Clear text private key         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPrivateKey |     string      | Encrypted private key       |
+| Field Name                                                          |   Field type    | Parameter Description |
+| ------------------------------------------------------------------- |:---------------:| --------------------- |
+| list                                                                | list&lt;object> | accountkeystorelist   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address             |     string      | 账户地址                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKey              |     string      | 公钥                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prikey              |     string      | 明文私钥                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPrivateKey |     string      | 加密后的私钥                |
 #### Example request data: 
 
 _**request path:**_
@@ -806,17 +831,17 @@ _**Detailed description: Offline acquisition of account plaintext private key**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |     Parameter type      | Parameter Description         | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:-------------:| ------------ |:----:|
-| form                                                            | getprikeyform | Offline access to account plaintext private key form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address         |    string     | Account address         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPriKey |    string     | Account ciphertext private key       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |    string     | Account password         |  yes   |
+| Parameter Name                                                  | Parameter type | Parameter Description                                | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:--------------:| ---------------------------------------------------- |:--------------------------:|
+| form                                                            | getprikeyform  | Offline access to account plaintext private key form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address         |     string     | Account address                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPriKey |     string     | Account ciphertext private key                       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |     string     | Account password                                     |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description |
-| ----- |:------:| ---- |
-| value | string | Clear text private key |
+| Field Name | Field type | Parameter Description  |
+| ---------- |:----------:| ---------------------- |
+| value      |   string   | Clear text private key |
 #### Example request data: 
 
 _**request path:**_
@@ -860,18 +885,18 @@ _**Detailed description: Offline account password modification**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |       Parameter type        | Parameter Description       | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:-----------------:| ---------- |:----:|
-| form                                                            | resetpasswordform | Offline account password modification form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address         |      string       | Account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPriKey |      string       | Account ciphertext private key     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;oldPassword     |      string       | Account original password      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newPassword     |      string       | Account New Password      |  yes   |
+| Parameter Name                                                  |  Parameter type   | Parameter Description                      | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:-----------------:| ------------------------------------------ |:--------------------------:|
+| form                                                            | resetpasswordform | Offline account password modification form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address         |      string       | Account address                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPriKey |      string       | Account ciphertext private key             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;oldPassword     |      string       | Account original password                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newPassword     |      string       | Account New Password                       |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description       |
-| ----- |:------:| ---------- |
-| value | string | Encryption private key after resetting password |
+| Field Name | Field type | Parameter Description                           |
+| ---------- |:----------:| ----------------------------------------------- |
+| value      |   string   | Encryption private key after resetting password |
 #### Example request data: 
 
 _**request path:**_
@@ -919,21 +944,21 @@ _**Detailed description: For multi account transfer transactions used for offlin
 ```
 
 #### parameter list
-| Parameter Name                                                                                                                 |      Parameter type       | Parameter Description        | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------------- |:---------------:| ----------- |:----:|
-| form                                                                                                                |  multisignform  | Multiple Account Summary Signature Form   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dtoList                                                             | list&lt;object> | keystoreaggregate  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address             |     string      | address          |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priKey              |     string      | Clear text private key        |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPrivateKey |     string      | Encrypt private key        |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password            |     string      | password          |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex                                                               |     string      | Transaction serializationHexcharacter string |  yes   |
+| Parameter Name                                                                                                      | Parameter type  | Parameter Description                        | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------------- |:---------------:| -------------------------------------------- |:--------------------------:|
+| form                                                                                                                |  multisignform  | Multiple Account Summary Signature Form      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dtoList                                                             | list&lt;object> | keystoreaggregate                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address             |     string      | 地址                                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priKey              |     string      | 明文私钥                                         |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPrivateKey |     string      | 加密私钥                                         |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password            |     string      | 密码                                           |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex                                                               |     string      | Transaction serializationHexcharacter string |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description          |
-| ----- |:------:| ------------- |
-| hash  | string | transactionhash        |
-| txHex | string | Signed transaction16Hexadecimal Strings |
+| Field Name | Field type | Parameter Description                   |
+| ---------- |:----------:| --------------------------------------- |
+| hash       |   string   | transactionhash                         |
+| txHex      |   string   | Signed transaction16Hexadecimal Strings |
 #### Example request data: 
 
 _**request path:**_
@@ -981,18 +1006,18 @@ _**Detailed description: Clear text private key digest signature**_
 ```
 
 #### parameter list
-| Parameter Name                                                     |      Parameter type      | Parameter Description        | Is it mandatory to fill in |
-| ------------------------------------------------------- |:--------------:| ----------- |:----:|
-| form                                                    | prikeysignform | Clear text private key abstract signature form  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex   |     string     | Transaction serializationHexcharacter string |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address |     string     | Account address        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priKey  |     string     | Account plaintext private key      |  yes   |
+| Parameter Name                                          | Parameter type | Parameter Description                          | Is it mandatory to fill in |
+| ------------------------------------------------------- |:--------------:| ---------------------------------------------- |:--------------------------:|
+| form                                                    | prikeysignform | Clear text private key abstract signature form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex   |     string     | Transaction serializationHexcharacter string   |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address |     string     | Account address                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priKey  |     string     | Account plaintext private key                  |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description          |
-| ----- |:------:| ------------- |
-| hash  | string | transactionhash        |
-| txHex | string | Signed transaction16Hexadecimal Strings |
+| Field Name | Field type | Parameter Description                   |
+| ---------- |:----------:| --------------------------------------- |
+| hash       |   string   | transactionhash                         |
+| txHex      |   string   | Signed transaction16Hexadecimal Strings |
 #### Example request data: 
 
 _**request path:**_
@@ -1037,19 +1062,19 @@ _**Detailed description: Cryptography private key digest signature**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |          Parameter type           | Parameter Description        | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:-----------------------:| ----------- |:----:|
-| form                                                            | encryptedprikeysignform | Cryptography private key digest signature form  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex           |         string          | Transaction serializationHexcharacter string |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address         |         string          | Account address        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPriKey |         string          | Account ciphertext private key      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |         string          | Account password        |  yes   |
+| Parameter Name                                                  |     Parameter type      | Parameter Description                          | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:-----------------------:| ---------------------------------------------- |:--------------------------:|
+| form                                                            | encryptedprikeysignform | Cryptography private key digest signature form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex           |         string          | Transaction serializationHexcharacter string   |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address         |         string          | Account address                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPriKey |         string          | Account ciphertext private key                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |         string          | Account password                               |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description          |
-| ----- |:------:| ------------- |
-| hash  | string | transactionhash        |
-| txHex | string | Signed transaction16Hexadecimal Strings |
+| Field Name | Field type | Parameter Description                   |
+| ---------- |:----------:| --------------------------------------- |
+| hash       |   string   | transactionhash                         |
+| txHex      |   string   | Signed transaction16Hexadecimal Strings |
 #### Example request data: 
 
 _**request path:**_
@@ -1078,7 +1103,48 @@ _**request form data:**_
 }
 ```
 
-### 1.18 Create a multi signature account
+### 1.18 Multiple account ciphertext private key digest signature
+#### Cmd: /api/account/encryptedPriKeys/sign
+_**Detailed description: Multiple account ciphertext private key digest signature**_
+#### HttpMethod: POST
+
+#### Form json data: 
+
+```json
+{
+  "txHex" : null,
+  "address" : null,
+  "encryptedPriKey" : null,
+  "password" : null
+}
+```
+
+#### parameter list
+| Parameter Name                                                  |     Parameter type      | Parameter Description                          | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:-----------------------:| ---------------------------------------------- |:--------------------------:|
+| form                                                            | encryptedprikeysignform | Cryptography private key digest signature form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex           |         string          | Transaction serializationHexcharacter string   |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address         |         string          | Account address                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encryptedPriKey |         string          | Account ciphertext private key                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |         string          | Account password                               |            yes             |
+
+#### Return value
+| Field Name | Field type | Parameter Description                   |
+| ---------- |:----------:| --------------------------------------- |
+| hash       |   string   | transactionhash                         |
+| txHex      |   string   | Signed transaction16Hexadecimal Strings |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 1.19 Create a multi signature account
 #### Cmd: /api/account/multiSign/create
 _**Detailed description: Create multiple signed accounts based on the public keys of multiple accounts,minSignsThe minimum number of signatures required to create transactions for multi signature accounts**_
 #### HttpMethod: POST
@@ -1093,16 +1159,16 @@ _**Detailed description: Create multiple signed accounts based on the public key
 ```
 
 #### parameter list
-| Parameter Name                                                      |            Parameter type            | Parameter Description     | Is it mandatory to fill in |
-| -------------------------------------------------------- |:--------------------------:| -------- |:----:|
-| form                                                     | multisignaccountcreateform | Create a multi signature account form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys  |      list&lt;string>       | Account public key collection   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns |            int             | Minimum number of signatures    |  yes   |
+| Parameter Name                                           |       Parameter type       | Parameter Description                 | Is it mandatory to fill in |
+| -------------------------------------------------------- |:--------------------------:| ------------------------------------- |:--------------------------:|
+| form                                                     | multisignaccountcreateform | Create a multi signature account form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys  |      list&lt;string>       | Account public key collection         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns |            int             | Minimum number of signatures          |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description  |
-| ----- |:------:| ----- |
-| value | string | The address of the account |
+| Field Name | Field type | Parameter Description      |
+| ---------- |:----------:| -------------------------- |
+| value      |   string   | The address of the account |
 #### Example request data: 
 
 _**request path:**_
@@ -1128,7 +1194,7 @@ _**request form data:**_
 }
 ```
 
-### 1.19 Offline creation and setting of alias transactions
+### 1.20 Offline creation and setting of alias transactions
 #### Cmd: /api/account/aliasTx/create
 _**Detailed description: Create multiple signed accounts based on the public keys of multiple accounts,minSignsThe minimum number of signatures required to create transactions for multi signature accounts**_
 #### HttpMethod: POST
@@ -1145,19 +1211,19 @@ _**Detailed description: Create multiple signed accounts based on the public key
 ```
 
 #### parameter list
-| Parameter Name                                                     |   Parameter type   | Parameter Description     | Is it mandatory to fill in |
-| ------------------------------------------------------- |:--------:| -------- |:----:|
-| dto                                                     | aliasdto | Create a multi signature account form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address |  string  | Account address     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias   |  string  | alias       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce   |  string  | assetnoncevalue |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark  |  string  | Transaction notes     |  no   |
+| Parameter Name                                          | Parameter type | Parameter Description                 | Is it mandatory to fill in |
+| ------------------------------------------------------- |:--------------:| ------------------------------------- |:--------------------------:|
+| dto                                                     |    aliasdto    | Create a multi signature account form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address |     string     | 账户地址                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias   |     string     | 别名                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce   |     string     | 资产nonce值                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark  |     string     | 交易备注                                  |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description         |
-| ----- |:------:| ------------ |
-| hash  | string | transactionhash       |
-| txHex | string | Transaction serialization16Hexadecimal Strings |
+| Field Name | Field type | Parameter Description                          |
+| ---------- |:----------:| ---------------------------------------------- |
+| hash       |   string   | transactionhash                                |
+| txHex      |   string   | Transaction serialization16Hexadecimal Strings |
 #### Example request data: 
 
 _**request path:**_
@@ -1186,7 +1252,7 @@ _**request form data:**_
 }
 ```
 
-### 1.20 Offline creation and setting of alias transactions for multiple signed accounts
+### 1.21 Offline creation and setting of alias transactions for multiple signed accounts
 #### Cmd: /api/account/multiSign/aliasTx/create
 _**Detailed description: Offline creation and setting of alias transactions for multiple signed accounts**_
 #### HttpMethod: POST
@@ -1205,21 +1271,21 @@ _**Detailed description: Offline creation and setting of alias transactions for 
 ```
 
 #### parameter list
-| Parameter Name                                                      |       Parameter type        | Parameter Description     | Is it mandatory to fill in |
-| -------------------------------------------------------- |:-----------------:| -------- |:----:|
-| dto                                                      | multisignaliasdto | Create an alias transaction form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address  |      string       | Account address     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias    |      string       | alias       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce    |      string       | assetnoncevalue |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark   |      string       | Transaction notes     |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys  |  list&lt;string>  | Public key set     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns |        int        | Minimum number of signatures    |  yes   |
+| Parameter Name                                           |  Parameter type   | Parameter Description            | Is it mandatory to fill in |
+| -------------------------------------------------------- |:-----------------:| -------------------------------- |:--------------------------:|
+| dto                                                      | multisignaliasdto | Create an alias transaction form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address  |      string       | 账户地址                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias    |      string       | 别名                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce    |      string       | 资产nonce值                         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark   |      string       | 交易备注                             |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys  |  list&lt;string>  | 公钥集合                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns |        int        | 最小签名数                            |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description         |
-| ----- |:------:| ------------ |
-| hash  | string | transactionhash       |
-| txHex | string | Transaction serialization16Hexadecimal Strings |
+| Field Name | Field type | Parameter Description                          |
+| ---------- |:----------:| ---------------------------------------------- |
+| hash       |   string   | transactionhash                                |
+| txHex      |   string   | Transaction serialization16Hexadecimal Strings |
 #### Example request data: 
 
 _**request path:**_
@@ -1250,7 +1316,7 @@ _**request form data:**_
 }
 ```
 
-### 1.21 Obtain account address format based on private key
+### 1.22 Obtain account address format based on private key
 #### Cmd: /api/account/address/priKey
 _**Detailed description: Obtain account address format based on private key**_
 #### HttpMethod: POST
@@ -1264,15 +1330,15 @@ _**Detailed description: Obtain account address format based on private key**_
 ```
 
 #### parameter list
-| Parameter Name                                                    |    Parameter type    | Parameter Description   | Is it mandatory to fill in |
-| ------------------------------------------------------ |:----------:| ------ |:----:|
-| form                                                   | prikeyform | Private Key Form   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priKey |   string   | Account plaintext private key |  yes   |
+| Parameter Name                                         | Parameter type | Parameter Description         | Is it mandatory to fill in |
+| ------------------------------------------------------ |:--------------:| ----------------------------- |:--------------------------:|
+| form                                                   |   prikeyform   | Private Key Form              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;priKey |     string     | Account plaintext private key |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description |
-| ----- |:------:| ---- |
-| value | string | Account address |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Account address       |
 #### Example request data: 
 
 _**request path:**_
@@ -1303,30 +1369,32 @@ _**Detailed description: Query block headers based on block height**_
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name    | Parameter type | Parameter Description | Is it mandatory to fill in |
-| ------ |:----:| ---- |:----:|
-| height | long | block height |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| height         |      long      | block height          |            yes             |
 
 #### Return value
-| Field Name                  |      Field type       | Parameter Description                 |
-| -------------------- |:---------------:| -------------------- |
-| hash                 |     string      | Blockedhashvalue             |
-| preHash              |     string      | Previous block'shashvalue          |
-| merkleHash           |     string      | Merkelhash              |
-| time                 |     string      | Block generation time               |
-| height               |      long       | block height                 |
-| txCount              |       int       | Number of block packaging transactions             |
-| blockSignature       |     string      | autographHex.encode(byte[]) |
-| size                 |       int       | size                   |
-| packingAddress       |     string      | Packaging address                 |
-| roundIndex           |      long       | Consensus round                 |
-| consensusMemberCount |       int       | Number of members participating in consensus             |
-| roundStartTime       |     string      | Current consensus round start time            |
-| packingIndexOfRound  |       int       | The ranking of the blocks packaged in the current round          |
-| mainVersion          |      short      | The current effective version of the main network            |
-| blockVersion         |      short      | The version of the block can be understood as the version of the local wallet   |
-| stateRoot            |     string      | Smart Contract World State Root            |
-| txHashList           | list&lt;string> | Block packaged transactionshashaggregate        |
+| Field Name           |   Field type    | Parameter Description                                                         |
+| -------------------- |:---------------:| ----------------------------------------------------------------------------- |
+| hash                 |     string      | Blockedhashvalue                                                              |
+| preHash              |     string      | Previous block'shashvalue                                                     |
+| merkleHash           |     string      | Merkelhash                                                                    |
+| time                 |     string      | Block generation time                                                         |
+| timestamp            |      long       | Block generation timestamp                                                    |
+| height               |      long       | block height                                                                  |
+| txCount              |       int       | Number of block packaging transactions                                        |
+| blockSignature       |     string      | autographHex.encode(byte[])                                                   |
+| size                 |       int       | size                                                                          |
+| packingAddress       |     string      | Packaging address                                                             |
+| roundIndex           |      long       | Consensus round                                                               |
+| consensusMemberCount |       int       | Number of members participating in consensus                                  |
+| roundStartTime       |     string      | Current consensus round start time                                            |
+| roundStartTimestamp  |      long       | Current consensus round start timestamp                                       |
+| packingIndexOfRound  |       int       | The ranking of the blocks packaged in the current round                       |
+| mainVersion          |      short      | The current effective version of the main network                             |
+| blockVersion         |      short      | The version of the block can be understood as the version of the local wallet |
+| stateRoot            |     string      | Smart Contract World State Root                                               |
+| txHashList           | list&lt;string> | Block packaged transactionshashaggregate                                      |
 #### Example request data: 
 
 _**request path:**_
@@ -1367,30 +1435,32 @@ _**Detailed description: Based on blockshashQuery block header**_
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name  |  Parameter type  | Parameter Description   | Is it mandatory to fill in |
-| ---- |:------:| ------ |:----:|
-| hash | string | blockhash |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| hash           |     string     | blockhash             |            yes             |
 
 #### Return value
-| Field Name                  |      Field type       | Parameter Description                 |
-| -------------------- |:---------------:| -------------------- |
-| hash                 |     string      | Blockedhashvalue             |
-| preHash              |     string      | Previous block'shashvalue          |
-| merkleHash           |     string      | Merkelhash              |
-| time                 |     string      | Block generation time               |
-| height               |      long       | block height                 |
-| txCount              |       int       | Number of block packaging transactions             |
-| blockSignature       |     string      | autographHex.encode(byte[]) |
-| size                 |       int       | size                   |
-| packingAddress       |     string      | Packaging address                 |
-| roundIndex           |      long       | Consensus round                 |
-| consensusMemberCount |       int       | Number of members participating in consensus             |
-| roundStartTime       |     string      | Current consensus round start time            |
-| packingIndexOfRound  |       int       | The ranking of the blocks packaged in the current round          |
-| mainVersion          |      short      | The current effective version of the main network            |
-| blockVersion         |      short      | The version of the block can be understood as the version of the local wallet   |
-| stateRoot            |     string      | Smart Contract World State Root            |
-| txHashList           | list&lt;string> | Block packaged transactionshashaggregate        |
+| Field Name           |   Field type    | Parameter Description                                                         |
+| -------------------- |:---------------:| ----------------------------------------------------------------------------- |
+| hash                 |     string      | Blockedhashvalue                                                              |
+| preHash              |     string      | Previous block'shashvalue                                                     |
+| merkleHash           |     string      | Merkelhash                                                                    |
+| time                 |     string      | Block generation time                                                         |
+| timestamp            |      long       | Block generation timestamp                                                    |
+| height               |      long       | block height                                                                  |
+| txCount              |       int       | Number of block packaging transactions                                        |
+| blockSignature       |     string      | autographHex.encode(byte[])                                                   |
+| size                 |       int       | size                                                                          |
+| packingAddress       |     string      | Packaging address                                                             |
+| roundIndex           |      long       | Consensus round                                                               |
+| consensusMemberCount |       int       | Number of members participating in consensus                                  |
+| roundStartTime       |     string      | Current consensus round start time                                            |
+| roundStartTimestamp  |      long       | Current consensus round start timestamp                                       |
+| packingIndexOfRound  |       int       | The ranking of the blocks packaged in the current round                       |
+| mainVersion          |      short      | The current effective version of the main network                             |
+| blockVersion         |      short      | The version of the block can be understood as the version of the local wallet |
+| stateRoot            |     string      | Smart Contract World State Root                                               |
+| txHashList           | list&lt;string> | Block packaged transactionshashaggregate                                      |
 #### Example request data: 
 
 _**request path:**_
@@ -1434,25 +1504,27 @@ _**Detailed description: Query the latest block header information**_
 No parameters
 
 #### Return value
-| Field Name                  |      Field type       | Parameter Description                 |
-| -------------------- |:---------------:| -------------------- |
-| hash                 |     string      | Blockedhashvalue             |
-| preHash              |     string      | Previous block'shashvalue          |
-| merkleHash           |     string      | Merkelhash              |
-| time                 |     string      | Block generation time               |
-| height               |      long       | block height                 |
-| txCount              |       int       | Number of block packaging transactions             |
-| blockSignature       |     string      | autographHex.encode(byte[]) |
-| size                 |       int       | size                   |
-| packingAddress       |     string      | Packaging address                 |
-| roundIndex           |      long       | Consensus round                 |
-| consensusMemberCount |       int       | Number of members participating in consensus             |
-| roundStartTime       |     string      | Current consensus round start time            |
-| packingIndexOfRound  |       int       | The ranking of the blocks packaged in the current round          |
-| mainVersion          |      short      | The current effective version of the main network            |
-| blockVersion         |      short      | The version of the block can be understood as the version of the local wallet   |
-| stateRoot            |     string      | Smart Contract World State Root            |
-| txHashList           | list&lt;string> | Block packaged transactionshashaggregate        |
+| Field Name           |   Field type    | Parameter Description                                                         |
+| -------------------- |:---------------:| ----------------------------------------------------------------------------- |
+| hash                 |     string      | Blockedhashvalue                                                              |
+| preHash              |     string      | Previous block'shashvalue                                                     |
+| merkleHash           |     string      | Merkelhash                                                                    |
+| time                 |     string      | Block generation time                                                         |
+| timestamp            |      long       | Block generation timestamp                                                    |
+| height               |      long       | block height                                                                  |
+| txCount              |       int       | Number of block packaging transactions                                        |
+| blockSignature       |     string      | autographHex.encode(byte[])                                                   |
+| size                 |       int       | size                                                                          |
+| packingAddress       |     string      | Packaging address                                                             |
+| roundIndex           |      long       | Consensus round                                                               |
+| consensusMemberCount |       int       | Number of members participating in consensus                                  |
+| roundStartTime       |     string      | Current consensus round start time                                            |
+| roundStartTimestamp  |      long       | Current consensus round start timestamp                                       |
+| packingIndexOfRound  |       int       | The ranking of the blocks packaged in the current round                       |
+| mainVersion          |      short      | The current effective version of the main network                             |
+| blockVersion         |      short      | The version of the block can be understood as the version of the local wallet |
+| stateRoot            |     string      | Smart Contract World State Root                                               |
+| txHashList           | list&lt;string> | Block packaged transactionshashaggregate                                      |
 #### Example request data: 
 
 _**request path:**_
@@ -1496,51 +1568,54 @@ _**Detailed description: This interface contains all transaction information pac
 No parameters
 
 #### Return value
-| Field Name                                                                                                           |      Field type       | Parameter Description                                      |
-| ------------------------------------------------------------------------------------------------------------- |:---------------:| ----------------------------------------- |
-| header                                                                                                        |     object      | Block header information, Only return the corresponding partial data                         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Blockedhashvalue                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;preHash                                                       |     string      | Previous block'shashvalue                               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;merkleHash                                                    |     string      | Merkelhash                                   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Block generation time                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height                                                        |      long       | block height                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txCount                                                       |       int       | Number of block packaging transactions                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockSignature                                                |     string      | autographHex.encode(byte[])                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | size                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                                |     string      | Packaging address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundIndex                                                    |      long       | Consensus round                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;consensusMemberCount                                          |       int       | Number of members participating in consensus                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTime                                                |     string      | Current consensus round start time                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingIndexOfRound                                           |       int       | The ranking of the blocks packaged in the current round                               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mainVersion                                                   |      short      | The current effective version of the main network                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockVersion                                                  |      short      | The version of the block can be understood as the version of the local wallet                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stateRoot                                                     |     string      | Smart Contract World State Root                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHashList                                                    | list&lt;string> | Block packaged transactionshashaggregate                             |
-| txs                                                                                                           | list&lt;object> | Transaction List                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Transactionalhashvalue                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type                                                          |       int       | Transaction type                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Transaction time                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHeight                                                   |      long       | block height                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHash                                                     |     string      | blockhash                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                        |     string      | Transaction notes                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transactionSignature                                          |     string      | Transaction signature                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txDataHex                                                     |     string      | Transaction business data serialization string                              |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status                                                        |       int       | Transaction status 0:unConfirm(To be confirmed), 1:confirm(Confirmed)     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | Transaction size                                      |
+| Field Name                                                                                                    |   Field type    | Parameter Description                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------- |:---------------:| ---------------------------------------------------------------------------------------------------------------------------------------- |
+| header                                                                                                        |     object      | Block header information, Only return the corresponding partial data                                                                     |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Blockedhashvalue                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;preHash                                                       |     string      | Previous block'shashvalue                                                                                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;merkleHash                                                    |     string      | Merkelhash                                                                                                                               |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Block generation time                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;timestamp                                                     |      long       | Block generation timestamp                                                                                                               |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height                                                        |      long       | block height                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txCount                                                       |       int       | Number of block packaging transactions                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockSignature                                                |     string      | autographHex.encode(byte[])                                                                                                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | size                                                                                                                                     |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                                |     string      | Packaging address                                                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundIndex                                                    |      long       | Consensus round                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;consensusMemberCount                                          |       int       | Number of members participating in consensus                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTime                                                |     string      | Current consensus round start time                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTimestamp                                           |      long       | Current consensus round start timestamp                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingIndexOfRound                                           |       int       | The ranking of the blocks packaged in the current round                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mainVersion                                                   |      short      | The current effective version of the main network                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockVersion                                                  |      short      | The version of the block can be understood as the version of the local wallet                                                            |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stateRoot                                                     |     string      | Smart Contract World State Root                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHashList                                                    | list&lt;string> | Block packaged transactionshashaggregate                                                                                                 |
+| txs                                                                                                           | list&lt;object> | Transaction List                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Transactionalhashvalue                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type                                                          |       int       | Transaction type                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Transaction time                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;timestamp                                                     |      long       | Transaction timestamp                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHeight                                                   |      long       | block height                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHash                                                     |     string      | blockhash                                                                                                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                        |     string      | Transaction notes                                                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transactionSignature                                          |     string      | Transaction signature                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txDataHex                                                     |     string      | Transaction business data serialization string                                                                                           |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status                                                        |       int       | Transaction status 0:unConfirm(To be confirmed), 1:confirm(Confirmed)                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | Transaction size                                                                                                                         |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inBlockIndex                                                  |       int       | Order in blocks, stored inrocksDBThe middle is unordered, assigned values when saving blocks, sorted based on this value after retrieval |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                          | list&lt;object> | input                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |     string      | accountnonceValue ofHexString, prevent double flower transactions, retrieve the previous transactionhashAt the end of8Bytes  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;locked        |      byte       | 0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation）                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                            | list&lt;object> | output                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime      |      long       | Unlocking time,-1To permanently lock                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                          | list&lt;object> | input                                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |     string      | accountnonceValue ofHexString, prevent double flower transactions, retrieve the previous transactionhashAt the end of8Bytes              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;locked        |      byte       | 0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation）                                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                            | list&lt;object> | output                                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime      |      long       | Unlocking time,-1To permanently lock                                                                                                     |
 #### Example request data: 
 
 _**request path:**_
@@ -1627,56 +1702,59 @@ _**Detailed description: This interface contains all transaction information pac
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name    | Parameter type | Parameter Description | Is it mandatory to fill in |
-| ------ |:----:| ---- |:----:|
-| height | long | block height |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| height         |      long      | block height          |            yes             |
 
 #### Return value
-| Field Name                                                                                                           |      Field type       | Parameter Description                                      |
-| ------------------------------------------------------------------------------------------------------------- |:---------------:| ----------------------------------------- |
-| header                                                                                                        |     object      | Block header information, Only return the corresponding partial data                         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Blockedhashvalue                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;preHash                                                       |     string      | Previous block'shashvalue                               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;merkleHash                                                    |     string      | Merkelhash                                   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Block generation time                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height                                                        |      long       | block height                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txCount                                                       |       int       | Number of block packaging transactions                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockSignature                                                |     string      | autographHex.encode(byte[])                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | size                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                                |     string      | Packaging address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundIndex                                                    |      long       | Consensus round                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;consensusMemberCount                                          |       int       | Number of members participating in consensus                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTime                                                |     string      | Current consensus round start time                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingIndexOfRound                                           |       int       | The ranking of the blocks packaged in the current round                               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mainVersion                                                   |      short      | The current effective version of the main network                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockVersion                                                  |      short      | The version of the block can be understood as the version of the local wallet                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stateRoot                                                     |     string      | Smart Contract World State Root                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHashList                                                    | list&lt;string> | Block packaged transactionshashaggregate                             |
-| txs                                                                                                           | list&lt;object> | Transaction List                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Transactionalhashvalue                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type                                                          |       int       | Transaction type                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Transaction time                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHeight                                                   |      long       | block height                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHash                                                     |     string      | blockhash                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                        |     string      | Transaction notes                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transactionSignature                                          |     string      | Transaction signature                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txDataHex                                                     |     string      | Transaction business data serialization string                              |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status                                                        |       int       | Transaction status 0:unConfirm(To be confirmed), 1:confirm(Confirmed)     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | Transaction size                                      |
+| Field Name                                                                                                    |   Field type    | Parameter Description                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------- |:---------------:| ---------------------------------------------------------------------------------------------------------------------------------------- |
+| header                                                                                                        |     object      | Block header information, Only return the corresponding partial data                                                                     |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Blockedhashvalue                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;preHash                                                       |     string      | Previous block'shashvalue                                                                                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;merkleHash                                                    |     string      | Merkelhash                                                                                                                               |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Block generation time                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;timestamp                                                     |      long       | Block generation timestamp                                                                                                               |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height                                                        |      long       | block height                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txCount                                                       |       int       | Number of block packaging transactions                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockSignature                                                |     string      | autographHex.encode(byte[])                                                                                                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | size                                                                                                                                     |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                                |     string      | Packaging address                                                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundIndex                                                    |      long       | Consensus round                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;consensusMemberCount                                          |       int       | Number of members participating in consensus                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTime                                                |     string      | Current consensus round start time                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTimestamp                                           |      long       | Current consensus round start timestamp                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingIndexOfRound                                           |       int       | The ranking of the blocks packaged in the current round                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mainVersion                                                   |      short      | The current effective version of the main network                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockVersion                                                  |      short      | The version of the block can be understood as the version of the local wallet                                                            |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stateRoot                                                     |     string      | Smart Contract World State Root                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHashList                                                    | list&lt;string> | Block packaged transactionshashaggregate                                                                                                 |
+| txs                                                                                                           | list&lt;object> | Transaction List                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Transactionalhashvalue                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type                                                          |       int       | Transaction type                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Transaction time                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;timestamp                                                     |      long       | Transaction timestamp                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHeight                                                   |      long       | block height                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHash                                                     |     string      | blockhash                                                                                                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                        |     string      | Transaction notes                                                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transactionSignature                                          |     string      | Transaction signature                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txDataHex                                                     |     string      | Transaction business data serialization string                                                                                           |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status                                                        |       int       | Transaction status 0:unConfirm(To be confirmed), 1:confirm(Confirmed)                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | Transaction size                                                                                                                         |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inBlockIndex                                                  |       int       | Order in blocks, stored inrocksDBThe middle is unordered, assigned values when saving blocks, sorted based on this value after retrieval |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                          | list&lt;object> | input                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |     string      | accountnonceValue ofHexString, prevent double flower transactions, retrieve the previous transactionhashAt the end of8Bytes  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;locked        |      byte       | 0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation）                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                            | list&lt;object> | output                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime      |      long       | Unlocking time,-1To permanently lock                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                          | list&lt;object> | input                                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |     string      | accountnonceValue ofHexString, prevent double flower transactions, retrieve the previous transactionhashAt the end of8Bytes              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;locked        |      byte       | 0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation）                                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                            | list&lt;object> | output                                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime      |      long       | Unlocking time,-1To permanently lock                                                                                                     |
 #### Example request data: 
 
 _**request path:**_
@@ -1763,56 +1841,59 @@ _**Detailed description: This interface contains all transaction information pac
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name  |  Parameter type  | Parameter Description   | Is it mandatory to fill in |
-| ---- |:------:| ------ |:----:|
-| hash | string | blockhash |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| hash           |     string     | blockhash             |            yes             |
 
 #### Return value
-| Field Name                                                                                                           |      Field type       | Parameter Description                                      |
-| ------------------------------------------------------------------------------------------------------------- |:---------------:| ----------------------------------------- |
-| header                                                                                                        |     object      | Block header information, Only return the corresponding partial data                         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Blockedhashvalue                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;preHash                                                       |     string      | Previous block'shashvalue                               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;merkleHash                                                    |     string      | Merkelhash                                   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Block generation time                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height                                                        |      long       | block height                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txCount                                                       |       int       | Number of block packaging transactions                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockSignature                                                |     string      | autographHex.encode(byte[])                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | size                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                                |     string      | Packaging address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundIndex                                                    |      long       | Consensus round                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;consensusMemberCount                                          |       int       | Number of members participating in consensus                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTime                                                |     string      | Current consensus round start time                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingIndexOfRound                                           |       int       | The ranking of the blocks packaged in the current round                               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mainVersion                                                   |      short      | The current effective version of the main network                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockVersion                                                  |      short      | The version of the block can be understood as the version of the local wallet                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stateRoot                                                     |     string      | Smart Contract World State Root                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHashList                                                    | list&lt;string> | Block packaged transactionshashaggregate                             |
-| txs                                                                                                           | list&lt;object> | Transaction List                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Transactionalhashvalue                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type                                                          |       int       | Transaction type                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Transaction time                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHeight                                                   |      long       | block height                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHash                                                     |     string      | blockhash                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                        |     string      | Transaction notes                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transactionSignature                                          |     string      | Transaction signature                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txDataHex                                                     |     string      | Transaction business data serialization string                              |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status                                                        |       int       | Transaction status 0:unConfirm(To be confirmed), 1:confirm(Confirmed)     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | Transaction size                                      |
+| Field Name                                                                                                    |   Field type    | Parameter Description                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------- |:---------------:| ---------------------------------------------------------------------------------------------------------------------------------------- |
+| header                                                                                                        |     object      | Block header information, Only return the corresponding partial data                                                                     |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Blockedhashvalue                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;preHash                                                       |     string      | Previous block'shashvalue                                                                                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;merkleHash                                                    |     string      | Merkelhash                                                                                                                               |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Block generation time                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;timestamp                                                     |      long       | Block generation timestamp                                                                                                               |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height                                                        |      long       | block height                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txCount                                                       |       int       | Number of block packaging transactions                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockSignature                                                |     string      | autographHex.encode(byte[])                                                                                                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | size                                                                                                                                     |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                                |     string      | Packaging address                                                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundIndex                                                    |      long       | Consensus round                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;consensusMemberCount                                          |       int       | Number of members participating in consensus                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTime                                                |     string      | Current consensus round start time                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roundStartTimestamp                                           |      long       | Current consensus round start timestamp                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingIndexOfRound                                           |       int       | The ranking of the blocks packaged in the current round                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mainVersion                                                   |      short      | The current effective version of the main network                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockVersion                                                  |      short      | The version of the block can be understood as the version of the local wallet                                                            |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stateRoot                                                     |     string      | Smart Contract World State Root                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHashList                                                    | list&lt;string> | Block packaged transactionshashaggregate                                                                                                 |
+| txs                                                                                                           | list&lt;object> | Transaction List                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hash                                                          |     string      | Transactionalhashvalue                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type                                                          |       int       | Transaction type                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                          |     string      | Transaction time                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;timestamp                                                     |      long       | Transaction timestamp                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHeight                                                   |      long       | block height                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blockHash                                                     |     string      | blockhash                                                                                                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                        |     string      | Transaction notes                                                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transactionSignature                                          |     string      | Transaction signature                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txDataHex                                                     |     string      | Transaction business data serialization string                                                                                           |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status                                                        |       int       | Transaction status 0:unConfirm(To be confirmed), 1:confirm(Confirmed)                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size                                                          |       int       | Transaction size                                                                                                                         |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inBlockIndex                                                  |       int       | Order in blocks, stored inrocksDBThe middle is unordered, assigned values when saving blocks, sorted based on this value after retrieval |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                          | list&lt;object> | input                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |     string      | accountnonceValue ofHexString, prevent double flower transactions, retrieve the previous transactionhashAt the end of8Bytes  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;locked        |      byte       | 0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation）                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                            | list&lt;object> | output                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime      |      long       | Unlocking time,-1To permanently lock                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                          | list&lt;object> | input                                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |     string      | accountnonceValue ofHexString, prevent double flower transactions, retrieve the previous transactionhashAt the end of8Bytes              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;locked        |      byte       | 0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation）                                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                            | list&lt;object> | output                                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime      |      long       | Unlocking time,-1To permanently lock                                                                                                     |
 #### Example request data: 
 
 _**request path:**_
@@ -1899,14 +1980,14 @@ _**Detailed description: This interface contains all transaction information pac
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name    | Parameter type | Parameter Description | Is it mandatory to fill in |
-| ------ |:----:| ---- |:----:|
-| height | long | block height |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| height         |      long      | block height          |            yes             |
 
 #### Return value
-| Field Name |  Field type  | Parameter Description            |
-| --- |:------:| --------------- |
-| Return value | string | Return the serialized blockHEXcharacter string |
+| Field Name   | Field type | Parameter Description                          |
+| ------------ |:----------:| ---------------------------------------------- |
+| Return value |   string   | Return the serialized blockHEXcharacter string |
 #### Example request data: 
 
 _**request path:**_
@@ -1930,14 +2011,14 @@ _**Detailed description: This interface contains all transaction information pac
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name  |  Parameter type  | Parameter Description   | Is it mandatory to fill in |
-| ---- |:------:| ------ |:----:|
-| hash | string | blockhash |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| hash           |     string     | blockhash             |            yes             |
 
 #### Return value
-| Field Name |  Field type  | Parameter Description            |
-| --- |:------:| --------------- |
-| Return value | string | Return the serialized blockHEXcharacter string |
+| Field Name   | Field type | Parameter Description                          |
+| ------------ |:----------:| ---------------------------------------------- |
+| Return value |   string   | Return the serialized blockHEXcharacter string |
 #### Example request data: 
 
 _**request path:**_
@@ -1961,37 +2042,38 @@ _**Detailed description: according tohashObtain transactions**_
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name  |  Parameter type  | Parameter Description   | Is it mandatory to fill in |
-| ---- |:------:| ------ |:----:|
-| hash | string | transactionhash |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| hash           |     string     | transactionhash       |            yes             |
 
 #### Return value
-| Field Name                                                           |      Field type       | Parameter Description                                      |
-| ------------------------------------------------------------- |:---------------:| ----------------------------------------- |
-| hash                                                          |     string      | Transactionalhashvalue                                  |
-| type                                                          |       int       | Transaction type                                      |
-| time                                                          |     string      | Transaction time                                      |
-| blockHeight                                                   |      long       | block height                                      |
-| blockHash                                                     |     string      | blockhash                                    |
-| remark                                                        |     string      | Transaction notes                                      |
-| transactionSignature                                          |     string      | Transaction signature                                      |
-| txDataHex                                                     |     string      | Transaction business data serialization string                              |
-| status                                                        |       int       | Transaction status 0:unConfirm(To be confirmed), 1:confirm(Confirmed)     |
-| size                                                          |       int       | Transaction size                                      |
+| Field Name                                                    |   Field type    | Parameter Description                                                                                                                    |
+| ------------------------------------------------------------- |:---------------:| ---------------------------------------------------------------------------------------------------------------------------------------- |
+| hash                                                          |     string      | Transactionalhashvalue                                                                                                                   |
+| type                                                          |       int       | Transaction type                                                                                                                         |
+| time                                                          |     string      | Transaction time                                                                                                                         |
+| timestamp                                                     |      long       | Transaction timestamp                                                                                                                    |
+| blockHeight                                                   |      long       | block height                                                                                                                             |
+| blockHash                                                     |     string      | blockhash                                                                                                                                |
+| remark                                                        |     string      | Transaction notes                                                                                                                        |
+| transactionSignature                                          |     string      | Transaction signature                                                                                                                    |
+| txDataHex                                                     |     string      | Transaction business data serialization string                                                                                           |
+| status                                                        |       int       | Transaction status 0:unConfirm(To be confirmed), 1:confirm(Confirmed)                                                                    |
+| size                                                          |       int       | Transaction size                                                                                                                         |
 | inBlockIndex                                                  |       int       | Order in blocks, stored inrocksDBThe middle is unordered, assigned values when saving blocks, sorted based on this value after retrieval |
-| from                                                          | list&lt;object> | input                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |     string      | accountnonceValue ofHexString, prevent double flower transactions, retrieve the previous transactionhashAt the end of8Bytes  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;locked        |      byte       | 0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation）                 |
-| to                                                            | list&lt;object> | output                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime      |      long       | Unlocking time,-1To permanently lock                              |
+| from                                                          | list&lt;object> | input                                                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |     string      | accountnonceValue ofHexString, prevent double flower transactions, retrieve the previous transactionhashAt the end of8Bytes              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;locked        |      byte       | 0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation）                                                      |
+| to                                                            | list&lt;object> | output                                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address       |     string      | Account address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsChainId |       int       | Asset issuance chainid                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetsId      |       int       | assetid                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |     string      | quantity                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime      |      long       | Unlocking time,-1To permanently lock                                                                                                     |
 #### Example request data: 
 
 _**request path:**_
@@ -2030,7 +2112,32 @@ nothing
 }
 ```
 
-### 3.2 Verify transactions
+### 3.2 rehandle cross_chain transactions
+#### Cmd: /api/tx/rehandlectx/{hash}
+_**Detailed description: rehandle cross_chain transactions**_
+#### HttpMethod: GET
+
+#### parameter list
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| hash           |     string     | transactionhash       |            yes             |
+
+#### Return value
+| Field Name   | Field type | Parameter Description |
+| ------------ |:----------:| --------------------- |
+| Return value |   string   |                       |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 3.3 Verify transactions
 #### Cmd: /api/accountledger/transaction/validate
 _**Detailed description: Verify transactions for offline assembly,Successful verification returns transactionhashvalue,Failure returns error message**_
 #### HttpMethod: POST
@@ -2044,15 +2151,15 @@ _**Detailed description: Verify transactions for offline assembly,Successful ver
 ```
 
 #### parameter list
-| Parameter Name                                                   |  Parameter type  | Parameter Description         | Is it mandatory to fill in |
-| ----------------------------------------------------- |:------:| ------------ |:----:|
-| Verify if the transaction is correct                                              | txform | Verify the correctness of the transaction form   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex | string | Transaction serialization16Hexadecimal Strings |  yes   |
+| Parameter Name                                        | Parameter type | Parameter Description                          | Is it mandatory to fill in |
+| ----------------------------------------------------- |:--------------:| ---------------------------------------------- |:--------------------------:|
+| Verify if the transaction is correct                  |     txform     | Verify the correctness of the transaction form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex |     string     | Transaction serialization16Hexadecimal Strings |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description   |
-| ----- |:------:| ------ |
-| value | string | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -2077,7 +2184,7 @@ _**request form data:**_
 }
 ```
 
-### 3.3 Broadcasting transactions
+### 3.4 Broadcasting transactions
 #### Cmd: /api/accountledger/transaction/broadcast
 _**Detailed description: Broadcast offline assembly transactions,Successfully returnedtrue,Failure returns error message**_
 #### HttpMethod: POST
@@ -2091,16 +2198,16 @@ _**Detailed description: Broadcast offline assembly transactions,Successfully re
 ```
 
 #### parameter list
-| Parameter Name                                                   |  Parameter type  | Parameter Description         | Is it mandatory to fill in |
-| ----------------------------------------------------- |:------:| ------------ |:----:|
-| Broadcasting transactions                                                  | txform | Broadcast transaction form       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex | string | Transaction serialization16Hexadecimal Strings |  yes   |
+| Parameter Name                                        | Parameter type | Parameter Description                          | Is it mandatory to fill in |
+| ----------------------------------------------------- |:--------------:| ---------------------------------------------- |:--------------------------:|
+| Broadcasting transactions                             |     txform     | Broadcast transaction form                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex |     string     | Transaction serialization16Hexadecimal Strings |            yes             |
 
 #### Return value
-| Field Name   |  Field type   | Parameter Description   |
-| ----- |:-------:| ------ |
-| value | boolean | Whether successful   |
-| hash  | string  | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |  boolean   | Whether successful    |
+| hash       |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -2126,7 +2233,7 @@ _**request form data:**_
 }
 ```
 
-### 3.4 Broadcasting transactions(Not verifying contracts)
+### 3.5 Broadcasting transactions(Not verifying contracts)
 #### Cmd: /api/accountledger/transaction/broadcastWithNoContractValidation
 _**Detailed description: Broadcast offline assembly transactions(Not verifying contracts),Successfully returnedtrue,Failure returns error message**_
 #### HttpMethod: POST
@@ -2140,16 +2247,16 @@ _**Detailed description: Broadcast offline assembly transactions(Not verifying c
 ```
 
 #### parameter list
-| Parameter Name                                                   |  Parameter type  | Parameter Description          | Is it mandatory to fill in |
-| ----------------------------------------------------- |:------:| ------------- |:----:|
-| Broadcasting transactions(Not verifying contracts)                                           | txform | Broadcasting transactions(Not verifying contracts)form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex | string | Transaction serialization16Hexadecimal Strings  |  yes   |
+| Parameter Name                                        | Parameter type | Parameter Description                                  | Is it mandatory to fill in |
+| ----------------------------------------------------- |:--------------:| ------------------------------------------------------ |:--------------------------:|
+| Broadcasting transactions(Not verifying contracts)    |     txform     | Broadcasting transactions(Not verifying contracts)form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHex |     string     | Transaction serialization16Hexadecimal Strings         |            yes             |
 
 #### Return value
-| Field Name   |  Field type   | Parameter Description   |
-| ----- |:-------:| ------ |
-| value | boolean | Whether successful   |
-| hash  | string  | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |  boolean   | Whether successful    |
+| hash       |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -2175,7 +2282,7 @@ _**request form data:**_
 }
 ```
 
-### 3.5 Single transfer
+### 3.6 Single transfer
 #### Cmd: /api/accountledger/transfer
 _**Detailed description: Initiate transfer transactions for a single account or asset**_
 #### HttpMethod: POST
@@ -2187,29 +2294,29 @@ _**Detailed description: Initiate transfer transactions for a single account or 
   "address" : null,
   "toAddress" : null,
   "password" : null,
-  "assetChainId" : null,
-  "assetId" : null,
+  "assetChainId" : 0,
+  "assetId" : 0,
   "amount" : null,
   "remark" : null
 }
 ```
 
 #### parameter list
-| Parameter Name                                                       |     Parameter type     | Parameter Description   | Is it mandatory to fill in |
-| --------------------------------------------------------- |:------------:| ------ |:----:|
-| Single transfer                                                      | transferform | Single transfer form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address   |    string    | Account address   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress |    string    | Account address   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password  |    string    | Account password   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId    |    int       | Asset ChainID   |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId   |    int       | assetID     |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount    |  biginteger  | money     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark    |    string    | Remarks     |  no   |
+| Parameter Name                                               | Parameter type | Parameter Description | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:--------------:| --------------------- |:--------------------------:|
+| Single transfer                                              |  transferform  | Single transfer form  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string     | Account address       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress    |     string     | Account address       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password     |     string     | Account password      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |      int       | Asset ChainID         |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |      int       | assetID               |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger   | money                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark       |     string     | Remarks               |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description   |
-| ----- |:------:| ------ |
-| value | string | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -2238,9 +2345,55 @@ _**request form data:**_
 }
 ```
 
-### 3.6 Offline assembly transfer transaction
+### 3.7 Cross chain transfer
+#### Cmd: /api/accountledger/crossTransfer
+_**Detailed description: Initiate cross chain transfer transactions for single account and single asset transactions**_
+#### HttpMethod: POST
+
+#### Form json data: 
+
+```json
+{
+  "address" : null,
+  "toAddress" : null,
+  "password" : null,
+  "assetChainId" : 0,
+  "assetId" : 0,
+  "amount" : null,
+  "remark" : null
+}
+```
+
+#### parameter list
+| Parameter Name                                               |  Parameter type   | Parameter Description     | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:-----------------:| ------------------------- |:--------------------------:|
+| Cross chain transfer                                         | crosstransferform | Cross chain transfer form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |      string       | 转账地址                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress    |      string       | 接收者地址                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password     |      string       | 密码                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |        int        | 资产chainId                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |        int        | 资产Id                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |    biginteger     | 转账金额                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark       |      string       | 交易备注                      |            yes             |
+
+#### Return value
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 3.8 Offline assembly transfer transaction
 #### Cmd: /api/accountledger/createTransferTxOffline
-_**Detailed description: according toinputsandoutputsOffline assembly transfer transaction, used for single account or multi account transfer transactions. The transaction fee isinputsThe total amount of main assets in the Li Ben Chain, minusoutputsThe total amount of main assets in the Li Ben Chain**_
+_**Detailed description: according toinputsandoutputsOffline assembly transfer transaction, used for single account or multi account transfer transactions.The transaction fee isinputsThe total amount of main assets in the Li Ben Chain, minusoutputsThe total amount of main assets in the Li Ben Chain**_
 #### HttpMethod: POST
 
 #### Form json data: 
@@ -2267,29 +2420,29 @@ _**Detailed description: according toinputsandoutputsOffline assembly transfer t
 ```
 
 #### parameter list
-| Parameter Name                                                                                                          |      Parameter type       | Parameter Description     | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------ |:---------------:| -------- |:----:|
-| transferDto                                                                                                  |   transferdto   | Transfer transaction form   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inputs                                                       | list&lt;object> | Transfer transaction input list |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string      | Account address     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |       int       | The chain of assetsid   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |       int       | assetid     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger    | Asset amount     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |     string      | assetnoncevalue |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                                      | list&lt;object> | Transfer transaction output list |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string      | Account address     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |       int       | The chain of assetsid   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |       int       | assetid     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger    | Asset amount     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime     |      long       | Lock time     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                         |      long       | Creation time     |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                       |     string      | Transaction notes     |  no   |
+| Parameter Name                                                                                               | Parameter type  | Parameter Description     | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:---------------:| ------------------------- |:--------------------------:|
+| transferDto                                                                                                  |   transferdto   | Transfer transaction form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inputs                                                       | list&lt;object> | 转账交易输入列表                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string      | 账户地址                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |       int       | 资产的链id                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |       int       | 资产id                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger    | 资产金额                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |     string      | 资产nonce值                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                                      | list&lt;object> | 转账交易输出列表                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string      | 账户地址                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |       int       | 资产的链id                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |       int       | 资产id                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger    | 资产金额                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime     |      long       | 锁定时间                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                         |      long       | 交易时间                      |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                       |     string      | 交易备注                      |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description         |
-| ----- |:------:| ------------ |
-| hash  | string | transactionhash       |
-| txHex | string | Transaction serialization16Hexadecimal Strings |
+| Field Name | Field type | Parameter Description                          |
+| ---------- |:----------:| ---------------------------------------------- |
+| hash       |   string   | transactionhash                                |
+| txHex      |   string   | Transaction serialization16Hexadecimal Strings |
 #### Example request data: 
 
 _**request path:**_
@@ -2329,7 +2482,70 @@ _**request form data:**_
 }
 ```
 
-### 3.7 Calculate the transaction fee required for offline creation of transfer transactions
+### 3.9 Offline assembly of cross chain transfer transactions
+#### Cmd: /api/accountledger/createCrossTxOffline
+_**Detailed description: according toinputsandoutputsOffline assembly of cross chain transfer transactions, used for single account or multi account transfer transactions.The transaction fee isinputsThe total amount of main assets in the Li Ben Chain, minusoutputsThe total amount of main assets in the local chain, plus the cross chain transferNULSHandling fees**_
+#### HttpMethod: POST
+
+#### Form json data: 
+
+```json
+{
+  "inputs" : [ {
+    "address" : null,
+    "assetChainId" : 0,
+    "assetId" : 0,
+    "amount" : null,
+    "nonce" : null
+  } ],
+  "outputs" : [ {
+    "address" : null,
+    "assetChainId" : 0,
+    "assetId" : 0,
+    "amount" : null,
+    "lockTime" : 0
+  } ],
+  "time" : 0,
+  "remark" : null
+}
+```
+
+#### parameter list
+| Parameter Name                                                                                               | Parameter type  | Parameter Description                 | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:---------------:| ------------------------------------- |:--------------------------:|
+| transferDto                                                                                                  |   transferdto   | Cross chain transfer transaction form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inputs                                                       | list&lt;object> | 转账交易输入列表                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string      | 账户地址                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |       int       | 资产的链id                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |       int       | 资产id                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger    | 资产金额                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |     string      | 资产nonce值                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                                      | list&lt;object> | 转账交易输出列表                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string      | 账户地址                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |       int       | 资产的链id                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |       int       | 资产id                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger    | 资产金额                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime     |      long       | 锁定时间                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time                                                         |      long       | 交易时间                                  |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                       |     string      | 交易备注                                  |             no             |
+
+#### Return value
+| Field Name | Field type | Parameter Description                          |
+| ---------- |:----------:| ---------------------------------------------- |
+| hash       |   string   | transactionhash                                |
+| txHex      |   string   | Transaction serialization16Hexadecimal Strings |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 3.10 Calculate the transaction fee required for offline creation of transfer transactions
 #### Cmd: /api/accountledger/calcTransferTxFee
 _**Detailed description: Calculate the transaction fee required for offline creation of transfer transactions**_
 #### HttpMethod: POST
@@ -2347,19 +2563,19 @@ _**Detailed description: Calculate the transaction fee required for offline crea
 ```
 
 #### parameter list
-| Parameter Name                                                          |       Parameter type       | Parameter Description    | Is it mandatory to fill in |
-| ------------------------------------------------------------ |:----------------:| ------- |:----:|
-| TransferTxFeeDto                                             | transfertxfeedto | Transfer transaction fees |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;addressCount |       int        | Number of transfer addresses  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromLength   |       int        | Transfer input length  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toLength     |       int        | Transfer output length  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark       |      string      | Transaction notes    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price        |    biginteger    | Unit price of handling fee   |  no   |
+| Parameter Name                                               |  Parameter type  | Parameter Description     | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:----------------:| ------------------------- |:--------------------------:|
+| TransferTxFeeDto                                             | transfertxfeedto | Transfer transaction fees |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;addressCount |       int        | 转账地址数量                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromLength   |       int        | 转账输入长度                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toLength     |       int        | 转账输出长度                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark       |      string      | 交易备注                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price        |    biginteger    | 手续费单价                     |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description  |
-| ----- |:------:| ----- |
-| value | string | Transaction fees |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Transaction fees      |
 #### Example request data: 
 
 _**request path:**_
@@ -2388,9 +2604,51 @@ _**request form data:**_
 }
 ```
 
-### 3.8 Multiple account offline assembly transfer transactions
+### 3.11 Calculate the transaction fee required for offline creation of cross chain transfer transactions
+#### Cmd: /api/accountledger/calcCrossTxFee
+_**Detailed description: Calculate the transaction fee required for offline creation of cross chain transfer transactions**_
+#### HttpMethod: POST
+
+#### Form json data: 
+
+```json
+{
+  "addressCount" : 0,
+  "fromLength" : 0,
+  "toLength" : 0,
+  "remark" : null,
+  "price" : null
+}
+```
+
+#### parameter list
+| Parameter Name                                               |  Parameter type  | Parameter Description     | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:----------------:| ------------------------- |:--------------------------:|
+| TransferTxFeeDto                                             | transfertxfeedto | Transfer transaction fees |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;addressCount |       int        | 转账地址数量                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromLength   |       int        | 转账输入长度                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toLength     |       int        | 转账输出长度                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark       |      string      | 交易备注                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price        |    biginteger    | 手续费单价                     |             no             |
+
+#### Return value
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Transaction fees      |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 3.12 Multiple account offline assembly transfer transactions
 #### Cmd: /api/accountledger/createMultiSignTransferTxOffline
-_**Detailed description: according toinputsandoutputsOffline assembly transfer transaction, used for single account or multi account transfer transactions. The transaction fee isinputsThe total amount of main assets in the Li Ben Chain, minusoutputsThe total amount of main assets in the Li Ben Chain**_
+_**Detailed description: according toinputsandoutputsOffline assembly transfer transaction, used for single account or multi account transfer transactions.The transaction fee isinputsThe total amount of main assets in the Li Ben Chain, minusoutputsThe total amount of main assets in the Li Ben Chain**_
 #### HttpMethod: POST
 
 #### Form json data: 
@@ -2418,30 +2676,30 @@ _**Detailed description: according toinputsandoutputsOffline assembly transfer t
 ```
 
 #### parameter list
-| Parameter Name                                                                                                          |         Parameter type         | Parameter Description       | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------ |:--------------------:| ---------- |:----:|
-| transferDto                                                                                                  | multisigntransferdto | Multi signature account transfer transaction form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                      |   list&lt;string>    | Public key set       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                     |         int          | Minimum number of signatures      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inputs                                                       |   list&lt;object>    | Transfer transaction input list   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |        string        | Account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |         int          | The chain of assetsid     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |         int          | assetid       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |      biginteger      | Asset amount       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |        string        | assetnoncevalue   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                                      |   list&lt;object>    | Transfer transaction output list   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |        string        | Account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |         int          | The chain of assetsid     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |         int          | assetid       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |      biginteger      | Asset amount       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime     |         long         | Lock time       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                       |        string        | Transaction notes       |  yes   |
+| Parameter Name                                                                                               |    Parameter type    | Parameter Description                             | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:--------------------:| ------------------------------------------------- |:--------------------------:|
+| transferDto                                                                                                  | multisigntransferdto | Multi signature account transfer transaction form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                      |   list&lt;string>    | 公钥集合                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                     |         int          | 最小签名数                                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inputs                                                       |   list&lt;object>    | 转账交易输入列表                                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |        string        | 账户地址                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |         int          | 资产的链id                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |         int          | 资产id                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |      biginteger      | 资产金额                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |        string        | 资产nonce值                                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                                      |   list&lt;object>    | 转账交易输出列表                                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |        string        | 账户地址                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |         int          | 资产的链id                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |         int          | 资产id                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |      biginteger      | 资产金额                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lockTime     |         long         | 锁定时间                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                       |        string        | 交易备注                                              |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description         |
-| ----- |:------:| ------------ |
-| hash  | string | transactionhash       |
-| txHex | string | Transaction serialization16Hexadecimal Strings |
+| Field Name | Field type | Parameter Description                          |
+| ---------- |:----------:| ---------------------------------------------- |
+| hash       |   string   | transactionhash                                |
+| txHex      |   string   | Transaction serialization16Hexadecimal Strings |
 #### Example request data: 
 
 _**request path:**_
@@ -2483,7 +2741,7 @@ _**request form data:**_
 }
 ```
 
-### 3.9 Calculate the transaction fee required for offline creation of multi signature account transfer transactions
+### 3.13 Calculate the transaction fee required for offline creation of multi signature account transfer transactions
 #### Cmd: /api/accountledger/calcMultiSignTransferTxFee
 _**Detailed description: Calculate the transaction fee required for offline creation of multi signature account transfer transactions**_
 #### HttpMethod: POST
@@ -2501,19 +2759,19 @@ _**Detailed description: Calculate the transaction fee required for offline crea
 ```
 
 #### parameter list
-| Parameter Name                                                         |           Parameter type            | Parameter Description          | Is it mandatory to fill in |
-| ----------------------------------------------------------- |:-------------------------:| ------------- |:----:|
-| MultiSignTransferTxFeeDto                                   | multisigntransfertxfeedto | Multiple account transfer transaction fee form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeyCount |            int            | Number of public keys corresponding to multiple signed addresses    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromLength  |            int            | Transfer input length        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toLength    |            int            | Transfer output length        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark      |          string           | Transaction notes          |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price       |        biginteger         | Unit price of handling fee         |  no   |
+| Parameter Name                                              |      Parameter type       | Parameter Description                          | Is it mandatory to fill in |
+| ----------------------------------------------------------- |:-------------------------:| ---------------------------------------------- |:--------------------------:|
+| MultiSignTransferTxFeeDto                                   | multisigntransfertxfeedto | Multiple account transfer transaction fee form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeyCount |            int            | 多签地址对应公钥数量                                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromLength  |            int            | 转账输入长度                                         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toLength    |            int            | 转账输出长度                                         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark      |          string           | 交易备注                                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price       |        biginteger         | 手续费单价                                          |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description  |
-| ----- |:------:| ----- |
-| value | string | Transaction fees |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | Transaction fees      |
 #### Example request data: 
 
 _**request path:**_
@@ -2563,23 +2821,23 @@ _**Detailed description: Publish contract**_
 ```
 
 #### parameter list
-| Parameter Name                                                          |      Parameter type      | Parameter Description                 | Is it mandatory to fill in |
-| ------------------------------------------------------------ |:--------------:| -------------------- |:----:|
-| Publish contract                                                         | contractcreate | Publish Contract Form               |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender       |     string     | Transaction Creator                |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit     |      long      | maximumgasconsume              |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price        |      long      | Execution contract unit price               |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password     |     string     | Transaction creator account password            |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark       |     string     | Remarks                   |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode |     string     | Smart Contract Code(BytecodeHexEncoding string) |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias        |     string     | Contract alias                 |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args         |    object[]    | parameter list                 |  no   |
+| Parameter Name                                               | Parameter type | Parameter Description                           | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:--------------:| ----------------------------------------------- |:--------------------------:|
+| Publish contract                                             | contractcreate | Publish Contract Form                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender       |     string     | Transaction Creator                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit     |      long      | maximumgasconsume                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price        |      long      | Execution contract unit price                   |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password     |     string     | Transaction creator account password            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark       |     string     | Remarks                                         |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode |     string     | Smart Contract Code(BytecodeHexEncoding string) |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias        |     string     | Contract alias                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args         |    object[]    | parameter list                                  |             no             |
 
 #### Return value
-| Field Name             |  Field type  | Parameter Description        |
-| --------------- |:------:| ----------- |
-| txHash          | string | Transactions for publishing contractshash |
-| contractAddress | string | Generated contract address     |
+| Field Name      | Field type | Parameter Description                     |
+| --------------- |:----------:| ----------------------------------------- |
+| txHash          |   string   | Transactions for publishing contractshash |
+| contractAddress |   string   | Generated contract address                |
 #### Example request data: 
 
 _**request path:**_
@@ -2635,24 +2893,24 @@ _**Detailed description: Call Contract**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |     Parameter type     | Parameter Description                       | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:------------:| -------------------------- |:----:|
-| Call Contract                                                            | contractcall | Call Contract Form                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |    string    | Transaction Creator                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit        |     long     | maximumgasconsume                    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price           |     long     | Execution contract unit price                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |    string    | Transaction creator account password                  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |    string    | Remarks                         |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |    string    | Smart contract address                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value           |  biginteger  | The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0 |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |    string    | Method name                        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |    string    | Method description, if the method in the contract is not overloaded, this parameter can be empty   |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |   object[]   | parameter list                       |  no   |
+| Parameter Name                                                  | Parameter type | Parameter Description                                                                                                                      | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:--------------:| ------------------------------------------------------------------------------------------------------------------------------------------ |:--------------------------:|
+| Call Contract                                                   |  contractcall  | Call Contract Form                                                                                                                         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |     string     | Transaction Creator                                                                                                                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit        |      long      | maximumgasconsume                                                                                                                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price           |      long      | Execution contract unit price                                                                                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |     string     | Transaction creator account password                                                                                                       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |     string     | Remarks                                                                                                                                    |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |     string     | Smart contract address                                                                                                                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value           |   biginteger   | The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |     string     | Method name                                                                                                                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |     string     | Method description, if the method in the contract is not overloaded, this parameter can be empty                                           |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |    object[]    | parameter list                                                                                                                             |             no             |
 
 #### Return value
-| Field Name    |  Field type  | Parameter Description        |
-| ------ |:------:| ----------- |
-| txHash | string | Transaction calling contracthash |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| txHash     |   string   | Transaction calling contracthash |
 #### Example request data: 
 
 _**request path:**_
@@ -2703,18 +2961,18 @@ _**Detailed description: Delete contract**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |      Parameter type      | Parameter Description      | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:--------------:| --------- |:----:|
-| Delete contract                                                            | contractdelete | Delete Contract Form    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |     string     | Transaction Creator     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |     string     | Smart contract address    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |     string     | Transaction creator account password |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |     string     | Remarks        |  no   |
+| Parameter Name                                                  | Parameter type | Parameter Description                | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:--------------:| ------------------------------------ |:--------------------------:|
+| Delete contract                                                 | contractdelete | Delete Contract Form                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |     string     | Transaction Creator                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |     string     | Smart contract address               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |     string     | Transaction creator account password |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |     string     | Remarks                              |             no             |
 
 #### Return value
-| Field Name    |  Field type  | Parameter Description        |
-| ------ |:------:| ----------- |
-| txHash | string | Delete transactions for contractshash |
+| Field Name | Field type | Parameter Description                 |
+| ---------- |:----------:| ------------------------------------- |
+| txHash     |   string   | Delete transactions for contractshash |
 #### Example request data: 
 
 _**request path:**_
@@ -2761,20 +3019,20 @@ _**Detailed description: contracttokenTransfer**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |         Parameter type          | Parameter Description         | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:---------------------:| ------------ |:----:|
-| tokenTransfer                                                         | contracttokentransfer | tokenTransfer Form    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromAddress     |        string         | Transferor's account address      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |        string         | Transferor account address password    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress       |        string         | Transferee's account address      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |        string         | Contract address         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount          |      biginteger       | Transferred outtokenAsset amount |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |        string         | Remarks           |  no   |
+| Parameter Name                                                  |    Parameter type     | Parameter Description               | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:---------------------:| ----------------------------------- |:--------------------------:|
+| tokenTransfer                                                   | contracttokentransfer | tokenTransfer Form                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromAddress     |        string         | Transferor's account address        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password        |        string         | Transferor account address password |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress       |        string         | Transferee's account address        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |        string         | Contract address                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount          |      biginteger       | Transferred outtokenAsset amount    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |        string         | Remarks                             |             no             |
 
 #### Return value
-| Field Name    |  Field type  | Parameter Description   |
-| ------ |:------:| ------ |
-| txHash | string | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| txHash     |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -2822,19 +3080,19 @@ _**Detailed description: Transfer from account address to contract address(Main 
 ```
 
 #### parameter list
-| Parameter Name                                                         |       Parameter type       | Parameter Description      | Is it mandatory to fill in |
-| ----------------------------------------------------------- |:----------------:| --------- |:----:|
-| Transfer to the contracted address                                                     | contracttransfer | Transfer Form to Contract Address |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromAddress |      string      | Transferor's account address   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password    |      string      | Transferor account address password |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress   |      string      | Transferred contract address   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount      |    biginteger    | The amount of main chain assets transferred out |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark      |      string      | Remarks        |  no   |
+| Parameter Name                                              |  Parameter type  | Parameter Description                           | Is it mandatory to fill in |
+| ----------------------------------------------------------- |:----------------:| ----------------------------------------------- |:--------------------------:|
+| Transfer to the contracted address                          | contracttransfer | Transfer Form to Contract Address               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromAddress |      string      | Transferor's account address                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password    |      string      | Transferor account address password             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress   |      string      | Transferred contract address                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount      |    biginteger    | The amount of main chain assets transferred out |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark      |      string      | Remarks                                         |             no             |
 
 #### Return value
-| Field Name    |  Field type  | Parameter Description   |
-| ------ |:------:| ------ |
-| txHash | string | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| txHash     |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -2869,21 +3127,21 @@ _**Detailed description: Obtain the specified contract for the account addressto
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name             |  Parameter type  | Parameter Description | Is it mandatory to fill in |
-| --------------- |:------:| ---- |:----:|
-| contractAddress | string | Contract address |  yes   |
-| address         | string | Account address |  yes   |
+| Parameter Name  | Parameter type | Parameter Description | Is it mandatory to fill in |
+| --------------- |:--------------:| --------------------- |:--------------------------:|
+| contractAddress |     string     | Contract address      |            yes             |
+| address         |     string     | Account address       |            yes             |
 
 #### Return value
-| Field Name             |  Field type  | Parameter Description                    |
-| --------------- |:------:| ----------------------- |
-| contractAddress | string | Contract address                    |
-| name            | string | tokenname                 |
-| symbol          | string | tokensymbol                 |
-| amount          | string | tokenquantity                 |
-| decimals        |  long  | tokenSupported Decimal Places            |
-| blockHeight     |  long  | Block height during contract creation              |
-| status          |  int   | Contract status(0-Not present, 1-normal, 2-termination) |
+| Field Name      | Field type | Parameter Description                                   |
+| --------------- |:----------:| ------------------------------------------------------- |
+| contractAddress |   string   | Contract address                                        |
+| name            |   string   | tokenname                                               |
+| symbol          |   string   | tokensymbol                                             |
+| amount          |   string   | tokenquantity                                           |
+| decimals        |    long    | tokenSupported Decimal Places                           |
+| blockHeight     |    long    | Block height during contract creation                   |
+| status          |    int     | Contract status(0-Not present, 1-normal, 2-termination) |
 #### Example request data: 
 
 _**request path:**_
@@ -2915,39 +3173,39 @@ _**Detailed description: Get detailed information about smart contracts**_
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name     |  Parameter type  | Parameter Description | Is it mandatory to fill in |
-| ------- |:------:| ---- |:----:|
-| address | string | Contract address |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| address        |     string     | Contract address      |            yes             |
 
 #### Return value
-| Field Name                                                                                                      |      Field type       | Parameter Description                                       |
-| -------------------------------------------------------------------------------------------------------- |:---------------:| ------------------------------------------ |
-| createTxHash                                                                                             |     string      | Transactions for publishing contractshash                                |
-| address                                                                                                  |     string      | Contract address                                       |
-| creater                                                                                                  |     string      | Contract Creator Address                                    |
-| alias                                                                                                    |     string      | Contract alias                                       |
-| createTime                                                                                               |      long       | Contract creation time（unit：second）                               |
-| blockHeight                                                                                              |      long       | Block height during contract creation                                 |
-| isDirectPayable                                                                                          |     boolean     | Do you accept direct transfer                                   |
-| tokenType                                                                                                |       int       | tokentype, 0 - wrongtoken, 1 - NRC20, 2 - NRC721 |
-| isNrc20                                                                                                  |     boolean     | Is itNRC20contract                                 |
-| nrc20TokenName                                                                                           |     string      | NRC20-tokenname                              |
-| nrc20TokenSymbol                                                                                         |     string      | NRC20-tokensymbol                              |
-| decimals                                                                                                 |      long       | NRC20-tokenSupported Decimal Places                         |
-| totalSupply                                                                                              |     string      | NRC20-tokenTotal issuance amount                            |
-| status                                                                                                   |     string      | Contract status（not_found, normal, stop）              |
-| method                                                                                                   | list&lt;object> | List of Contract Methods                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name                                                     |     string      | Method Name                                       |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;desc                                                     |     string      | Method description                                       |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args                                                     | list&lt;object> | Method parameter list                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type     |     string      | Parameter type                                       |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name     |     string      | Parameter Name                                       |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required |     boolean     | Is it mandatory to fill in                                       |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnArg                                                |     string      | return type                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;view                                                     |     boolean     | View Method（Call this method and the data will not be linked）                         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event                                                    |     boolean     | Is it an event                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;payable                                                  |     boolean     | Is it an acceptable method for transferring main chain assets                            |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jsonSerializable                                         |     boolean     | Is the method return valueJSONserialize                             |
+| Field Name                                                                                               |   Field type    | Parameter Description                                         |
+| -------------------------------------------------------------------------------------------------------- |:---------------:| ------------------------------------------------------------- |
+| createTxHash                                                                                             |     string      | Transactions for publishing contractshash                     |
+| address                                                                                                  |     string      | Contract address                                              |
+| creater                                                                                                  |     string      | Contract Creator Address                                      |
+| alias                                                                                                    |     string      | Contract alias                                                |
+| createTime                                                                                               |      long       | Contract creation time（unit：second）                           |
+| blockHeight                                                                                              |      long       | Block height during contract creation                         |
+| isDirectPayable                                                                                          |     boolean     | Do you accept direct transfer                                 |
+| tokenType                                                                                                |       int       | tokentype, 0 - wrongtoken, 1 - NRC20, 2 - NRC721              |
+| isNrc20                                                                                                  |     boolean     | Is itNRC20contract                                            |
+| nrc20TokenName                                                                                           |     string      | NRC20-tokenname                                               |
+| nrc20TokenSymbol                                                                                         |     string      | NRC20-tokensymbol                                             |
+| decimals                                                                                                 |      long       | NRC20-tokenSupported Decimal Places                           |
+| totalSupply                                                                                              |     string      | NRC20-tokenTotal issuance amount                              |
+| status                                                                                                   |     string      | Contract status（not_found, normal, stop）                      |
+| method                                                                                                   | list&lt;object> | List of Contract Methods                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name                                                     |     string      | Method Name                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;desc                                                     |     string      | Method description                                            |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args                                                     | list&lt;object> | Method parameter list                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type     |     string      | Parameter type                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name     |     string      | Parameter Name                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required |     boolean     | Is it mandatory to fill in                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnArg                                                |     string      | return type                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;view                                                     |     boolean     | View Method（Call this method and the data will not be linked） |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event                                                    |     boolean     | Is it an event                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;payable                                                  |     boolean     | Is it an acceptable method for transferring main chain assets |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jsonSerializable                                         |     boolean     | Is the method return valueJSONserialize                       |
 #### Example request data: 
 
 _**request path:**_
@@ -3090,51 +3348,51 @@ _**Detailed description: Obtain the execution results of smart contracts**_
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name  |  Parameter type  | Parameter Description   | Is it mandatory to fill in |
-| ---- |:------:| ------ |:----:|
-| hash | string | transactionhash |  yes   |
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| hash           |     string     | transactionhash       |            yes             |
 
 #### Return value
-| Field Name                                                                                                   |      Field type       | Parameter Description                                        |
-| ----------------------------------------------------------------------------------------------------- |:---------------:| ------------------------------------------- |
-| success                                                                                               |     boolean     | Whether the contract execution was successful                                    |
-| errorMessage                                                                                          |     string      | Execution failure information                                      |
-| contractAddress                                                                                       |     string      | Contract address                                        |
-| result                                                                                                |     string      | Contract execution results                                      |
-| gasLimit                                                                                              |      long       | GASlimit                                       |
-| gasUsed                                                                                               |      long       | UsedGAS                                      |
-| price                                                                                                 |      long       | GASunit price                                       |
-| totalFee                                                                                              |     string      | Total transaction fees                                      |
-| txSizeFee                                                                                             |     string      | Transaction size handling fee                                     |
-| actualContractFee                                                                                     |     string      | Actual contract execution fee                                   |
-| refundFee                                                                                             |     string      | Contract return handling fee                                    |
-| value                                                                                                 |     string      | The amount of main network assets transferred by the caller to the contracted address. If there is no such service, it is:0                 |
-| stackTrace                                                                                            |     string      | Abnormal stack trace                                      |
-| transfers                                                                                             | list&lt;object> | Contract transfer list（Transfer out from contract）                               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHash                                                |     string      | Contract generation transaction：Contract transfer transactionhash                           |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                  |     string      | Transferred contract address                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                 |     string      | Transfer amount                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                               | list&lt;object> | Transferred address list                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to    |     string      | Transfer address                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value |     string      | Transfer amount                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;orginTxHash                                           |     string      | Call contract transactionshash（Source transactionhashContract trading is derived from calling contract trading）         |
-| events                                                                                                | list&lt;string> | Contract Event List                                      |
-| debugEvents                                                                                           | list&lt;string> | Modal Contract Event List                                    |
-| tokenTransfers                                                                                        | list&lt;object> | contracttokenTransfer List                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress                                       |     string      | Contract address                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                  |     string      | Payer                                         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                    |     string      | Payee                                         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                 |     string      | Transfer amount                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name                                                  |     string      | tokenname                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;symbol                                                |     string      | tokensymbol                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;decimals                                              |      long       | tokenSupported Decimal Places                                |
-| invokeRegisterCmds                                                                                    | list&lt;object> | List of call records for contract calls to external commands                             |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cmdName                                               |     string      | Command Name                                        |
+| Field Name                                                                                            |   Field type    | Parameter Description                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------- |:---------------:| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| success                                                                                               |     boolean     | Whether the contract execution was successful                                                                                                         |
+| errorMessage                                                                                          |     string      | Execution failure information                                                                                                                         |
+| contractAddress                                                                                       |     string      | Contract address                                                                                                                                      |
+| result                                                                                                |     string      | Contract execution results                                                                                                                            |
+| gasLimit                                                                                              |      long       | GASlimit                                                                                                                                              |
+| gasUsed                                                                                               |      long       | UsedGAS                                                                                                                                               |
+| price                                                                                                 |      long       | GASunit price                                                                                                                                         |
+| totalFee                                                                                              |     string      | Total transaction fees                                                                                                                                |
+| txSizeFee                                                                                             |     string      | Transaction size handling fee                                                                                                                         |
+| actualContractFee                                                                                     |     string      | Actual contract execution fee                                                                                                                         |
+| refundFee                                                                                             |     string      | Contract return handling fee                                                                                                                          |
+| value                                                                                                 |     string      | The amount of main network assets transferred by the caller to the contracted address. If there is no such service, it is:0                           |
+| stackTrace                                                                                            |     string      | Abnormal stack trace                                                                                                                                  |
+| transfers                                                                                             | list&lt;object> | Contract transfer list（Transfer out from contract）                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHash                                                |     string      | Contract generation transaction：Contract transfer transactionhash                                                                                     |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                  |     string      | Transferred contract address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                 |     string      | Transfer amount                                                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                               | list&lt;object> | Transferred address list                                                                                                                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to    |     string      | Transfer address                                                                                                                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value |     string      | Transfer amount                                                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;orginTxHash                                           |     string      | Call contract transactionshash（Source transactionhashContract trading is derived from calling contract trading）                                       |
+| events                                                                                                | list&lt;string> | Contract Event List                                                                                                                                   |
+| debugEvents                                                                                           | list&lt;string> | Modal Contract Event List                                                                                                                             |
+| tokenTransfers                                                                                        | list&lt;object> | contracttokenTransfer List                                                                                                                            |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress                                       |     string      | Contract address                                                                                                                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                  |     string      | Payer                                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                    |     string      | Payee                                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                 |     string      | Transfer amount                                                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name                                                  |     string      | tokenname                                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;symbol                                                |     string      | tokensymbol                                                                                                                                           |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;decimals                                              |      long       | tokenSupported Decimal Places                                                                                                                         |
+| invokeRegisterCmds                                                                                    | list&lt;object> | List of call records for contract calls to external commands                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cmdName                                               |     string      | Command Name                                                                                                                                          |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args                                                  |       map       | Command parameters are not fixed and come from different commands, so they are not described here. The structure is {Parameter Name=Parameter values} |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cmdRegisterMode                                       |     string      | Registered Command Mode（QUERY\_DATA or NEW\_TX）             |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newTxHash                                             |     string      | Generated transactionshash（When the command mode being called is NEW\_TX When, a transaction will be generated）        |
-| contractTxList                                                                                        | list&lt;string> | Serialized string list for contract generation transactions                             |
-| remark                                                                                                |     string      | Remarks                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cmdRegisterMode                                       |     string      | Registered Command Mode（QUERY\_DATA or NEW\_TX）                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newTxHash                                             |     string      | Generated transactionshash（When the command mode being called is NEW\_TX When, a transaction will be generated）                                       |
+| contractTxList                                                                                        | list&lt;string> | Serialized string list for contract generation transactions                                                                                           |
+| remark                                                                                                |     string      | Remarks                                                                                                                                               |
 #### Example request data: 
 
 _**request path:**_
@@ -3225,53 +3483,53 @@ _**Detailed description: Obtain a list of smart contract execution results**_
 ```
 
 #### parameter list
-| Parameter Name                                                      |          Parameter type          | Parameter Description           | Is it mandatory to fill in |
-| -------------------------------------------------------- |:----------------------:| -------------- |:----:|
-| Obtain a list of smart contract execution results                                             | contractresultlistform | Get the smart contract execution result list form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hashList |    list&lt;string>     | transactionhashlist       |  yes   |
+| Parameter Name                                           |     Parameter type     | Parameter Description                             | Is it mandatory to fill in |
+| -------------------------------------------------------- |:----------------------:| ------------------------------------------------- |:--------------------------:|
+| Obtain a list of smart contract execution results        | contractresultlistform | Get the smart contract execution result list form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hashList |    list&lt;string>     | transactionhashlist                               |            yes             |
 
 #### Return value
-| Field Name                                                                                                                                                   |      Field type       | Parameter Description                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------- |:---------------:| ------------------------------------------- |
-| hash1 or hash2 or hash3...                                                                                                                            |     object      | TradinghashIn the listhashValue askeyHerekey nameIt is dynamic       |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;success                                                                                               |     boolean     | Whether the contract execution was successful                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;errorMessage                                                                                          |     string      | Execution failure information                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress                                                                                       |     string      | Contract address                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;result                                                                                                |     string      | Contract execution results                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit                                                                                              |      long       | GASlimit                                       |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasUsed                                                                                               |      long       | UsedGAS                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                                                                 |      long       | GASunit price                                       |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;totalFee                                                                                              |     string      | Total transaction fees                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txSizeFee                                                                                             |     string      | Transaction size handling fee                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;actualContractFee                                                                                     |     string      | Actual contract execution fee                                   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;refundFee                                                                                             |     string      | Contract return handling fee                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                                                                 |     string      | The amount of main network assets transferred by the caller to the contracted address. If there is no such service, it is:0                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stackTrace                                                                                            |     string      | Abnormal stack trace                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transfers                                                                                             | list&lt;object> | Contract transfer list（Transfer out from contract）                               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHash                                                |     string      | Contract generation transaction：Contract transfer transactionhash                           |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                  |     string      | Transferred contract address                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                 |     string      | Transfer amount                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                               | list&lt;object> | Transferred address list                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to    |     string      | Transfer address                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value |     string      | Transfer amount                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;orginTxHash                                           |     string      | Call contract transactionshash（Source transactionhashContract trading is derived from calling contract trading）         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;events                                                                                                | list&lt;string> | Contract Event List                                      |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debugEvents                                                                                           | list&lt;string> | Modal Contract Event List                                    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tokenTransfers                                                                                        | list&lt;object> | contracttokenTransfer List                                 |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress                                       |     string      | Contract address                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                  |     string      | Payer                                         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                    |     string      | Payee                                         |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                 |     string      | Transfer amount                                        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name                                                  |     string      | tokenname                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;symbol                                                |     string      | tokensymbol                                     |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;decimals                                              |      long       | tokenSupported Decimal Places                                |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;invokeRegisterCmds                                                                                    | list&lt;object> | List of call records for contract calls to external commands                             |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cmdName                                               |     string      | Command Name                                        |
+| Field Name                                                                                                                                            |   Field type    | Parameter Description                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- |:---------------:| ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| hash1 or hash2 or hash3...                                                                                                                            |     object      | TradinghashIn the listhashValue askeyHerekey nameIt is dynamic                                                                                        |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;success                                                                                               |     boolean     | Whether the contract execution was successful                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;errorMessage                                                                                          |     string      | Execution failure information                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress                                                                                       |     string      | Contract address                                                                                                                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;result                                                                                                |     string      | Contract execution results                                                                                                                            |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit                                                                                              |      long       | GASlimit                                                                                                                                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasUsed                                                                                               |      long       | UsedGAS                                                                                                                                               |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                                                                 |      long       | GASunit price                                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;totalFee                                                                                              |     string      | Total transaction fees                                                                                                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txSizeFee                                                                                             |     string      | Transaction size handling fee                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;actualContractFee                                                                                     |     string      | Actual contract execution fee                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;refundFee                                                                                             |     string      | Contract return handling fee                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                                                                 |     string      | The amount of main network assets transferred by the caller to the contracted address. If there is no such service, it is:0                           |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stackTrace                                                                                            |     string      | Abnormal stack trace                                                                                                                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transfers                                                                                             | list&lt;object> | Contract transfer list（Transfer out from contract）                                                                                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHash                                                |     string      | Contract generation transaction：Contract transfer transactionhash                                                                                     |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                  |     string      | Transferred contract address                                                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                 |     string      | Transfer amount                                                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outputs                                               | list&lt;object> | Transferred address list                                                                                                                              |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to    |     string      | Transfer address                                                                                                                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value |     string      | Transfer amount                                                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;orginTxHash                                           |     string      | Call contract transactionshash（Source transactionhashContract trading is derived from calling contract trading）                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;events                                                                                                | list&lt;string> | Contract Event List                                                                                                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;debugEvents                                                                                           | list&lt;string> | Modal Contract Event List                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tokenTransfers                                                                                        | list&lt;object> | contracttokenTransfer List                                                                                                                            |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress                                       |     string      | Contract address                                                                                                                                      |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from                                                  |     string      | Payer                                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to                                                    |     string      | Payee                                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value                                                 |     string      | Transfer amount                                                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name                                                  |     string      | tokenname                                                                                                                                             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;symbol                                                |     string      | tokensymbol                                                                                                                                           |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;decimals                                              |      long       | tokenSupported Decimal Places                                                                                                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;invokeRegisterCmds                                                                                    | list&lt;object> | List of call records for contract calls to external commands                                                                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cmdName                                               |     string      | Command Name                                                                                                                                          |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args                                                  |       map       | Command parameters are not fixed and come from different commands, so they are not described here. The structure is {Parameter Name=Parameter values} |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cmdRegisterMode                                       |     string      | Registered Command Mode（QUERY\_DATA or NEW\_TX）             |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newTxHash                                             |     string      | Generated transactionshash（When the command mode being called is NEW\_TX When, a transaction will be generated）        |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractTxList                                                                                        | list&lt;string> | Serialized string list for contract generation transactions                             |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                                                                |     string      | Remarks                                          |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cmdRegisterMode                                       |     string      | Registered Command Mode（QUERY\_DATA or NEW\_TX）                                                                                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newTxHash                                             |     string      | Generated transactionshash（When the command mode being called is NEW\_TX When, a transaction will be generated）                                       |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractTxList                                                                                        | list&lt;string> | Serialized string list for contract generation transactions                                                                                           |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark                                                                                                |     string      | Remarks                                                                                                                                               |
 #### Example request data: 
 
 _**request path:**_
@@ -3388,27 +3646,27 @@ _**Detailed description: Get contract code constructor**_
 ```
 
 #### parameter list
-| Parameter Name                                                          |     Parameter type     | Parameter Description                 | Is it mandatory to fill in |
-| ------------------------------------------------------------ |:------------:| -------------------- |:----:|
-| Get contract code constructor                                                   | contractcode | Get Contract Code Constructor Form         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode |    string    | Smart Contract Code(BytecodeHexEncoding string) |  yes   |
+| Parameter Name                                               | Parameter type | Parameter Description                           | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:--------------:| ----------------------------------------------- |:--------------------------:|
+| Get contract code constructor                                |  contractcode  | Get Contract Code Constructor Form              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode |     string     | Smart Contract Code(BytecodeHexEncoding string) |            yes             |
 
 #### Return value
-| Field Name                                                                                                      |      Field type       | Parameter Description               |
-| -------------------------------------------------------------------------------------------------------- |:---------------:| ------------------ |
-| constructor                                                                                              |     object      | Contract constructor details           |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name                                                     |     string      | Method Name               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;desc                                                     |     string      | Method description               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args                                                     | list&lt;object> | Method parameter list             |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type     |     string      | Parameter type               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name     |     string      | Parameter Name               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required |     boolean     | Is it mandatory to fill in               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnArg                                                |     string      | return type              |
+| Field Name                                                                                               |   Field type    | Parameter Description                                         |
+| -------------------------------------------------------------------------------------------------------- |:---------------:| ------------------------------------------------------------- |
+| constructor                                                                                              |     object      | Contract constructor details                                  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name                                                     |     string      | Method Name                                                   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;desc                                                     |     string      | Method description                                            |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args                                                     | list&lt;object> | Method parameter list                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type     |     string      | Parameter type                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name     |     string      | Parameter Name                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required |     boolean     | Is it mandatory to fill in                                    |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnArg                                                |     string      | return type                                                   |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;view                                                     |     boolean     | View Method（Call this method and the data will not be linked） |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event                                                    |     boolean     | Is it an event              |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;payable                                                  |     boolean     | Is it an acceptable method for transferring main chain assets    |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jsonSerializable                                         |     boolean     | Is the method return valueJSONserialize     |
-| isNrc20                                                                                                  |     boolean     | Is itNRC20contract         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event                                                    |     boolean     | Is it an event                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;payable                                                  |     boolean     | Is it an acceptable method for transferring main chain assets |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jsonSerializable                                         |     boolean     | Is the method return valueJSONserialize                       |
+| isNrc20                                                                                                  |     boolean     | Is itNRC20contract                                            |
 #### Example request data: 
 
 _**request path:**_
@@ -3474,27 +3732,27 @@ _**Detailed description: Obtain information on the specified function of the pub
 ```
 
 #### parameter list
-| Parameter Name                                                             |        Parameter type        | Parameter Description                     | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:------------------:| ------------------------ |:----:|
-| Obtain information on the specified function of the published contract                                                  | contractmethodform | Get the information form for the specified function of the published contract         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |       string       | Smart contract address                   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |       string       | Method name                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |       string       | Method description, if the method in the contract is not overloaded, this parameter can be empty |  no   |
+| Parameter Name                                                         |   Parameter type   | Parameter Description                                                                            | Is it mandatory to fill in |
+| ---------------------------------------------------------------------- |:------------------:| ------------------------------------------------------------------------------------------------ |:--------------------------:|
+| Obtain information on the specified function of the published contract | contractmethodform | Get the information form for the specified function of the published contract                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress        |       string       | Smart contract address                                                                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName             |       string       | Method name                                                                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc             |       string       | Method description, if the method in the contract is not overloaded, this parameter can be empty |             no             |
 
 #### Return value
-| Field Name                                                      |      Field type       | Parameter Description               |
-| -------------------------------------------------------- |:---------------:| ------------------ |
-| name                                                     |     string      | Method Name               |
-| desc                                                     |     string      | Method description               |
-| args                                                     | list&lt;object> | Method parameter list             |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type     |     string      | Parameter type               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name     |     string      | Parameter Name               |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required |     boolean     | Is it mandatory to fill in               |
-| returnArg                                                |     string      | return type              |
+| Field Name                                               |   Field type    | Parameter Description                                         |
+| -------------------------------------------------------- |:---------------:| ------------------------------------------------------------- |
+| name                                                     |     string      | Method Name                                                   |
+| desc                                                     |     string      | Method description                                            |
+| args                                                     | list&lt;object> | Method parameter list                                         |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type     |     string      | Parameter type                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name     |     string      | Parameter Name                                                |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required |     boolean     | Is it mandatory to fill in                                    |
+| returnArg                                                |     string      | return type                                                   |
 | view                                                     |     boolean     | View Method（Call this method and the data will not be linked） |
-| event                                                    |     boolean     | Is it an event              |
-| payable                                                  |     boolean     | Is it an acceptable method for transferring main chain assets    |
-| jsonSerializable                                         |     boolean     | Is the method return valueJSONserialize     |
+| event                                                    |     boolean     | Is it an event                                                |
+| payable                                                  |     boolean     | Is it an acceptable method for transferring main chain assets |
+| jsonSerializable                                         |     boolean     | Is the method return valueJSONserialize                       |
 #### Example request data: 
 
 _**request path:**_
@@ -3567,17 +3825,17 @@ _**Detailed description: Get a list of parameter types for specified functions i
 ```
 
 #### parameter list
-| Parameter Name                                                             |        Parameter type        | Parameter Description                     | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:------------------:| ------------------------ |:----:|
-| Get a list of parameter types for specified functions in published contracts                                              | contractmethodform | Get the parameter type form for the function specified in the published contract       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |       string       | Smart contract address                   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |       string       | Method name                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |       string       | Method description, if the method in the contract is not overloaded, this parameter can be empty |  no   |
+| Parameter Name                                                               |   Parameter type   | Parameter Description                                                                            | Is it mandatory to fill in |
+| ---------------------------------------------------------------------------- |:------------------:| ------------------------------------------------------------------------------------------------ |:--------------------------:|
+| Get a list of parameter types for specified functions in published contracts | contractmethodform | Get the parameter type form for the function specified in the published contract                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress              |       string       | Smart contract address                                                                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName                   |       string       | Method name                                                                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc                   |       string       | Method description, if the method in the contract is not overloaded, this parameter can be empty |             no             |
 
 #### Return value
-| Field Name |      Field type       | Parameter Description |
-| --- |:---------------:| ---- |
-| Return value | list&lt;string> |      |
+| Field Name   |   Field type    | Parameter Description |
+| ------------ |:---------------:| --------------------- |
+| Return value | list&lt;string> |                       |
 #### Example request data: 
 
 _**request path:**_
@@ -3620,21 +3878,21 @@ _**Detailed description: Verify release contract**_
 ```
 
 #### parameter list
-| Parameter Name                                                          |          Parameter type          | Parameter Description                 | Is it mandatory to fill in |
-| ------------------------------------------------------------ |:----------------------:| -------------------- |:----:|
-| Verify release contract                                                       | contractvalidatecreate | Verify and publish the contract form             |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender       |         string         | Transaction Creator                |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit     |          long          | maximumgasconsume              |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price        |          long          | Execution contract unit price               |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode |         string         | Smart Contract Code(BytecodeHexEncoding string) |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args         |        object[]        | parameter list                 |  no   |
+| Parameter Name                                               |     Parameter type     | Parameter Description                           | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:----------------------:| ----------------------------------------------- |:--------------------------:|
+| Verify release contract                                      | contractvalidatecreate | Verify and publish the contract form            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender       |         string         | Transaction Creator                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit     |          long          | maximumgasconsume                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price        |          long          | Execution contract unit price                   |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode |         string         | Smart Contract Code(BytecodeHexEncoding string) |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args         |        object[]        | parameter list                                  |             no             |
 
 #### Return value
-| Field Name     |  Field type   | Parameter Description      |
-| ------- |:-------:| --------- |
-| success | boolean | Verification success or failure    |
-| code    | string  | Error code for verification failure  |
-| msg     | string  | Error message for verification failure |
+| Field Name | Field type | Parameter Description                  |
+| ---------- |:----------:| -------------------------------------- |
+| success    |  boolean   | Verification success or failure        |
+| code       |   string   | Error code for verification failure    |
+| msg        |   string   | Error message for verification failure |
 #### Example request data: 
 
 _**request path:**_
@@ -3660,7 +3918,7 @@ _**request form data:**_
   "data" : {
     "success" : true
   }
-}, pub ]
+}, "Example of verification failure, please refer to[/api/contract/validate/call] - Verify Call Contract" ]
 ```
 
 ### 4.14 Verify Call Contract
@@ -3684,24 +3942,24 @@ _**Detailed description: Verify Call Contract**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |         Parameter type         | Parameter Description                       | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:--------------------:| -------------------------- |:----:|
-| Verify Call Contract                                                          | contractvalidatecall | Verify Call Contract Form                   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |        string        | Transaction Creator                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value           |         long         | The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0 |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit        |         long         | maximumgasconsume                    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price           |         long         | Execution contract unit price                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |        string        | Smart contract address                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |        string        | Method Name                       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |        string        | Method description, if the method in the contract is not overloaded, this parameter can be empty   |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |       object[]       | parameter list                       |  no   |
+| Parameter Name                                                  |    Parameter type    | Parameter Description                                                                                                                      | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:--------------------:| ------------------------------------------------------------------------------------------------------------------------------------------ |:--------------------------:|
+| Verify Call Contract                                            | contractvalidatecall | Verify Call Contract Form                                                                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |        string        | Transaction Creator                                                                                                                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value           |         long         | The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0 |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit        |         long         | maximumgasconsume                                                                                                                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price           |         long         | Execution contract unit price                                                                                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |        string        | Smart contract address                                                                                                                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |        string        | Method Name                                                                                                                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |        string        | Method description, if the method in the contract is not overloaded, this parameter can be empty                                           |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |       object[]       | parameter list                                                                                                                             |             no             |
 
 #### Return value
-| Field Name     |  Field type   | Parameter Description      |
-| ------- |:-------:| --------- |
-| success | boolean | Verification success or failure    |
-| code    | string  | Error code for verification failure  |
-| msg     | string  | Error message for verification failure |
+| Field Name | Field type | Parameter Description                  |
+| ---------- |:----------:| -------------------------------------- |
+| success    |  boolean   | Verification success or failure        |
+| code       |   string   | Error code for verification failure    |
+| msg        |   string   | Error message for verification failure |
 #### Example request data: 
 
 _**request path:**_
@@ -3755,18 +4013,18 @@ _**Detailed description: Verify deletion of contract**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |          Parameter type          | Parameter Description     | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:----------------------:| -------- |:----:|
-| Verify deletion of contract                                                          | contractvalidatedelete | Verify Delete Contract Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |         string         | Transaction Creator    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |         string         | Smart contract address   |  yes   |
+| Parameter Name                                                  |     Parameter type     | Parameter Description       | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:----------------------:| --------------------------- |:--------------------------:|
+| Verify deletion of contract                                     | contractvalidatedelete | Verify Delete Contract Form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |         string         | Transaction Creator         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |         string         | Smart contract address      |            yes             |
 
 #### Return value
-| Field Name     |  Field type   | Parameter Description      |
-| ------- |:-------:| --------- |
-| success | boolean | Verification success or failure    |
-| code    | string  | Error code for verification failure  |
-| msg     | string  | Error message for verification failure |
+| Field Name | Field type | Parameter Description                  |
+| ---------- |:----------:| -------------------------------------- |
+| success    |  boolean   | Verification success or failure        |
+| code       |   string   | Error code for verification failure    |
+| msg        |   string   | Error message for verification failure |
 #### Example request data: 
 
 _**request path:**_
@@ -3808,17 +4066,17 @@ _**Detailed description: Estimate the release of contract transactionsGAS**_
 ```
 
 #### parameter list
-| Parameter Name                                                          |           Parameter type           | Parameter Description                 | Is it mandatory to fill in |
-| ------------------------------------------------------------ |:------------------------:| -------------------- |:----:|
-| Estimate the release of contract transactionsGAS                                                 | imputedgascontractcreate | Estimate the release of contract transactionsGASform       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender       |          string          | Transaction Creator                |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode |          string          | Smart Contract Code(BytecodeHexEncoding string) |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args         |         object[]         | parameter list                 |  no   |
+| Parameter Name                                               |      Parameter type      | Parameter Description                                | Is it mandatory to fill in |
+| ------------------------------------------------------------ |:------------------------:| ---------------------------------------------------- |:--------------------------:|
+| Estimate the release of contract transactionsGAS             | imputedgascontractcreate | Estimate the release of contract transactionsGASform |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender       |          string          | Transaction Creator                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode |          string          | Smart Contract Code(BytecodeHexEncoding string)      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args         |         object[]         | parameter list                                       |             no             |
 
 #### Return value
-| Field Name      | Field type | Parameter Description              |
-| -------- |:----:| ----------------- |
-| gasLimit | long | ConsumablegasValue, return value for execution failure1 |
+| Field Name | Field type | Parameter Description                                   |
+| ---------- |:----------:| ------------------------------------------------------- |
+| gasLimit   |    long    | ConsumablegasValue, return value for execution failure1 |
 #### Example request data: 
 
 _**request path:**_
@@ -3864,20 +4122,20 @@ _**Detailed description: Estimating the call to contract transactionsGAS**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |          Parameter type          | Parameter Description                       | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:----------------------:| -------------------------- |:----:|
-| Estimating the call to contract transactionsGAS                                                    | imputedgascontractcall | Estimating the call to contract transactionsGASform             |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |         string         | Transaction Creator                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value           |       biginteger       | The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0 |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |         string         | Smart contract address                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |         string         | Method Name                       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |         string         | Method description, if the method in the contract is not overloaded, this parameter can be empty   |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |        object[]        | parameter list                       |  no   |
+| Parameter Name                                                  |     Parameter type     | Parameter Description                                                                                                                      | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:----------------------:| ------------------------------------------------------------------------------------------------------------------------------------------ |:--------------------------:|
+| Estimating the call to contract transactionsGAS                 | imputedgascontractcall | Estimating the call to contract transactionsGASform                                                                                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |         string         | Transaction Creator                                                                                                                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value           |       biginteger       | The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0 |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |         string         | Smart contract address                                                                                                                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |         string         | Method Name                                                                                                                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |         string         | Method description, if the method in the contract is not overloaded, this parameter can be empty                                           |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |        object[]        | parameter list                                                                                                                             |             no             |
 
 #### Return value
-| Field Name      | Field type | Parameter Description              |
-| -------- |:----:| ----------------- |
-| gasLimit | long | ConsumablegasValue, return value for execution failure1 |
+| Field Name | Field type | Parameter Description                                   |
+| ---------- |:----------:| ------------------------------------------------------- |
+| gasLimit   |    long    | ConsumablegasValue, return value for execution failure1 |
 #### Example request data: 
 
 _**request path:**_
@@ -3924,18 +4182,18 @@ _**Detailed description: Call the contract not on chain method**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |       Parameter type       | Parameter Description                     | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:----------------:| ------------------------ |:----:|
-| Call the contract not on chain method                                                       | contractviewcall | Call contract non chain method form              |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |      string      | Smart contract address                   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |      string      | Method Name                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |      string      | Method description, if the method in the contract is not overloaded, this parameter can be empty |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |     object[]     | parameter list                     |  no   |
+| Parameter Name                                                  |  Parameter type  | Parameter Description                                                                            | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:----------------:| ------------------------------------------------------------------------------------------------ |:--------------------------:|
+| Call the contract not on chain method                           | contractviewcall | Call contract non chain method form                                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |      string      | Smart contract address                                                                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |      string      | Method Name                                                                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |      string      | Method description, if the method in the contract is not overloaded, this parameter can be empty |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |     object[]     | parameter list                                                                                   |             no             |
 
 #### Return value
-| Field Name    |  Field type  | Parameter Description      |
-| ------ |:------:| --------- |
-| result | string | The call result of the view method |
+| Field Name | Field type | Parameter Description              |
+| ---------- |:----------:| ---------------------------------- |
+| result     |   string   | The call result of the view method |
 #### Example request data: 
 
 _**request path:**_
@@ -3985,25 +4243,25 @@ _**Detailed description: Offline assembly - Transactions for publishing contract
 ```
 
 #### parameter list
-| Parameter Name                                                           |         Parameter type          | Parameter Description                 | Is it mandatory to fill in |
-| ------------------------------------------------------------- |:---------------------:| -------------------- |:----:|
-| Publish offline transactions for contracts                                                      | contractcreateoffline | Publish offline transaction forms for contracts           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender        |        string         | Transaction Creator                |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance |      biginteger       | Account balance                 |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |        string         | accountnoncevalue             |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias         |        string         | Contract alias                 |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode  |        string         | Smart Contract Code(BytecodeHexEncoding string) |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit      |         long          | GASlimit                |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args          |       object[]        | parameter list                 |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argsType      |       string[]        | Parameter Type List               |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark        |        string         | Remarks                   |  no   |
+| Parameter Name                                                |    Parameter type     | Parameter Description                           | Is it mandatory to fill in |
+| ------------------------------------------------------------- |:---------------------:| ----------------------------------------------- |:--------------------------:|
+| Publish offline transactions for contracts                    | contractcreateoffline | Publish offline transaction forms for contracts |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender        |        string         | Transaction Creator                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance |      biginteger       | Account balance                                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |        string         | accountnoncevalue                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alias         |        string         | Contract alias                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractCode  |        string         | Smart Contract Code(BytecodeHexEncoding string) |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit      |         long          | GASlimit                                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args          |       object[]        | parameter list                                  |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argsType      |       string[]        | Parameter Type List                             |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark        |        string         | Remarks                                         |             no             |
 
 #### Return value
-| Field Name             |  Field type  | Parameter Description     |
-| --------------- |:------:| -------- |
-| hash            | string | transactionhash   |
-| txHex           | string | Transaction serialization string |
-| contractAddress | string | Generated contract address  |
+| Field Name      | Field type | Parameter Description            |
+| --------------- |:----------:| -------------------------------- |
+| hash            |   string   | transactionhash                  |
+| txHex           |   string   | Transaction serialization string |
+| contractAddress |   string   | Generated contract address       |
 #### Example request data: 
 
 _**request path:**_
@@ -4062,26 +4320,26 @@ _**Detailed description: Offline assembly - Transaction calling contract**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |        Parameter type         | Parameter Description                       | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:-------------------:| -------------------------- |:----:|
-| Call contract offline transaction                                                        | contractcalloffline | Call contract offline transaction form                 |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |       string        | Transaction Creator                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance   |     biginteger      | Account balance                       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce           |       string        | accountnoncevalue                   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |       string        | Smart contract address                     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit        |        long         | GASlimit                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value           |     biginteger      | The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0 |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |       string        | Method name                        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |       string        | Method description, if the method in the contract is not overloaded, this parameter can be empty   |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |      object[]       | parameter list                       |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argsType        |      string[]       | Parameter Type List                     |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |       string        | Remarks                         |  no   |
+| Parameter Name                                                  |   Parameter type    | Parameter Description                                                                                                                      | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:-------------------:| ------------------------------------------------------------------------------------------------------------------------------------------ |:--------------------------:|
+| Call contract offline transaction                               | contractcalloffline | Call contract offline transaction form                                                                                                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |       string        | Transaction Creator                                                                                                                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance   |     biginteger      | Account balance                                                                                                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce           |       string        | accountnoncevalue                                                                                                                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |       string        | Smart contract address                                                                                                                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit        |        long         | GASlimit                                                                                                                                   |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value           |     biginteger      | The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodName      |       string        | Method name                                                                                                                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;methodDesc      |       string        | Method description, if the method in the contract is not overloaded, this parameter can be empty                                           |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args            |      object[]       | parameter list                                                                                                                             |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argsType        |      string[]       | Parameter Type List                                                                                                                        |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |       string        | Remarks                                                                                                                                    |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -4135,20 +4393,20 @@ _**Detailed description: Offline assembly - Delete contract transactions**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |         Parameter type          | Parameter Description       | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:---------------------:| ---------- |:----:|
-| Delete contract offline transaction                                                        | contractdeleteoffline | Delete offline transaction form for contract |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |        string         | Transaction Creator      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance   |      biginteger       | Account balance       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce           |        string         | accountnoncevalue   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |        string         | Smart contract address     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |        string         | Remarks         |  no   |
+| Parameter Name                                                  |    Parameter type     | Parameter Description                        | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:---------------------:| -------------------------------------------- |:--------------------------:|
+| Delete contract offline transaction                             | contractdeleteoffline | Delete offline transaction form for contract |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sender          |        string         | Transaction Creator                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance   |      biginteger       | Account balance                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce           |        string         | accountnoncevalue                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |        string         | Smart contract address                       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |        string         | Remarks                                      |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -4199,23 +4457,23 @@ _**Detailed description: Offline assembly - contracttokenTransfer transaction**_
 ```
 
 #### parameter list
-| Parameter Name                                                             |             Parameter type             | Parameter Description          | Is it mandatory to fill in |
-| --------------------------------------------------------------- |:----------------------------:| ------------- |:----:|
-| tokenOffline transfer transaction                                                     | contracttokentransferoffline | tokenTransfer Offline Transaction Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromAddress     |            string            | Transferor's account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance   |          biginteger          | Transferor account balance       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce           |            string            | Transferor's accountnoncevalue   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress       |            string            | Transferee's account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |            string            | Contract address          |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit        |             long             | GASlimit         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount          |          biginteger          | Transferred outtokenAsset amount  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |            string            | Remarks            |  no   |
+| Parameter Name                                                  |        Parameter type        | Parameter Description                  | Is it mandatory to fill in |
+| --------------------------------------------------------------- |:----------------------------:| -------------------------------------- |:--------------------------:|
+| tokenOffline transfer transaction                               | contracttokentransferoffline | tokenTransfer Offline Transaction Form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromAddress     |            string            | Transferor's account address           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance   |          biginteger          | Transferor account balance             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce           |            string            | Transferor's accountnoncevalue         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress       |            string            | Transferee's account address           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contractAddress |            string            | Contract address                       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit        |             long             | GASlimit                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount          |          biginteger          | Transferred outtokenAsset amount       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark          |            string            | Remarks                                |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -4268,22 +4526,22 @@ _**Detailed description: Offline assembly - Transfer from account address to con
 ```
 
 #### parameter list
-| Parameter Name                                                           |          Parameter type           | Parameter Description          | Is it mandatory to fill in |
-| ------------------------------------------------------------- |:-----------------------:| ------------- |:----:|
-| Transfer offline transaction to contract address                                                   | contracttransferoffline | Transfer offline transaction form to contract address |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromAddress   |         string          | Transferor's account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance |       biginteger        | Transferor account balance       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |         string          | Transferor's accountnoncevalue   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress     |         string          | Transferred contract address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit      |          long           | GASlimit         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |       biginteger        | The amount of main chain assets transferred out     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark        |         string          | Remarks            |  no   |
+| Parameter Name                                                |     Parameter type      | Parameter Description                                 | Is it mandatory to fill in |
+| ------------------------------------------------------------- |:-----------------------:| ----------------------------------------------------- |:--------------------------:|
+| Transfer offline transaction to contract address              | contracttransferoffline | Transfer offline transaction form to contract address |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fromAddress   |         string          | Transferor's account address                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;senderBalance |       biginteger        | Transferor account balance                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce         |         string          | Transferor's accountnoncevalue                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toAddress     |         string          | Transferred contract address                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gasLimit      |          long           | GASlimit                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount        |       biginteger        | The amount of main chain assets transferred out       |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remark        |         string          | Remarks                                               |             no             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -4334,20 +4592,20 @@ _**Detailed description: Create consensus nodes**_
 ```
 
 #### parameter list
-| Parameter Name                                                            |      Parameter type       | Parameter Description        | Is it mandatory to fill in |
-| -------------------------------------------------------------- |:---------------:| ----------- |:----:|
-| CreateAgentForm                                                | createagentform | Create consensus node form    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress   |     string      | Node address        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress |     string      | Node block address      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rewardAddress  |     string      | Reward address, default node address |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commissionRate |       int       | commission rate        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit        |     string      | Mortgage amount        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password       |     string      | password          |  yes   |
+| Parameter Name                                                 | Parameter type  | Parameter Description                | Is it mandatory to fill in |
+| -------------------------------------------------------------- |:---------------:| ------------------------------------ |:--------------------------:|
+| CreateAgentForm                                                | createagentform | Create consensus node form           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress   |     string      | Node address                         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress |     string      | Node block address                   |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rewardAddress  |     string      | Reward address, default node address |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commissionRate |       int       | commission rate                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit        |     string      | Mortgage amount                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password       |     string      | password                             |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description   |
-| ----- |:------:| ------ |
-| value | string | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -4392,16 +4650,16 @@ _**Detailed description: Unregister consensus node**_
 ```
 
 #### parameter list
-| Parameter Name                                                      |     Parameter type      | Parameter Description     | Is it mandatory to fill in |
-| -------------------------------------------------------- |:-------------:| -------- |:----:|
-| StopAgentForm                                            | stopagentform | Unregister Consensus Node Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address  |    string     | Consensus node address   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |    string     | password       |  yes   |
+| Parameter Name                                           | Parameter type | Parameter Description          | Is it mandatory to fill in |
+| -------------------------------------------------------- |:--------------:| ------------------------------ |:--------------------------:|
+| StopAgentForm                                            | stopagentform  | Unregister Consensus Node Form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address  |     string     | Consensus node address         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |     string     | password                       |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description   |
-| ----- |:------:| ------ |
-| value | string | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -4444,18 +4702,18 @@ _**Detailed description: Entrusting participation in consensus**_
 ```
 
 #### parameter list
-| Parameter Name                                                       |    Parameter type     | Parameter Description     | Is it mandatory to fill in |
-| --------------------------------------------------------- |:-----------:| -------- |:----:|
-| DepositForm                                               | depositform | Delegated Participation Consensus Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address   |   string    | Participating Consensus Account Address |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash |   string    | Consensus nodehash |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit   |   string    | Amount of participation in consensus  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password  |   string    | password       |  yes   |
+| Parameter Name                                            | Parameter type | Parameter Description                   | Is it mandatory to fill in |
+| --------------------------------------------------------- |:--------------:| --------------------------------------- |:--------------------------:|
+| DepositForm                                               |  depositform   | Delegated Participation Consensus Form  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address   |     string     | Participating Consensus Account Address |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash |     string     | Consensus nodehash                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit   |     string     | Amount of participation in consensus    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password  |     string     | password                                |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description   |
-| ----- |:------:| ------ |
-| value | string | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -4499,17 +4757,17 @@ _**Detailed description: Exit consensus**_
 ```
 
 #### parameter list
-| Parameter Name                                                      |     Parameter type     | Parameter Description         | Is it mandatory to fill in |
-| -------------------------------------------------------- |:------------:| ------------ |:----:|
-| Exit consensus                                                     | withdrawform | Exit consensus form       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address  |    string    | Node address         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHash   |    string    | Transactions upon joining consensushash |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |    string    | password           |  yes   |
+| Parameter Name                                           | Parameter type | Parameter Description                   | Is it mandatory to fill in |
+| -------------------------------------------------------- |:--------------:| --------------------------------------- |:--------------------------:|
+| Exit consensus                                           |  withdrawform  | Exit consensus form                     |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address  |     string     | Node address                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;txHash   |     string     | Transactions upon joining consensushash |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password |     string     | password                                |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description   |
-| ----- |:------:| ------ |
-| value | string | transactionhash |
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
 #### Example request data: 
 
 _**request path:**_
@@ -4542,20 +4800,20 @@ _**Detailed description: Query the delegation consensus list of nodes**_
 #### HttpMethod: GET
 
 #### parameter list
-| Parameter Name       |  Parameter type  | Parameter Description          | Is it mandatory to fill in |
-| --------- |:------:| ------------- |:----:|
-| agentHash | string | Create transactions for consensus nodeshash |  yes   |
+| Parameter Name | Parameter type | Parameter Description                       | Is it mandatory to fill in |
+| -------------- |:--------------:| ------------------------------------------- |:--------------------------:|
+| agentHash      |     string     | Create transactions for consensus nodeshash |            yes             |
 
 #### Return value
-| Field Name         |  Field type  | Parameter Description      |
-| ----------- |:------:| --------- |
-| deposit     | string | Entrusted amount      |
-| agentHash   | string | nodehash    |
-| address     | string | Account address      |
-| time        |  long  | Entrustment time      |
-| txHash      | string | Entrusted transactionhash  |
-| blockHeight |  long  | Block height at the time of delegation  |
-| delHeight   |  long  | Block height for exiting delegation |
+| Field Name  | Field type | Parameter Description                  |
+| ----------- |:----------:| -------------------------------------- |
+| deposit     |   string   | Entrusted amount                       |
+| agentHash   |   string   | nodehash                               |
+| address     |   string   | Account address                        |
+| time        |    long    | Entrustment time                       |
+| txHash      |   string   | Entrusted transactionhash              |
+| blockHeight |    long    | Block height at the time of delegation |
+| delHeight   |    long    | Block height for exiting delegation    |
 #### Example request data: 
 
 _**request path:**_
@@ -4605,19 +4863,19 @@ _**Detailed description: Including maximum height backwards1000Find a specified 
 ```
 
 #### parameter list
-| Parameter Name                                                       |        Parameter type         | Parameter Description                      | Is it mandatory to fill in |
-| --------------------------------------------------------- |:-------------------:| ------------------------- |:----:|
-| RandomSeedCountForm                                       | randomseedcountform | Random Seed Form                    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height    |        long         | Maximum height                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count     |         int         | Original number of seeds                    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;algorithm |       string        | Algorithm identification：SHA3, KECCAK, MERKLE |  no   |
+| Parameter Name                                            |   Parameter type    | Parameter Description                         | Is it mandatory to fill in |
+| --------------------------------------------------------- |:-------------------:| --------------------------------------------- |:--------------------------:|
+| RandomSeedCountForm                                       | randomseedcountform | Random Seed Form                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height    |        long         | Maximum height                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count     |         int         | Original number of seeds                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;algorithm |       string        | Algorithm identification：SHA3, KECCAK, MERKLE |             no             |
 
 #### Return value
-| Field Name       |  Field type  | Parameter Description    |
-| --------- |:------:| ------- |
-| seed      | string | Generate random seeds |
-| algorithm | string | Algorithm identification    |
-| count     |  int   | Original number of seeds  |
+| Field Name | Field type | Parameter Description    |
+| ---------- |:----------:| ------------------------ |
+| seed       |   string   | Generate random seeds    |
+| algorithm  |   string   | Algorithm identification |
+| count      |    int     | Original number of seeds |
 #### Example request data: 
 
 _**request path:**_
@@ -4662,19 +4920,19 @@ _**Detailed description: Find all valid original seeds within this block interva
 ```
 
 #### parameter list
-| Parameter Name                                                         |         Parameter type         | Parameter Description                      | Is it mandatory to fill in |
-| ----------------------------------------------------------- |:--------------------:| ------------------------- |:----:|
-| RandomSeedHeightForm                                        | randomseedheightform | Random Seed Form                    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;startHeight |         long         | Starting height                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;endHeight   |         long         | Cut-off height                      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;algorithm   |        string        | Algorithm identification：SHA3, KECCAK, MERKLE |  no   |
+| Parameter Name                                              |    Parameter type    | Parameter Description                         | Is it mandatory to fill in |
+| ----------------------------------------------------------- |:--------------------:| --------------------------------------------- |:--------------------------:|
+| RandomSeedHeightForm                                        | randomseedheightform | Random Seed Form                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;startHeight |         long         | Starting height                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;endHeight   |         long         | Cut-off height                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;algorithm   |        string        | Algorithm identification：SHA3, KECCAK, MERKLE |             no             |
 
 #### Return value
-| Field Name       |  Field type  | Parameter Description    |
-| --------- |:------:| ------- |
-| seed      | string | Generate random seeds |
-| algorithm | string | Algorithm identification    |
-| count     |  int   | Original number of seeds  |
+| Field Name | Field type | Parameter Description    |
+| ---------- |:----------:| ------------------------ |
+| seed       |   string   | Generate random seeds    |
+| algorithm  |   string   | Algorithm identification |
+| count      |    int     | Original number of seeds |
 #### Example request data: 
 
 _**request path:**_
@@ -4718,16 +4976,16 @@ _**Detailed description: Including maximum height backwards1000Find a specified 
 ```
 
 #### parameter list
-| Parameter Name                                                    |          Parameter type          | Parameter Description     | Is it mandatory to fill in |
-| ------------------------------------------------------ |:----------------------:| -------- |:----:|
-| RandomRawSeedCountForm                                 | randomrawseedcountform | Original random seed form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height |          long          | Maximum height     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count  |          int           | Original number of seeds   |  yes   |
+| Parameter Name                                         |     Parameter type     | Parameter Description     | Is it mandatory to fill in |
+| ------------------------------------------------------ |:----------------------:| ------------------------- |:--------------------------:|
+| RandomRawSeedCountForm                                 | randomrawseedcountform | Original random seed form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height |          long          | Maximum height            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count  |          int           | Original number of seeds  |            yes             |
 
 #### Return value
-| Field Name    |      Field type       | Parameter Description |
-| ------ |:---------------:| ---- |
-| Original Seed List | list&lt;string> |      |
+| Field Name         |   Field type    | Parameter Description |
+| ------------------ |:---------------:| --------------------- |
+| Original Seed List | list&lt;string> |                       |
 #### Example request data: 
 
 _**request path:**_
@@ -4766,16 +5024,16 @@ _**Detailed description: Find all valid original seeds within this block interva
 ```
 
 #### parameter list
-| Parameter Name                                                         |          Parameter type           | Parameter Description     | Is it mandatory to fill in |
-| ----------------------------------------------------------- |:-----------------------:| -------- |:----:|
-| RandomRawSeedHeightForm                                     | randomrawseedheightform | Original random seed form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;startHeight |          long           | Starting height     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;endHeight   |          long           | Cut-off height     |  yes   |
+| Parameter Name                                              |     Parameter type      | Parameter Description     | Is it mandatory to fill in |
+| ----------------------------------------------------------- |:-----------------------:| ------------------------- |:--------------------------:|
+| RandomRawSeedHeightForm                                     | randomrawseedheightform | Original random seed form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;startHeight |          long           | Starting height           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;endHeight   |          long           | Cut-off height            |            yes             |
 
 #### Return value
-| Field Name    |      Field type       | Parameter Description |
-| ------ |:---------------:| ---- |
-| Original Seed List | list&lt;string> |      |
+| Field Name         |   Field type    | Parameter Description |
+| ------------------ |:---------------:| --------------------- |
+| Original Seed List | list&lt;string> |                       |
 #### Example request data: 
 
 _**request path:**_
@@ -4824,26 +5082,26 @@ _**Detailed description: The required assets for participating in consensus can 
 ```
 
 #### parameter list
-| Parameter Name                                                                                                          |     Parameter type     | Parameter Description       | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------ |:------------:| ---------- |:----:|
-| ConsensusDto                                                                                                 | consensusdto | Offline creation of consensus node form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress                                                 |    string    | Node creation address     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                               |    string    | Node block address     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rewardAddress                                                |    string    | Obtain consensus reward address   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commissionRate                                               |     int      | Node commission ratio     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                      |  biginteger  | Create node margin    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |    object    | Transaction input information     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |    string    | Account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |     int      | The chain of assetsid     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |     int      | assetid       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |  biginteger  | Asset amount       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |    string    | assetnoncevalue   |  yes   |
+| Parameter Name                                                                                               | Parameter type | Parameter Description                   | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:--------------:| --------------------------------------- |:--------------------------:|
+| ConsensusDto                                                                                                 |  consensusdto  | Offline creation of consensus node form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress                                                 |     string     | 节点创建地址                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                               |     string     | 节点出块地址                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rewardAddress                                                |     string     | 获取共识奖励地址                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commissionRate                                               |      int       | 节点佣金比例                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                      |   biginteger   | 创建节点保证金                                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |     object     | 交易输入信息                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string     | 账户地址                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |      int       | 资产的链id                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |      int       | 资产id                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger   | 资产金额                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |     string     | 资产nonce值                                |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -4907,27 +5165,27 @@ _**Detailed description: Assembly transactionsStopDepositDtoInformation can be o
 ```
 
 #### parameter list
-| Parameter Name                                                                                                                                                          |       Parameter type       | Parameter Description        | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------ |:----------------:| ----------- |:----:|
-| StopConsensusDto                                                                                                                                             | stopconsensusdto | Offline logout consensus node form  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash                                                                                                    |      string      | Create transactions for nodeshash |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress                                                                                                 |      string      | Node address        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                                                                      |    biginteger    | Create margin for nodes    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                                                                        |    biginteger    | Unit price of handling fee       |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositList                                                                                                  | list&lt;object>  | Stop delegation list      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositHash                                                  |      string      | Transactions with delegated consensushash |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |      object      | Transaction input information      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |      string      | Account address        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |       int        | The chain of assetsid      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |       int        | assetid        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |    biginteger    | Asset amount        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |      string      | assetnoncevalue    |  yes   |
+| Parameter Name                                                                                                                                               |  Parameter type  | Parameter Description              | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ |:----------------:| ---------------------------------- |:--------------------------:|
+| StopConsensusDto                                                                                                                                             | stopconsensusdto | Offline logout consensus node form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash                                                                                                    |      string      | 创建节点的交易hash                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress                                                                                                 |      string      | 节点地址                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                                                                      |    biginteger    | 创建节点的保证金                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                                                                        |    biginteger    | 手续费单价                              |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositList                                                                                                  | list&lt;object>  | 停止委托列表                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositHash                                                  |      string      | 委托共识的交易hash                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |      object      | 交易输入信息                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |      string      | 账户地址                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |       int        | 资产的链id                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |       int        | 资产id                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |    biginteger    | 资产金额                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |      string      | 资产nonce值                           |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -4998,24 +5256,24 @@ _**Detailed description: The required assets for participating in consensus can 
 ```
 
 #### parameter list
-| Parameter Name                                                                                                          |    Parameter type    | Parameter Description       | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------ |:----------:| ---------- |:----:|
-| DepositDto                                                                                                   | depositdto | Offline Delegation Participation Consensus Form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address                                                      |   string   | Account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                      | biginteger | Entrusted amount       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash                                                    |   string   | Consensus nodehash   |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |   object   | Transaction input information     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |   string   | Account address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |    int     | The chain of assetsid     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |    int     | assetid       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       | biginteger | Asset amount       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |   string   | assetnoncevalue   |  yes   |
+| Parameter Name                                                                                               | Parameter type | Parameter Description                           | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:--------------:| ----------------------------------------------- |:--------------------------:|
+| DepositDto                                                                                                   |   depositdto   | Offline Delegation Participation Consensus Form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address                                                      |     string     | 账户地址                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                      |   biginteger   | 委托金额                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash                                                    |     string     | 共识节点hash                                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |     object     | 交易输入信息                                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string     | 账户地址                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |      int       | 资产的链id                                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |      int       | 资产id                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger   | 资产金额                                            |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |     string     | 资产nonce值                                        |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -5073,24 +5331,24 @@ _**Detailed description: InterfaceinputData is entrusted for consensus tradingou
 ```
 
 #### parameter list
-| Parameter Name                                                                                                          |    Parameter type     | Parameter Description        | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------ |:-----------:| ----------- |:----:|
-| WithDrawDto                                                                                                  | withdrawdto | Offline exit consensus form    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address                                                      |   string    | address          |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositHash                                                  |   string    | Entrusted consensus tradinghash |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                        | biginteger  | Unit price of handling fee       |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |   object    | Transaction input information      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |   string    | Account address        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |     int     | The chain of assetsid      |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |     int     | assetid        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       | biginteger  | Asset amount        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |   string    | assetnoncevalue    |  yes   |
+| Parameter Name                                                                                               | Parameter type | Parameter Description       | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:--------------:| --------------------------- |:--------------------------:|
+| WithDrawDto                                                                                                  |  withdrawdto   | Offline exit consensus form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address                                                      |     string     | 地址                          |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositHash                                                  |     string     | 委托共识交易的hash                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                        |   biginteger   | 手续费单价                       |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |     object     | 交易输入信息                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |     string     | 账户地址                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |      int       | 资产的链id                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |      int       | 资产id                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |   biginteger   | 资产金额                        |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |     string     | 资产nonce值                    |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -5146,28 +5404,28 @@ _**Detailed description: The required assets for participating in consensus can 
 ```
 
 #### parameter list
-| Parameter Name                                                                                                          |         Parameter type          | Parameter Description           | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------ |:---------------------:| -------------- |:----:|
-| MultiSignConsensusDto                                                                                        | multisignconsensusdto | Offline creation of consensus node form for multiple account signatures |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress                                                 |        string         | Node creation address         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                               |        string         | Node block address         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rewardAddress                                                |        string         | Obtain consensus reward address       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commissionRate                                               |          int          | Node commission ratio         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                      |      biginteger       | Create node margin        |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |        object         | Transaction input information         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |        string         | Account address           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |          int          | The chain of assetsid         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |          int          | assetid           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |      biginteger       | Asset amount           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |        string         | assetnoncevalue       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                      |    list&lt;string>    | Public key set           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                     |          int          | Minimum number of signatures          |  yes   |
+| Parameter Name                                                                                               |    Parameter type     | Parameter Description                                                   | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:---------------------:| ----------------------------------------------------------------------- |:--------------------------:|
+| MultiSignConsensusDto                                                                                        | multisignconsensusdto | Offline creation of consensus node form for multiple account signatures |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress                                                 |        string         | 节点创建地址                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packingAddress                                               |        string         | 节点出块地址                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rewardAddress                                                |        string         | 获取共识奖励地址                                                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commissionRate                                               |          int          | 节点佣金比例                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                      |      biginteger       | 创建节点保证金                                                                 |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |        object         | 交易输入信息                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |        string         | 账户地址                                                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |          int          | 资产的链id                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |          int          | 资产id                                                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |      biginteger       | 资产金额                                                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |        string         | 资产nonce值                                                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                      |    list&lt;string>    | 公钥集合                                                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                     |          int          | 最小签名数                                                                   |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -5225,26 +5483,26 @@ _**Detailed description: The required assets for participating in consensus can 
 ```
 
 #### parameter list
-| Parameter Name                                                                                                          |        Parameter type         | Parameter Description           | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------ |:-------------------:| -------------- |:----:|
-| MultiSignDepositDto                                                                                          | multisigndepositdto | Multiple account offline delegation participation consensus form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address                                                      |       string        | Account address           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                      |     biginteger      | Entrusted amount           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash                                                    |       string        | Consensus nodehash       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |       object        | Transaction input information         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |       string        | Account address           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |         int         | The chain of assetsid         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |         int         | assetid           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |     biginteger      | Asset amount           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |       string        | assetnoncevalue       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                      |   list&lt;string>   | Public key set           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                     |         int         | Minimum number of signatures          |  yes   |
+| Parameter Name                                                                                               |   Parameter type    | Parameter Description                                            | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:-------------------:| ---------------------------------------------------------------- |:--------------------------:|
+| MultiSignDepositDto                                                                                          | multisigndepositdto | Multiple account offline delegation participation consensus form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address                                                      |       string        | 账户地址                                                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                      |     biginteger      | 委托金额                                                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash                                                    |       string        | 共识节点hash                                                         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |       object        | 交易输入信息                                                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |       string        | 账户地址                                                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |         int         | 资产的链id                                                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |         int         | 资产id                                                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |     biginteger      | 资产金额                                                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |       string        | 资产nonce值                                                         |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                      |   list&lt;string>   | 公钥集合                                                             |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                     |         int         | 最小签名数                                                            |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -5300,26 +5558,26 @@ _**Detailed description: InterfaceinputData is entrusted for consensus tradingou
 ```
 
 #### parameter list
-| Parameter Name                                                                                                          |         Parameter type         | Parameter Description         | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------ |:--------------------:| ------------ |:----:|
-| WithDrawDto                                                                                                  | multisignwithdrawdto | Multiple account offline exit consensus form with multiple signatures |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address                                                      |        string        | address           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositHash                                                  |        string        | Entrusted consensus tradinghash  |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                        |      biginteger      | Unit price of handling fee        |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |        object        | Transaction input information       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |        string        | Account address         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |         int          | The chain of assetsid       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |         int          | assetid         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |      biginteger      | Asset amount         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |        string        | assetnoncevalue     |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                      |   list&lt;string>    | Public key set         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                     |         int          | Minimum number of signatures        |  yes   |
+| Parameter Name                                                                                               |    Parameter type    | Parameter Description                                                 | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------ |:--------------------:| --------------------------------------------------------------------- |:--------------------------:|
+| WithDrawDto                                                                                                  | multisignwithdrawdto | Multiple account offline exit consensus form with multiple signatures |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address                                                      |        string        | 地址                                                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositHash                                                  |        string        | 委托共识交易的hash                                                           |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                        |      biginteger      | 手续费单价                                                                 |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |        object        | 交易输入信息                                                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |        string        | 账户地址                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |         int          | 资产的链id                                                                |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |         int          | 资产id                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |      biginteger      | 资产金额                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |        string        | 资产nonce值                                                              |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                      |   list&lt;string>    | 公钥集合                                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                     |         int          | 最小签名数                                                                 |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -5375,29 +5633,29 @@ _**Detailed description: Assembly transactionsStopDepositDtoInformation can be o
 ```
 
 #### parameter list
-| Parameter Name                                                                                                                                                          |           Parameter type            | Parameter Description           | Is it mandatory to fill in |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------ |:-------------------------:| -------------- |:----:|
-| StopConsensusDto                                                                                                                                             | multisignstopconsensusdto | Multiple account offline cancellation consensus node form |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash                                                                                                    |          string           | Create transactions for nodeshash    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress                                                                                                 |          string           | Node address           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                                                                      |        biginteger         | Create margin for nodes       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                                                                        |        biginteger         | Unit price of handling fee          |  no   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositList                                                                                                  |      list&lt;object>      | Stop delegation list         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositHash                                                  |          string           | Transactions with delegated consensushash    |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |          object           | Transaction input information         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |          string           | Account address           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |            int            | The chain of assetsid         |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |            int            | assetid           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |        biginteger         | Asset amount           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |          string           | assetnoncevalue       |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                                                                      |      list&lt;string>      | Public key set           |  yes   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                                                                     |            int            | Minimum number of signatures          |  yes   |
+| Parameter Name                                                                                                                                               |      Parameter type       | Parameter Description                                     | Is it mandatory to fill in |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ |:-------------------------:| --------------------------------------------------------- |:--------------------------:|
+| StopConsensusDto                                                                                                                                             | multisignstopconsensusdto | Multiple account offline cancellation consensus node form |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentHash                                                                                                    |          string           | 创建节点的交易hash                                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;agentAddress                                                                                                 |          string           | 节点地址                                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deposit                                                                                                      |        biginteger         | 创建节点的保证金                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price                                                                                                        |        biginteger         | 手续费单价                                                     |             no             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositList                                                                                                  |      list&lt;object>      | 停止委托列表                                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;depositHash                                                  |          string           | 委托共识的交易hash                                               |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input                                                        |          object           | 交易输入信息                                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address      |          string           | 账户地址                                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetChainId |            int            | 资产的链id                                                    |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assetId      |            int            | 资产id                                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;amount       |        biginteger         | 资产金额                                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonce        |          string           | 资产nonce值                                                  |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pubKeys                                                                                                      |      list&lt;string>      | 公钥集合                                                      |            yes             |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minSigns                                                                                                     |            int            | 最小签名数                                                     |            yes             |
 
 #### Return value
-| Field Name   |  Field type  | Parameter Description     |
-| ----- |:------:| -------- |
-| hash  | string | transactionhash   |
-| txHex | string | Transaction serialization string |
+| Field Name | Field type | Parameter Description            |
+| ---------- |:----------:| -------------------------------- |
+| hash       |   string   | transactionhash                  |
+| txHex      |   string   | Transaction serialization string |
 #### Example request data: 
 
 _**request path:**_
@@ -5436,4 +5694,194 @@ _**request form data:**_
   }
 }
 ```
+
+### 5.18 Get exit node/List of additional margin trading corresponding to withdrawal margin
+#### Cmd: /api/consensus/list/reduceNonce/{agentHash}
+_**Detailed description: Get exit node/List of additional margin trading corresponding to withdrawal margin**_
+#### HttpMethod: GET
+
+#### parameter list
+| Parameter Name | Parameter type | Parameter Description                       | Is it mandatory to fill in |
+| -------------- |:--------------:| ------------------------------------------- |:--------------------------:|
+| agentHash      |     string     | Create transactions for consensus nodeshash |            yes             |
+| quitAll        |     string     | Do you want to exit all                     |            yes             |
+| reduceAmount   |     string     | Exit amount                                 |            yes             |
+
+#### Return value
+| Field Name | Field type | Parameter Description                 |
+| ---------- |:----------:| ------------------------------------- |
+| deposit    |   string   | Entrusted amount                      |
+| nonce      |   string   | Correspondence of entrusted dataNONCE |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 6.1 Query the corresponding Ethereum address based on the consensus node packaging address
+#### Cmd: /api/converter/address/eth/{packingAddress}
+_**Detailed description: Query the corresponding Ethereum address based on the consensus node packaging address**_
+#### HttpMethod: GET
+
+#### parameter list
+| Parameter Name | Parameter type | Parameter Description            | Is it mandatory to fill in |
+| -------------- |:--------------:| -------------------------------- |:--------------------------:|
+| packingAddress |     string     | Consensus node packaging address |            yes             |
+
+#### Return value
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| ethAddress |   string   | Ethereum address      |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 6.2 Obtain virtual bank member information
+#### Cmd: /api/converter/bank
+_**Detailed description: Obtain virtual bank member information**_
+#### HttpMethod: GET
+
+#### parameter list
+No parameters
+
+#### Return value
+No return value
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 6.3 Obtain a list of revoked virtual bank qualification node addresses
+#### Cmd: /api/converter/disqualification
+_**Detailed description: Obtain a list of revoked virtual bank qualification node addresses**_
+#### HttpMethod: GET
+
+#### parameter list
+No parameters
+
+#### Return value
+| Field Name   |   Field type    | Parameter Description |
+| ------------ |:---------------:| --------------------- |
+| Return value | list&lt;string> | Return aListobject    |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 6.4 Application proposal
+#### Cmd: /api/converter/proposal
+_**Detailed description: Application proposal**_
+#### HttpMethod: POST
+
+#### parameter list
+| Parameter Name       | Parameter type | Parameter Description              | Is it mandatory to fill in |
+| -------------------- |:--------------:| ---------------------------------- |:--------------------------:|
+| chainId              |      int       | chainid                            |            yes             |
+| type                 |      byte      | Proposal type                      |            yes             |
+| content              |     string     | Proposal content                   |            yes             |
+| heterogeneousChainId |      int       | Heterogeneous chainchainId         |            yes             |
+| heterogeneousTxHash  |     string     | Heterogeneous Chain Tradinghash    |            yes             |
+| businessAddress      |     string     | address（account、Node address, etc） |            yes             |
+| hash                 |     string     | On chain transactionshash          |            yes             |
+| voteRangeType        |      byte      | Voting scope type                  |            yes             |
+| remark               |     string     | Remarks                            |            yes             |
+| address              |     string     | Signature address                  |            yes             |
+| password             |     string     | password                           |            yes             |
+
+#### Return value
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 6.5 Additional withdrawal handling fee/Proposal for returning the original route
+#### Cmd: /api/converter/fee
+_**Detailed description: Additional withdrawal handling fee/Proposal for returning the original route**_
+#### HttpMethod: POST
+
+#### parameter list
+| Parameter Name | Parameter type | Parameter Description          | Is it mandatory to fill in |
+| -------------- |:--------------:| ------------------------------ |:--------------------------:|
+| chainId        |      int       | chainid                        |            yes             |
+| txHash         |     string     | Original transactionhash       |            yes             |
+| amount         |   biginteger   | Additional handling fee amount |            yes             |
+| remark         |     string     | Transaction notes              |            yes             |
+| address        |     string     | payment/Signature address      |            yes             |
+| password       |     string     | password                       |            yes             |
+
+#### Return value
+| Field Name | Field type | Parameter Description |
+| ---------- |:----------:| --------------------- |
+| value      |   string   | transactionhash       |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
+
+### 6.6 Return heterogeneous chain master assets inNERVEAsset information of the network
+#### Cmd: /api/converter/heterogeneous/mainasset/{chainId}
+_**Detailed description: Return heterogeneous chain master assets inNERVEAsset information of the network**_
+#### HttpMethod: GET
+
+#### parameter list
+| Parameter Name | Parameter type | Parameter Description | Is it mandatory to fill in |
+| -------------- |:--------------:| --------------------- |:--------------------------:|
+| chainId        |    integer     | Heterogeneous chainID |            yes             |
+
+#### Return value
+| Field Name | Field type | Parameter Description    |
+| ---------- |:----------:| ------------------------ |
+| chainId    |    int     | Asset ChainID            |
+| assetId    |    int     | assetID                  |
+| symbol     |   string   | assetsymbol              |
+| decimals   |    int     | Decimal places of assets |
+#### Example request data: 
+
+_**request path:**_
+slightly
+
+_**request form data:**_
+nothing
+
+#### Example response data: 
+slightly
 

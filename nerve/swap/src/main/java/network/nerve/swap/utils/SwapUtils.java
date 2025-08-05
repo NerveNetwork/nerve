@@ -1253,11 +1253,20 @@ public class SwapUtils {
      * @param tx transaction
      */
     public static byte[] getSingleAddressFromTX(Transaction tx, int chainId, boolean verifySign) throws NulsException {
+        if (SwapContext.swapHelper.isSupportProtocol43()) {
+            return getSingleAddressFromTXV43(tx, chainId, verifySign);
+        } else {
+            return getSingleAddressFromTXV0(tx, chainId, verifySign);
+        }
+    }
+
+    public static byte[] getSingleAddressFromTXV0(Transaction tx, int chainId, boolean verifySign) throws NulsException {
 
         if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
             return null;
         }
         try {
+            byte[] txHashBytes = tx.getHash().getBytes();
             if (tx.isMultiSignTx()) {
                 MultiSignTxSignature txSignature = new MultiSignTxSignature();
                 txSignature.parse(tx.getTransactionSignature(), 0);
@@ -1265,13 +1274,13 @@ public class SwapUtils {
 
 
                 if (verifySign) {
-                    if ((txSignature.getP2PHKSignatures() == null || txSignature.getP2PHKSignatures().size() == 0)) {
+                    if ((txSignature.getP2PHKSignatures() == null || txSignature.getP2PHKSignatures().isEmpty())) {
                         throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
                     }
                     List<P2PHKSignature> validSignatures = txSignature.getValidSignature();
                     int validCount = 0;
                     for (P2PHKSignature signature : validSignatures) {
-                        if (ECKey.verify(tx.getHash().getBytes(), signature.getSignData().getSignBytes(), signature.getPublicKey())) {
+                        if (ECKey.verify(txHashBytes, signature.getSignData().getSignBytes(), signature.getPublicKey())) {
                             validCount++;
                         } else {
                             throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
@@ -1302,7 +1311,95 @@ public class SwapUtils {
                     throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
                 }
                 if (verifySign) {
-                    boolean r = ECKey.verify(tx.getHash().getBytes(), p2PHKSignatures.get(0).getSignData().getSignBytes(), p2PHKSignatures.get(0).getPublicKey());
+                    P2PHKSignature signature = p2PHKSignatures.get(0);
+                    boolean r = ECKey.verify(txHashBytes, signature.getSignData().getSignBytes(), signature.getPublicKey());
+                    if (!r) {
+                        throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
+                    }
+                }
+                return AddressTool.getAddress(p2PHKSignatures.get(0).getPublicKey(), chainId);
+            }
+        } catch (NulsException e) {
+            Log.error("TransactionSignature parse error!");
+            throw e;
+        }
+    }
+    public static byte[] getSingleAddressFromTXV43(Transaction tx, int chainId, boolean verifySign) throws NulsException {
+
+        if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
+            return null;
+        }
+        try {
+            String txHash = tx.getHash().toHex();
+            byte[] txHashBytes = tx.getHash().getBytes();
+            byte[] personalHash = null;
+            if (tx.isMultiSignTx()) {
+                MultiSignTxSignature txSignature = new MultiSignTxSignature();
+                txSignature.parse(tx.getTransactionSignature(), 0);
+                List<String> pubkeyList = new ArrayList<>();
+
+
+                if (verifySign) {
+                    if ((txSignature.getP2PHKSignatures() == null || txSignature.getP2PHKSignatures().isEmpty())) {
+                        throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
+                    }
+                    List<P2PHKSignature> validSignatures = txSignature.getValidSignature();
+                    byte[] dataBytes = txHashBytes;
+                    // add personal sign
+                    Byte type = txSignature.getType();
+                    if (type != null && type == 1) {
+                        if (personalHash == null) {
+                            personalHash = SignatureUtil.personalHash(txHash);
+                        }
+                        if (personalHash != null) {
+                            dataBytes = personalHash;
+                        }
+                    }
+                    int validCount = 0;
+                    for (P2PHKSignature signature : validSignatures) {
+                        if (ECKey.verify(dataBytes, signature.getSignData().getSignBytes(), signature.getPublicKey())) {
+                            validCount++;
+                        } else {
+                            throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
+                        }
+                    }
+                    if (validCount < txSignature.getM()) {
+                        throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
+                    }
+                }
+
+
+                for (byte[] pub : txSignature.getPubKeyList()) {
+                    pubkeyList.add(HexUtil.encode(pub));
+                }
+                Address address;
+                try {
+                    address = new Address(chainId, BaseConstant.P2SH_ADDRESS_TYPE, SerializeUtils.sha256hash160(AddressTool.createMultiSigAccountOriginBytes(chainId, txSignature.getM(), pubkeyList)));
+                } catch (Exception e) {
+                    Log.error(e);
+                    throw new NulsException(SwapErrorCode.FARM_SYRUP_DEPOSIT_ERROR);
+                }
+                return address.getAddressBytes();
+            } else {
+                TransactionSignature transactionSignature = new TransactionSignature();
+                transactionSignature.parse(tx.getTransactionSignature(), 0);
+                List<P2PHKSignature> p2PHKSignatures = transactionSignature.getP2PHKSignatures();
+                if (p2PHKSignatures.size() > 1) {
+                    throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
+                }
+                if (verifySign) {
+                    byte[] dataBytes = txHashBytes;
+                    Byte type = transactionSignature.getType();
+                    if (type != null && type == 1) {
+                        if (personalHash == null) {
+                            personalHash = SignatureUtil.personalHash(txHash);
+                        }
+                        if (personalHash != null) {
+                            dataBytes = personalHash;
+                        }
+                    }
+                    P2PHKSignature signature = p2PHKSignatures.get(0);
+                    boolean r = ECKey.verify(dataBytes, signature.getSignData().getSignBytes(), signature.getPublicKey());
                     if (!r) {
                         throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
                     }

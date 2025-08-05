@@ -562,7 +562,8 @@ public class ApiDocTool {
             Annotation annotation = clzs.getAnnotation(ApiModel.class);
             if (annotation == null) {
                 System.err.println(clzs.getName());
-                throw new IllegalArgumentException("Must be declared when the return value is a complex objectApiModuleannotation + " + clzs.getSimpleName());
+//                throw new IllegalArgumentException("Must be declared when the return value is a complex objectApiModuleannotation + " + clzs.getSimpleName());
+                return null;
             }
             List<Field> list = new LinkedList();
             list.addAll(Arrays.asList(clzs.getDeclaredFields()));

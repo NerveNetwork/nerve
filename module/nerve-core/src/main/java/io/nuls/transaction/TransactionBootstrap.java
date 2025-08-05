@@ -162,6 +162,13 @@ public class TransactionBootstrap implements INerveCoreBootstrap {
             Log.error("Failed to get height_1_20_0", e);
             throw new RuntimeException(e);
         }
+        try {
+            long heightVersion1_43_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_43_0"));
+            TxContext.PROTOCOL_1_43_0 = heightVersion1_43_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_43_0", e);
+            throw new RuntimeException(e);
+        }
     }
 
 }

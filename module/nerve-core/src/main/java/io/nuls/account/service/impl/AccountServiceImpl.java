@@ -754,10 +754,10 @@ public class AccountServiceImpl implements AccountService {
             return HexUtil.encode(signature.serialize());
         }
         if (!this.nerveCoreConfig.getSigMacAddress().equals(address)) {
-            //return null;
+            return null;
             //todo test code
-            P2PHKSignature signature = signDigest(data, chainId, address, password);
-            return HexUtil.encode(signature.serialize());
+            //P2PHKSignature signature = signDigest(data, chainId, address, password);
+            //return HexUtil.encode(signature.serialize());
         }
         extend.put("address", address);
         return this.sigMachineService.request(extend);

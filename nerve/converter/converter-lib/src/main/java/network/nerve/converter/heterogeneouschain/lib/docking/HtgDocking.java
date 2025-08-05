@@ -99,6 +99,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     protected HtgAnalysisTxHelper htgAnalysisTxHelper;
     protected HtgResendHelper htgResendHelper;
     protected HtgPendingTxHelper htgPendingTxHelper;
+    protected HtgAccount account;
     private HtgContext htgContext;
     private HeterogeneousChainGasInfo gasInfo;
     protected boolean closePending = false;
@@ -153,26 +154,26 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     private HeterogeneousAccount _importAccountByPriKey(String priKey, String password) throws NulsException {
-        if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
-            HtgAccount account = htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
-            account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
-            if (Arrays.equals(account.getPriKey(), HexUtil.decode(priKey))) {
-                account.setPriKey(new byte[0]);
+        try {
+            if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
+                htgAccountStorageService.deleteByAddress(htgContext.ADMIN_ADDRESS());
+                HtgAccount account = HtgUtil.createAccount(priKey);
+                account.encrypt(password);
                 return account;
             }
-        }
-        if (!FormatValidUtils.validPassword(password)) {
-            logger().error("password format wrong");
-            throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
-        }
-        HtgAccount account = HtgUtil.createAccount(priKey);
-        account.encrypt(password);
-        try {
-            htgAccountStorageService.save(account);
+            if (!FormatValidUtils.validPassword(password)) {
+                logger().error("password format wrong");
+                throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
+            }
+            HtgAccount account = HtgUtil.createAccount(priKey);
+            account.encrypt(password);
+
             // Overwrite this address as the virtual bank administrator address
             htgContext.SET_ADMIN_ADDRESS(account.getAddress());
             htgContext.SET_ADMIN_ADDRESS_PUBLIC_KEY(account.getCompressedPublicKey());
             htgContext.SET_ADMIN_ADDRESS_PASSWORD(password);
+            this.account = account;
+            htgAccountStorageService.deleteByAddress(account.getAddress());
             logger().info("towards {} Heterogeneous component import node block address information, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
             return account;
         } catch (Exception e) {
@@ -181,25 +182,26 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     private HeterogeneousAccount _importAccountByPubKey(String pubKey, String password) throws NulsException {
-        if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
-            HtgAccount account = htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
-            if (Arrays.equals(account.getPubKey(), HexUtil.decode(pubKey))) {
+        try {
+            if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
+                htgAccountStorageService.deleteByAddress(htgContext.ADMIN_ADDRESS());
+                HtgAccount account = HtgUtil.createAccountByPubkey(pubKey);
                 account.setPriKey(ZERO_BYTES);
                 account.setEncryptedPriKey(ZERO_BYTES);
                 return account;
             }
-        }
-        if (!FormatValidUtils.validPassword(password)) {
-            logger().error("password format wrong");
-            throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
-        }
-        HtgAccount account = HtgUtil.createAccountByPubkey(pubKey);
-        try {
-            htgAccountStorageService.save(account);
+            if (!FormatValidUtils.validPassword(password)) {
+                logger().error("password format wrong");
+                throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
+            }
+            HtgAccount account = HtgUtil.createAccountByPubkey(pubKey);
+
             // Overwrite this address as the virtual bank administrator address
             htgContext.SET_ADMIN_ADDRESS(account.getAddress());
             htgContext.SET_ADMIN_ADDRESS_PUBLIC_KEY(account.getCompressedPublicKey());
             htgContext.SET_ADMIN_ADDRESS_PASSWORD(password);
+            this.account = account;
+            htgAccountStorageService.deleteByAddress(account.getAddress());
             logger().info("towards {} Heterogeneous component import node block address information, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
             return account;
         } catch (Exception e) {
@@ -223,7 +225,11 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public HeterogeneousAccount getAccount(String address) {
-        return htgAccountStorageService.findByAddress(address);
+        HtgAccount account = this.account;
+        if (!account.getAddress().equals(address)) {
+            return null;
+        }
+        return account;
     }
 
     @Override
@@ -1389,7 +1395,6 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         account.setOrder(bankOrder);
-        account.setBankSize(bankSize);
         return account;
     }
 
@@ -1412,7 +1417,6 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         account.setOrder(bankOrder);
-        account.setBankSize(bankSize);
         return account;
     }
 

@@ -138,7 +138,8 @@ public class TrxWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                     continue;
                 }
                 // nerveTransaction not completed,[Non primary node] Check if the waiting time has ended. After that, check if the transaction has been initiated. Otherwise, initiate the transaction
-                if (now >= waitingEndTime && currentNodeSendOrder != 1 && !po.isInvokeResend()) {
+                //if (now >= waitingEndTime && currentNodeSendOrder != 1 && !po.isInvokeResend()) {
+                if (now >= waitingEndTime && currentNodeSendOrder == 1 && !po.isInvokeResend()) {
                     logger().info("Waiting time has ended, resend transaction, nerveHash: {}", nerveTxHash);
                     // Initiate transaction
                     htgResendHelper.reSend(po);

@@ -29,11 +29,11 @@ import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.FormatValidUtils;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
-import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
@@ -43,7 +43,6 @@ import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
-import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgERC20Po;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
@@ -54,6 +53,7 @@ import network.nerve.converter.heterogeneouschain.trx.core.TrxWalletApi;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxAnalysisTxHelper;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxERC20Helper;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxParseTxHelper;
+import network.nerve.converter.heterogeneouschain.trx.model.OrderData;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxAccount;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxEstimateSun;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxSendTransactionPo;
@@ -61,6 +61,10 @@ import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.utils.ConverterUtil;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.tron.trident.abi.TypeReference;
 import org.tron.trident.abi.datatypes.Address;
 import org.tron.trident.abi.datatypes.DynamicBytes;
@@ -75,10 +79,12 @@ import org.tron.trident.utils.Numeric;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.ZERO_BYTES;
+import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.NERVE_CC_TRON;
 
 
 /**
@@ -97,6 +103,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     protected HtgListener htgListener;
     protected ConverterConfig converterConfig;
     protected HtgTxRelationStorageService htgTxRelationStorageService;
+    protected HtgTxInvokeInfoStorageService htgTxInvokeInfoStorageService;
     protected HtgUnconfirmedTxStorageService htgUnconfirmedTxStorageService;
     protected HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
     protected HtgTxStorageService htgTxStorageService;
@@ -110,6 +117,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     protected HtgInvokeTxHelper htgInvokeTxHelper;
     protected HtgResendHelper htgResendHelper;
     protected HtgPendingTxHelper htgPendingTxHelper;
+    protected TrxAccount account;
     private HtgContext htgContext;
 
     private NulsLogger logger() {
@@ -162,26 +170,26 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     private HeterogeneousAccount _importAccountByPriKey(String priKey, String password) throws NulsException {
 
-        if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
-            HtgAccount account = htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
-            account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
-            if (Arrays.equals(account.getPriKey(), Numeric.hexStringToByteArray(priKey))) {
-                account.setPriKey(new byte[0]);
+        try {
+            if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
+                htgAccountStorageService.deleteByAddress(htgContext.ADMIN_ADDRESS());
+                TrxAccount account = TrxUtil.createAccount(priKey);
+                account.encrypt(password);
                 return account;
             }
-        }
-        if (!FormatValidUtils.validPassword(password)) {
-            logger().error("password format wrong");
-            throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
-        }
-        TrxAccount account = TrxUtil.createAccount(priKey);
-        account.encrypt(password);
-        try {
-            htgAccountStorageService.save(account);
+            if (!FormatValidUtils.validPassword(password)) {
+                logger().error("password format wrong");
+                throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
+            }
+            TrxAccount account = TrxUtil.createAccount(priKey);
+            account.encrypt(password);
+
             // Overwrite this address as the virtual bank administrator address
             htgContext.SET_ADMIN_ADDRESS(account.getAddress());
             htgContext.SET_ADMIN_ADDRESS_PUBLIC_KEY(account.getCompressedPublicKey());
             htgContext.SET_ADMIN_ADDRESS_PASSWORD(password);
+            this.account = account;
+            htgAccountStorageService.deleteByAddress(account.getAddress());
             logger().info("towards{}Heterogeneous component import node block address information, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
             return account;
         } catch (Exception e) {
@@ -190,25 +198,26 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     private HeterogeneousAccount _importAccountByPubKey(String pubKey, String password) throws NulsException {
-        if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
-            HtgAccount account = htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
-            if (Arrays.equals(account.getPubKey(), Numeric.hexStringToByteArray(pubKey))) {
+        try {
+            if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
+                htgAccountStorageService.deleteByAddress(htgContext.ADMIN_ADDRESS());
+                TrxAccount account = TrxUtil.createAccountByPubkey(pubKey);
                 account.setPriKey(ZERO_BYTES);
                 account.setEncryptedPriKey(ZERO_BYTES);
                 return account;
             }
-        }
-        if (!FormatValidUtils.validPassword(password)) {
-            logger().error("password format wrong");
-            throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
-        }
-        HtgAccount account = TrxUtil.createAccountByPubkey(pubKey);
-        try {
-            htgAccountStorageService.save(account);
+            if (!FormatValidUtils.validPassword(password)) {
+                logger().error("password format wrong");
+                throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
+            }
+            TrxAccount account = TrxUtil.createAccountByPubkey(pubKey);
+
             // Overwrite this address as the virtual bank administrator address
             htgContext.SET_ADMIN_ADDRESS(account.getAddress());
             htgContext.SET_ADMIN_ADDRESS_PUBLIC_KEY(account.getCompressedPublicKey());
             htgContext.SET_ADMIN_ADDRESS_PASSWORD(password);
+            this.account = account;
+            htgAccountStorageService.deleteByAddress(account.getAddress());
             logger().info("towards{}Heterogeneous component import node block address information, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
             return account;
         } catch (Exception e) {
@@ -232,7 +241,11 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public HeterogeneousAccount getAccount(String address) {
-        return htgAccountStorageService.findByAddress(address);
+        TrxAccount account = this.account;
+        if (!account.getAddress().equals(address)) {
+            return null;
+        }
+        return account;
     }
 
     @Override
@@ -1076,6 +1089,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     private String createOrSignWithdrawTxIIProtocol22(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
+            IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
             if (!htgContext.isAvailableRPC()) {
                 logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
                 throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
@@ -1090,6 +1104,10 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 return EMPTY_STRING;
             }
             // When checking the order, do not send transactions that are not in the first place
+            if (coreApi.isNerveMainnet() && !NERVE_CC_TRON.equals(htgContext.ADMIN_ADDRESS())) {
+                logger().info("Non primary non transaction, order: {}", account.getOrder());
+                return EMPTY_STRING;
+            }
             if (checkOrder && !checkFirstOrder(account.getOrder())) {
                 logger().info("Non primary non transaction, order: {}", account.getOrder());
                 return EMPTY_STRING;
@@ -1110,7 +1128,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 po.setDecimals(htgContext.getConfig().getDecimals());
                 po.setAssetId(htgContext.HTG_ASSET_ID());
             }
-            IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+
             // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the withdrawal will be abnormal
             if (coreApi.isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !trxParseTxHelper.isMinterERC20(po.getContractAddress())) {
@@ -1294,37 +1312,44 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     private TrxAccount createTxStartForChange(String nerveTxHash, String[] addAddresses, String[] removeAddresses, HtgWaitingTxPo po) throws Exception {
+        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
         TrxAccount txStart = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.CHANGE, po);
         Map<String, Integer> currentVirtualBanks = po.getCurrentVirtualBanks();
         if (addAddresses.length == 0 && removeAddresses.length == 0) {
             return txStart;
         }
-        for (String add : addAddresses) {
-            currentVirtualBanks.remove(add);
+        if (coreApi.isNerveMainnet()) {
+            int bankOrder;
+            if (NERVE_CC_TRON.equals(htgContext.ADMIN_ADDRESS())) {
+                bankOrder = 1;
+            } else {
+                bankOrder = 99999999;
+            }
+            txStart.setOrder(bankOrder);
+        } else {
+            for (String add : addAddresses) {
+                currentVirtualBanks.remove(add);
+            }
+            for (String remove : removeAddresses) {
+                currentVirtualBanks.remove(remove);
+            }
+            List<Map.Entry<String, Integer>> list = new ArrayList<>(currentVirtualBanks.entrySet());
+            list.sort(ConverterUtil.CHANGE_SORT);
+            int i = 1;
+            for (Map.Entry<String, Integer> entry : list) {
+                currentVirtualBanks.put(entry.getKey(), i++);
+            }
+            Integer order = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
+            if (order == null) {
+                order = 0x0f;
+            }
+            txStart.setOrder(order);
+            logger().info("Change the current node execution order of the transaction: {}, addAddresses: {}, removeAddresses: {}, currentVirtualBanks: {}", order, Arrays.toString(addAddresses), Arrays.toString(removeAddresses), currentVirtualBanks);
         }
-        for (String remove : removeAddresses) {
-            currentVirtualBanks.remove(remove);
-        }
-        List<Map.Entry<String, Integer>> list = new ArrayList<>(currentVirtualBanks.entrySet());
-        list.sort(ConverterUtil.CHANGE_SORT);
-        int i = 1;
-        for (Map.Entry<String, Integer> entry : list) {
-            currentVirtualBanks.put(entry.getKey(), i++);
-        }
-        Integer order = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
-        if (order == null) {
-            order = 0x0f;
-        }
-        txStart.setOrder(order);
-        logger().info("Change the current node execution order of the transaction: {}, addAddresses: {}, removeAddresses: {}, currentVirtualBanks: {}", order, Arrays.toString(addAddresses), Arrays.toString(removeAddresses), currentVirtualBanks);
         return txStart;
     }
 
     private TrxAccount createTxStart(String nerveTxHash, HeterogeneousChainTxType txType, HtgWaitingTxPo po) throws Exception {
-        Map<String, Integer> currentVirtualBanks = htgContext.getConverterCoreApi().currentVirtualBanksBalanceOrder(htgContext.getConfig().getChainId());
-        po.setCurrentVirtualBanks(currentVirtualBanks);
-        int bankSize = htgContext.getConverterCoreApi().getVirtualBankSize();
-
         /*String realNerveTxHash = nerveTxHash;
         // according tonervetransactionhashCalculate the sequential seed for the first two digits
         int seed = new BigInteger(realNerveTxHash.substring(0, 1), 16).intValue() + 1;
@@ -1350,10 +1375,23 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         }
         logger().debug("After processing, Current Bank Order: {}", currentVirtualBanks);*/
 
-        // Wait for a fixed time in sequence before sending outHTGtransaction
-        int bankOrder = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
-        if (logger().isDebugEnabled()) {
-            logger().debug("Sequential calculation parameters bankSize: {}, orginBankOrder: {}, bankOrder: {}", bankSize, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
+        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+        Map<String, Integer> currentVirtualBanks = coreApi.currentVirtualBanksBalanceOrder(htgContext.getConfig().getChainId());
+        po.setCurrentVirtualBanks(currentVirtualBanks);
+        int bankOrder;
+        if (coreApi.isNerveMainnet()) {
+            if (NERVE_CC_TRON.equals(htgContext.ADMIN_ADDRESS())) {
+                bankOrder = 1;
+            } else {
+                bankOrder = 99999999;
+            }
+        } else {
+            int bankSize = coreApi.getVirtualBankSize();
+            // Wait for a fixed time in sequence before sending outHTGtransaction
+            bankOrder = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
+            if (logger().isDebugEnabled()) {
+                logger().debug("Sequential calculation parameters bankSize: {}, orginBankOrder: {}, bankOrder: {}", bankSize, coreApi.getVirtualBankOrder(), bankOrder);
+            }
         }
         // towardsHTGNetwork request verification
         boolean isCompleted = trxParseTxHelper.isCompletedTransaction(nerveTxHash);
@@ -1365,35 +1403,44 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         account.setOrder(bankOrder);
-        account.setBankSize(bankSize);
         return account;
     }
 
     private TrxAccount createTxStartForWithdraw(String nerveTxHash, HeterogeneousChainTxType txType, HtgWaitingTxPo po) throws Exception {
-        Map<String, Integer> currentVirtualBanks = htgContext.getConverterCoreApi().currentVirtualBanksBalanceOrder(htgContext.getConfig().getChainId());
+        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+        Map<String, Integer> currentVirtualBanks = coreApi.currentVirtualBanksBalanceOrder(htgContext.getConfig().getChainId());
         po.setCurrentVirtualBanks(currentVirtualBanks);
-        int bankSize = htgContext.getConverterCoreApi().getVirtualBankSize();
-        // Wait for a fixed time in sequence before sending outHTGtransaction
-        int bankOrder = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
-        if (logger().isDebugEnabled()) {
-            logger().debug("Sequential calculation parameters bankSize: {}, orginBankOrder: {}, bankOrder: {}", bankSize, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
+        int bankOrder;
+        if (coreApi.isNerveMainnet()) {
+            if (NERVE_CC_TRON.equals(htgContext.ADMIN_ADDRESS())) {
+                bankOrder = 1;
+            } else {
+                bankOrder = 99999999;
+            }
+        } else {
+            int bankSize = coreApi.getVirtualBankSize();
+            // Wait for a fixed time in sequence before sending outHTGtransaction
+            bankOrder = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
+            if (logger().isDebugEnabled()) {
+                logger().debug("Sequential calculation parameters bankSize: {}, orginBankOrder: {}, bankOrder: {}", bankSize, coreApi.getVirtualBankOrder(), bankOrder);
+            }
         }
         // towardsHTGNetwork request verification
         boolean isCompleted = trxParseTxHelper.isCompletedTransaction(nerveTxHash);
         if (isCompleted) {
-            logger().info("[{}]transaction[{}]Completed", txType, nerveTxHash);
+            logger().info("[{}] transaction [{}] Completed", txType, nerveTxHash);
             return TrxAccount.newEmptyAccount(bankOrder);
         }
         // Obtain administrator account
         TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         account.setOrder(bankOrder);
-        account.setBankSize(bankSize);
         return account;
     }
 
 
     private String createTxComplete(String nerveTxHash, HtgUnconfirmedTxPo po, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
+        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
         // estimatefeeLimit
         TrxEstimateSun estimateSun;
         try {
@@ -1425,6 +1472,71 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 throw e;
             }
         }
+        if (coreApi.isNerveMainnet() && NERVE_CC_TRON.equals(fromAddress)) {
+            long availableEnergy = this.availableEnergy(fromAddress);
+            long txEnergyUsed = estimateSun.getEnergyUsed();
+            do {
+                long needEnergy = txEnergyUsed - availableEnergy;
+                if (availableEnergy >= txEnergyUsed || needEnergy < 12000) {
+                    boolean buyEnergy = true;
+                    // 订单和 nerveTxHash 绑定在一起，缓存上一笔nervehash，
+                    // 查询上一笔tron 交易是否已经发出(currentNodeSentEthTx)，交易已发出，自己就不再购买能量，否则需要自己购买
+                    String lastNerveTxHashWithTron = htgTxInvokeInfoStorageService.getLastNerveTxHashWithTron();
+                    if (lastNerveTxHashWithTron != null) {
+                        boolean sentTronTx = htgTxInvokeInfoStorageService.ifSentEthTx(lastNerveTxHashWithTron);
+                        if (sentTronTx) {
+                            buyEnergy = false;
+                        }
+                    }
+                    if (!buyEnergy) {
+                        logger().info("[{}] 上一笔nerve交易[{}]已发出，账户中剩余足够的能量，不再购买能量", nerveTxHash, lastNerveTxHashWithTron);
+                        if (needEnergy < 12000) {
+                            // 12000能量燃烧的trx，和购买trxDefi的能量价格相差不大，则不再购买能量，直接燃烧这部分trx来交易
+                            logger().info("[{}] 需要的能量小于12000，不再购买能量", nerveTxHash);
+                        }
+                        break;
+                    }
+                }
+                needEnergy = Math.max(needEnergy, 65000) + 1000;
+                // 持久化orderId，当购买了能量，仍然能量不足时，则抛出异常，不再重新创建，抛到tg中，人工处理(人工购买足够的能量 or 设定程序重新创建order去自动购买能量)
+                String orderKey = fromAddress + "-" + nerveTxHash;
+                String _orderId = htgMultiSignAddressHistoryStorageService.getTronEnergyOrder(orderKey);
+                if (StringUtils.isNotBlank(_orderId)) {
+                    // 已经购买过能量，再检查一次账户能量
+                    boolean enough = this.checkEnoughEnergy(nerveTxHash, fromAddress, txEnergyUsed);
+                    if (!enough) {
+                        // 能量仍然不足，则等待人工干预
+                        String invalidOrderId = trxWalletApi.getInvalidOrderId();
+                        // 人工更新invalidOrderId，当更新成账户当前的orderId时，则重新创建order，购买能量
+                        if (!_orderId.equals(invalidOrderId)) {
+                            String errorMsg = String.format("[%s] Energy has been purchased, orderId is %s, needEnergy is %s", nerveTxHash, _orderId, (needEnergy / 1000 + 1) * 1000);
+                            logger().error(errorMsg);
+                            throw new RuntimeException(errorMsg);
+                        }
+                    }
+                }
+
+                String apiKey = "xxx";
+                String energy = String.valueOf(needEnergy);
+                String rentTime = "1";
+                String receiveAddress = fromAddress;
+                String notes = "nerve multi";
+
+                // 购买能量
+                Map order = this.orderEnergy(apiKey, energy, rentTime, receiveAddress, notes);
+                if (order == null) {
+                    throw new RuntimeException("empty orderEnergy: " + nerveTxHash);
+                }
+                OrderData orderData = this.makeOrder(order);
+                htgMultiSignAddressHistoryStorageService.saveTronEnergyOrder(orderKey, orderData.getOrderId());
+                logger().info("[{}] order energy orderId: {}", nerveTxHash, orderData.getOrderId());
+                boolean enough = this.checkEnoughEnergy(nerveTxHash, receiveAddress, txEnergyUsed);
+                if (!enough) {
+                    throw new RuntimeException(String.format("[%s - %s] 没有足够的能量去交易", nerveTxHash, receiveAddress));
+                }
+            } while (false);
+        }
+
         // feeLimitchoice
         BigInteger feeLimit;
         if (txType == HeterogeneousChainTxType.WITHDRAW) {
@@ -1433,7 +1545,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             feeLimit = htgContext.GAS_LIMIT_OF_CHANGE();
         }
         if (estimateSun.getSunUsed() > 0) {
-            // Zoom in to3times
+            // Zoom in to 3 times
             feeLimit = BigDecimal.valueOf(estimateSun.getSunUsed()).multiply(TrxConstant.NUMBER_3).toBigInteger();
         }
         TrxSendTransactionPo trxSendTransactionPo = trxWalletApi.callContract(fromAddress, priKey, htgContext.MULTY_SIGN_ADDRESS(), feeLimit, txFunction, BigInteger.ZERO);
@@ -1442,6 +1554,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         htgTxRelationStorageService.save(htTxHash, nerveTxHash, trxSendTransactionPo.toHtgPo());
         // The current node has been sent outhtgtransaction
         htgInvokeTxHelper.saveSentEthTx(nerveTxHash);
+        htgTxInvokeInfoStorageService.saveLastNerveTxHashWithTron(nerveTxHash);
 
         // Save unconfirmed transactions
         po.setTxHash(htTxHash);
@@ -1453,6 +1566,109 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         htgListener.addListeningTx(htTxHash);
         logger().info("NerveNetwork oriented{}Network transmission[{}]transaction, nerveTxHash: {}, details: {}", htgContext.getConfig().getSymbol(), txType, nerveTxHash, po.toString());
         return htTxHash;
+    }
+
+    private boolean checkEnoughEnergy(String nerveTxHash, String receiveAddress, long enoughEnergy) throws InterruptedException {
+        boolean enough = false;
+        int count = 0;
+        while (true) {
+            long _availableEnergy = this.availableEnergy(receiveAddress);
+            logger().info("[{} - {}] 可用能量: {}", nerveTxHash, receiveAddress, _availableEnergy);
+            if (_availableEnergy >= enoughEnergy) {
+                enough = true;
+                break;
+            }
+            count++;
+            if (count > 3) {
+                break;
+            }
+            TimeUnit.MILLISECONDS.sleep(500);
+        }
+        return enough;
+    }
+
+
+    private long availableEnergy(String addr) {
+        try {
+            // 查询账户资源信息
+            org.tron.trident.proto.Response.AccountResourceMessage resourceInfo = trxWalletApi.getWrapper().getAccountResource(addr);
+
+            // 提取能量相关信息
+            long energyUsed = resourceInfo.getEnergyUsed(); // 已使用的能量
+            long energyLimit = resourceInfo.getEnergyLimit(); // 能量总量
+
+            return energyLimit - energyUsed;
+
+        } catch (Exception e) {
+            logger().error(String.format("[%s] 查询能量失败: %s", addr, e.getMessage()));
+            return 0;
+        }
+    }
+
+    private OrderData makeOrder(Map map) {
+        Object activationHash = map.get("activationHash");
+        Object hash = map.get("hash");
+        OrderData orderData = new OrderData(
+                map.get("orderId").toString(),
+                map.get("balance").toString(),
+                map.get("orderMoney").toString(),
+                activationHash == null ? null : activationHash.toString(),
+                hash == null ? Collections.EMPTY_LIST : (List<String>) hash
+        );
+        return orderData;
+    }
+
+    private Map orderEnergy(String apiKey, String energy, String rentTime, String receiveAddress, String notes) {
+        try {
+            OkHttpClient client = new OkHttpClient();
+            Map req = Map.of(
+                    "apiKey", apiKey,
+                    "payNums", energy,
+                    "rentTime", rentTime,
+                    "receiveAddress", receiveAddress,
+                    "orderNotes", notes
+            );
+            // 构造请求体
+            String requestBody = JSONUtils.obj2json(req);
+
+            // 构建请求
+            Request request = new Request.Builder()
+                    .url("https://app-api.trxdefi.ai/openapi/tron/energy/order/batchPay")
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            // 发送请求
+            try (okhttp3.Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    String error = String.format("Failed to order energy %s, receiveAddress %s", energy, receiveAddress);
+                    logger().error(error);
+                    throw new RuntimeException(error);
+                }
+                String resp = response.body().string();
+                String errorResp = String.format("error resp: %s", resp);
+                Map<String, Object> map = JSONUtils.json2map(resp);
+                Object codeObj = map.get("code");
+                if (codeObj == null) {
+                    logger().error(errorResp);
+                    throw new RuntimeException(errorResp);
+                }
+                int code = Integer.parseInt(codeObj.toString());
+                if (code != 0) {
+                    logger().error(errorResp);
+                    throw new RuntimeException(errorResp);
+                }
+                Object dataObj = map.get("data");
+                if (dataObj == null) {
+                    logger().error(errorResp);
+                    throw new RuntimeException(errorResp);
+                }
+                return (Map) dataObj;
+            }
+        } catch (Exception e) {
+            String errorMsg = String.format("Error to order energy %s, receiveAddress %s, error: %s", energy, receiveAddress, e.getMessage());
+            logger().error(errorMsg);
+            throw new RuntimeException(errorMsg);
+        }
     }
 
     private boolean isEnoughFeeOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {

@@ -40,6 +40,7 @@ import network.nerve.converter.utils.ConverterDBUtil;
 import org.rocksdb.RocksDBException;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,7 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
     private final String WITHDRAWL_UTXO_REBUILD_PREFIX;
     private final String WITHDRAWL_UTXO_LOCKED_PREFIX;
     private final String FTDATA_PREFIX;
+    private final String TRON_ENERGY_ORDER_PREFIX;
     private final byte[] SPLIT_GRANULARITY;
 
     private final HtgContext htgContext;
@@ -86,6 +88,7 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
         this.WITHDRAWL_UTXO_LOCKED_PREFIX = htgChainId + "_WITHDRAWL_UTXO_LOCKED_PREFIX-";
         this.SPLIT_GRANULARITY = stringToBytes(htgChainId + "_SPLIT_GRANULARITY");
         this.FTDATA_PREFIX = htgChainId + "_FTDATA_PREFIX-";
+        this.TRON_ENERGY_ORDER_PREFIX = htgChainId + "_TRON_ENERGY_ORDER_PREFIX-";
     }
 
     private boolean merged = false;
@@ -418,5 +421,19 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
         FtData po = new FtData();
         po.parse(bytes, 0);
         return po;
+    }
+
+    @Override
+    public void saveTronEnergyOrder(String addr, String orderId) throws Exception {
+        RocksDBService.put(baseArea(), stringToBytes(TRON_ENERGY_ORDER_PREFIX + addr), orderId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getTronEnergyOrder(String addr) throws Exception {
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(TRON_ENERGY_ORDER_PREFIX + addr));
+        if (bytes == null) {
+            return null;
+        }
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 }

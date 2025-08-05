@@ -40,6 +40,9 @@ import java.util.List;
  */
 public interface TrxConstant {
 
+    String NERVE_CC = "NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC";
+    String NERVE_CC_TRON = "TVXoMStg9Cmh2gMU4eBcZyS2Cr8Py99Wiz";
+
     String ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
     String ZERO_ADDRESS_TRX = "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb";
     String PUBLIC_KEY_UNCOMPRESSED_PREFIX = "04";
@@ -203,14 +206,14 @@ public interface TrxConstant {
                     //new TypeReference<Uint>(false) {}
             ));
 
-    BigInteger FEE_LIMIT_OF_WITHDRAW_BASE = BigInteger.valueOf(60_000000L);
-    BigInteger FEE_LIMIT_OF_CHANGE_BASE = BigInteger.valueOf(300_000000L);
+    BigInteger FEE_LIMIT_OF_WITHDRAW_BASE = BigInteger.valueOf(12_000000L);
+    BigInteger FEE_LIMIT_OF_CHANGE_BASE = BigInteger.valueOf(50_000000L);
     BigInteger TRX_1 = BigInteger.valueOf(1_000000L);
     BigInteger TRX_2 = BigInteger.valueOf(2_000000L);
     BigInteger TRX_10 = BigInteger.valueOf(10_000000L);
     BigInteger TRX_20 = BigInteger.valueOf(20_000000L);
     BigInteger TRX_100 = BigInteger.valueOf(100_000000L);
-    BigInteger SUN_PER_ENERGY_BASE = BigInteger.valueOf(420);
+    BigInteger SUN_PER_ENERGY_BASE = BigInteger.valueOf(210);
     BigDecimal NUMBER_3 = new BigDecimal("3");
     BigDecimal NUMBER_1_DOT_3 = new BigDecimal("1.3");
     BigDecimal NUMBER_0_DOT_1 = new BigDecimal("0.1");

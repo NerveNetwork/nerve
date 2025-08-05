@@ -124,6 +124,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 TxSubsequentProcessPO pendingPO = pendingTxQueue.peekFirst();
                 Transaction tx = pendingPO.getTx();
                 String nerveTxHash = tx.getHash().toHex();
+                chain.getLogger().info("[{}] tx start", nerveTxHash);
                 if (converterCoreApi.skippedTransaction(nerveTxHash)) {
                     // Determine if there is a problem with the transaction, Remove from queue, And remove it from the persistent library
                     chain.getLogger().info("[Heterogeneous chain pending queue] Historical legacy problem data, Remove transaction, hash:{}", nerveTxHash);
@@ -135,6 +136,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     continue;
                 }
                 if (pendingPO.getWithdrawAbnormalTimes() > 50) {
+                    chain.getLogger().error("[Heterogeneous chain pending queue] Retry 50 times, Remove transaction, hash:{}", nerveTxHash);
                     pendingTxQueue.remove();
                     continue;
                 }
@@ -693,6 +695,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 needSign = true;
             }
             if (needSign) {
+                chain.getLogger().info("[{}] tx sign", nerveTxHash);
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 HeterogeneousAssetInfo assetInfo = null;
                 CoinTo withdrawCoinTo = null;
@@ -742,6 +745,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
 
             boolean rs = false;
             if (compSignPO.getByzantinePass()) {
+                chain.getLogger().info("[{}] tx send cross out", nerveTxHash);
                 // collect more signatures
                 StringBuilder signatureDataBuilder = new StringBuilder();
                 for (ComponentSignMessage msg : compSignPO.getListMsg()) {
@@ -804,6 +808,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 rs = true;
             }
             // Store updated compSignPO
+            chain.getLogger().info("[{}] tx save PO", nerveTxHash);
             componentSignStorageService.save(chain, compSignPO);
             return rs;
         }
@@ -1024,6 +1029,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             needSign = true;
         }
         if (needSign) {
+            chain.getLogger().info("[{}] tx sign", txHash);
             int htgChainId = 0;
             String toAddress = null;
             if (TxType.WITHDRAWAL == tx.getType()) {
@@ -1082,6 +1088,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
 
         boolean rs = false;
         if (compSignPO.getByzantinePass()) {
+            chain.getLogger().info("[{}] tx send cross out", txHash);
             // collect more signatures
             StringBuilder signatureDataBuilder = new StringBuilder();
             for (ComponentSignMessage msg : compSignPO.getListMsg()) {
@@ -1155,6 +1162,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             rs = true;
         }
         // Store updated compSignPO
+        chain.getLogger().info("[{}] tx save PO", txHash);
         componentSignStorageService.save(chain, compSignPO);
         return rs;
     }

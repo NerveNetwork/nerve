@@ -21,40 +21,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package network.nerve.converter.heterogeneouschain.akc.register;
 
-package network.nerve.converter.heterogeneouschain.lib.storage;
+import io.nuls.core.core.annotation.Autowired;
+import io.nuls.core.core.annotation.Component;
+import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.heterogeneouschain.akc.context.AkcContext;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
+import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
 
-
-
-import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
-
-import java.util.List;
 
 /**
+ * towardsNerveCore registration
+ *
  * @author: Mimi
  * @date: 2020-02-20
  */
-public interface HtgTxInvokeInfoStorageService {
+@Component("akcRegister")
+public class AkcRegister extends HtgRegister {
 
-    int save(String nerveTxHash, HtgWaitingTxPo ethTxPo) throws Exception;
+    @Autowired
+    private ConverterConfig converterConfig;
+    private AkcContext context = new AkcContext();
 
-    HtgWaitingTxPo findEthWaitingTxPo(String nerveTxHash);
+    @Override
+    public ConverterConfig getConverterConfig() {
+        return converterConfig;
+    }
 
-    void deleteByTxHash(String nerveTxHash) throws Exception;
+    @Override
+    public HtgContext getHtgContext() {
+        return context;
+    }
 
-    boolean existNerveTxHash(String nerveTxHash);
+    @Override
+    public int order() {
+        return 43;
+    }
 
-    List<HtgWaitingTxPo> findAllWaitingTxPo();
+    @Override
+    public String DBName() {
+        return "cv_table_akc";
+    }
 
-    int saveSentEthTx(String nerveTxHash) throws Exception;
-
-    boolean ifSentEthTx(String nerveTxHash) throws Exception;
-
-    public void deleteSentEthTx(String nerveTxHash) throws Exception;
-
-    int saveCompletedNerveTx(String nerveTxHash) throws Exception;
-
-    boolean ifCompletedNerveTx(String nerveTxHash) throws Exception;
-    int saveLastNerveTxHashWithTron(String nerveTxHash) throws Exception;
-    String getLastNerveTxHashWithTron() throws Exception;
+    @Override
+    public String blockSyncThreadName() {
+        return "akc-block-sync";
+    }
 }

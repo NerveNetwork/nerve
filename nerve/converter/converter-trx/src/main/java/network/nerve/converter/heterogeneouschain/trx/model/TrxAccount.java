@@ -43,7 +43,6 @@ public class TrxAccount extends HtgAccount implements Serializable {
     private String compressedPublicKey;
 
     private transient int mod;
-    private transient int bankSize;
 
     public TrxAccount() {
     }
@@ -91,11 +90,4 @@ public class TrxAccount extends HtgAccount implements Serializable {
         this.mod = mod;
     }
 
-    public int getBankSize() {
-        return bankSize;
-    }
-
-    public void setBankSize(int bankSize) {
-        this.bankSize = bankSize;
-    }
 }

@@ -143,7 +143,7 @@ public class HeterogeneousAssetHelper {
                 }
             }
             if (total.compareTo(spend) < 0) {
-                chain.getLogger().info("[{}] not enough utxos to withdraw", txHash);
+                chain.getLogger().error("[{}] not enough utxos to withdraw", txHash);
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
         } while (false);

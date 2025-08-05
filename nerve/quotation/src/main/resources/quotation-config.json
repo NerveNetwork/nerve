@@ -255,6 +255,13 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "TBC-USDT",
           "desc": "TBC relative USDT price"
+        },
+        {
+          "key": "AKC_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "AKC-USDT",
+          "desc": "AKC relative USDT price"
         }
       ]
     }

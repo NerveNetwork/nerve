@@ -710,8 +710,14 @@ public class TxServiceImpl implements TxService {
                 }
             }
         } while (false);
-        if (!SignatureUtil.validateTransactionSignture(chainId, tx)) {
-            throw new NulsException(TxErrorCode.SIGNATURE_ERROR);
+        if (chain.getBestBlockHeight() >= TxContext.PROTOCOL_1_43_0) {
+            if (!SignatureUtil.validateTransactionSigntureForPersonalSign(chainId, tx)) {
+                throw new NulsException(TxErrorCode.SIGNATURE_ERROR);
+            }
+        } else {
+            if (!SignatureUtil.validateTransactionSignture(chainId, tx)) {
+                throw new NulsException(TxErrorCode.SIGNATURE_ERROR);
+            }
         }
     }
 

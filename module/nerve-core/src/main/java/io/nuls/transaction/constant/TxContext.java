@@ -53,6 +53,7 @@ public class TxContext {
     public static long PROTOCOL_1_18_0 = 0L;
     public static long PROTOCOL_1_19_0 = 0L;
     public static long PROTOCOL_1_20_0 = 0L;
+    public static long PROTOCOL_1_43_0 = 0L;
     public static Set<String> ACCOUNT_BLOCK_MANAGER_ADDRESS_SET = new HashSet<>();
     // Minimum number of signatures
     public static int ACCOUNT_BLOCK_MIN_SIGN_COUNT = 0;

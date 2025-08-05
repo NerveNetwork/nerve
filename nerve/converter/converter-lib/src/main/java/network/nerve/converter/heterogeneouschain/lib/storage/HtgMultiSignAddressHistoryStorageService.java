@@ -79,4 +79,8 @@ public interface HtgMultiSignAddressHistoryStorageService {
 
     void saveFtData(FtData ftData) throws Exception;
     FtData getFtData(String contractId) throws Exception;
+
+    void saveTronEnergyOrder(String addr, String orderId) throws Exception;
+
+    String getTronEnergyOrder(String addr) throws Exception;
 }

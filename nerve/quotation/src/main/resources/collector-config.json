@@ -46,6 +46,12 @@
     "baseurl": "https://api.xeggex.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.XeggexQuerier",
     "weight": "0.10"
+  },
+  {
+    "name": "Aiby2",
+    "baseurl": "https://cpsopenapi.aiby2.com/",
+    "collector": "network.nerve.quotation.rpc.querier.impl.Aiby2Querier",
+    "weight": "0.01"
   }
 ]
 

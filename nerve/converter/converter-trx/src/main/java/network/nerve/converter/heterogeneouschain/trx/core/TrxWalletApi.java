@@ -107,6 +107,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
 
     private Map<String, BigInteger> map = new HashMap<>();
     private ReentrantLock checkLock = new ReentrantLock();
+    private String invalidOrderId = "";
 
     private NulsLogger getLog() {
         return htgContext.logger();
@@ -122,6 +123,22 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             this.rpcAddress = StringUtils.isBlank(rpcAddress) ? EMPTY_STRING : rpcAddress;
             getLog().info("initialization {} API URL: {}", symbol(), rpcAddress);
         }
+    }
+
+    public void additionalCheck(Map<String, Object> resultMap) {
+        try {
+            String extend3 = (String) resultMap.get("extend3");
+            if (StringUtils.isBlank(extend3)) {
+                return;
+            }
+            invalidOrderId = extend3.trim();
+        } catch (Exception e) {
+            getLog().error(e);
+        }
+    }
+
+    public String getInvalidOrderId() {
+        return invalidOrderId;
     }
 
     public void checkApi(int order) throws NulsException {
@@ -146,6 +163,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                     break;
                 }
                 if (_version.intValue() > this.rpcVersion){
+                    this.additionalCheck(resultMap);
                     // findversionChange, switchrpc
                     Integer _index = (Integer) resultMap.get("index");
                     if (_index == null) {
@@ -508,6 +526,14 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                     }
                 }
                 return TrxEstimateSun.FAILED("Execute failed: empty result.");
+            } else {
+                Response.TransactionReturn result = call.getResult();
+                if (result != null && result.getMessage() != null) {
+                    String msg = result.getMessage().toStringUtf8();
+                    if ("REVERT opcode executed".equals(msg)) {
+                        return TrxEstimateSun.FAILED("Execute failed: REVERT opcode executed");
+                    }
+                }
             }
             String result = Numeric.toHexString(call.getConstantResult(0).toByteArray());
             if (TrxUtil.isErrorInResult(result)) {

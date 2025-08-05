@@ -463,29 +463,29 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
      * Date: 2018/4/16 14:55
      */
     public String sendMainAssetForTestCase(String fromAddress, String privateKey, String toAddress, BigDecimal value, BigInteger gasLimit, BigInteger gasPrice) throws Exception {
-        BigDecimal htBalance = getBalance(fromAddress);
-        if (htBalance == null) {
-            getLog().error("Get the current address{}Balance failed!", symbol());
-            return "501";
-        }
+        //BigDecimal htBalance = getBalance(fromAddress);
+        //if (htBalance == null) {
+        //    getLog().error("Get the current address{}Balance failed!", symbol());
+        //    return "501";
+        //}
         //getLog().info(fromAddress + "===Account amount" + convertWeiToEth(ethBalance.toBigInteger()));
         BigInteger bigIntegerValue = convertMainAssetToWei(value);
-        if (htBalance.toBigInteger().compareTo(bigIntegerValue.add(gasLimit.multiply(gasPrice))) < 0) {
-            //The balance is less than the sum of the transfer amount and handling fee
-            getLog().error("The account amount is less than the sum of the transfer amount and handling fee!");
-            return "502";
-        }
+        //if (htBalance.toBigInteger().compareTo(bigIntegerValue.add(gasLimit.multiply(gasPrice))) < 0) {
+        //    //The balance is less than the sum of the transfer amount and handling fee
+        //    getLog().error("The account amount is less than the sum of the transfer amount and handling fee!");
+        //    return "502";
+        //}
         BigInteger nonce = getNonce(fromAddress);
         if (nonce == null) {
             getLog().error("Get the current addressnoncefail!");
             return "503";
         }
         //getLog().info("nonce======>" + nonce);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            getLog().error(e.getMessage(), e);
-        }
+        //try {
+        //    Thread.sleep(1000);
+        //} catch (InterruptedException e) {
+        //    getLog().error(e.getMessage(), e);
+        //}
         RawTransaction etherTransaction = RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, toAddress, bigIntegerValue);
         //Transaction signature
         Credentials credentials = Credentials.create(privateKey);

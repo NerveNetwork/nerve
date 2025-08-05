@@ -257,6 +257,11 @@ public class CollectorTask implements Runnable {
                             continue;
                         }
                     }
+                    if (ANCHOR_TOKEN_AKC.equals(anchorToken)) {
+                        if (blockHeight < protocol43Height) {
+                            continue;
+                        }
+                    }
 
                     Collector collector = getCollector(qa.getCollector());
                     price = collector.enquiry(chain, anchorToken);
@@ -502,7 +507,7 @@ public class CollectorTask implements Runnable {
         try {
             return NerveSwapUtil.getPrice(chain, quContractCfg);
         } catch (Exception e) {
-            chain.getLogger().error(e);
+            chain.getLogger().error(quContractCfg.getTokenInfo(), e);
             return null;
         }
     }

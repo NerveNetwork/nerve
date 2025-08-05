@@ -82,8 +82,10 @@ public class Base {
     //String testEthRpcAddress = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     int testChainId = 97;
     //String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
-    String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";//1
+    //String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";//1
     //String mainEthRpcAddress = "https://bsc-dataseed1.binance.org/";
+    //String mainEthRpcAddress = "https://bsc.drpc.org";
+    String mainEthRpcAddress = "https://bsc-dataseed4.bnbchain.org";
     //String mainEthRpcAddress = "https://bsc-dataseed4.defibit.io/";//1
     //String mainEthRpcAddress = "https://bsc-dataseed2.binance.org/";
     //String mainEthRpcAddress = "https://bsc-dataseed3.ninicoin.io/";//1

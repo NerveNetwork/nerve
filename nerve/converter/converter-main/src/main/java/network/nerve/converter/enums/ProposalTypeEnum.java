@@ -57,12 +57,12 @@ public enum ProposalTypeEnum {
 
     MANAGE_SWAP_PAIR_FEE_RATE((byte) 11),
 
-    REMOVECOIN((byte) 12),
+    REMOVECOIN((byte) 12),//稳定币交易对移除币种(swap module)
 
-    TRANSACTION_WHITELIST((byte) 13),
+    TRANSACTION_WHITELIST((byte) 13),// 交易账户白名单(稳定币兑换币种暂停交易后，白名单地址可正常交易)(swap module)
 
-    CLOSE_HTG_CHAIN((byte) 14),
-    SPLIT_GRANULARITY((byte) 15);
+    CLOSE_HTG_CHAIN((byte) 14),//关闭指定异构链跨链
+    SPLIT_GRANULARITY((byte) 15);//BTC系多签账户UTXO金额拆分
 
     private byte value;
     private static Map<Byte, ProposalTypeEnum> map;

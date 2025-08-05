@@ -153,13 +153,13 @@
     "chain": "nerve",
     "key": "ETHNBTCLPKEY",
     "anchorToken": "ETHNBTCLP-USDT",
-    "tokenInfo": "9-628-18",
-    "swapTokenContractAddress": "9-2-18",
+    "tokenInfo": "9-895-18",
+    "swapTokenContractAddress": "9-628-18",
     "baseTokenContractAddress": "9-787-8",
     "baseAnchorToken": "USDT-USDT",
     "baseTokenInfo": "9-220-18",
     "rpcAddress": "9-787,9-220",
-    "effectiveHeight": 77200000,
+    "effectiveHeight": 77460000,
     "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
   }
 ]

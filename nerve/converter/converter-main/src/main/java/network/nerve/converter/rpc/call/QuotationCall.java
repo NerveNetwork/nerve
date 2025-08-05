@@ -118,6 +118,8 @@ public class QuotationCall {
             return new BigDecimal("0.0001142");
         } else if ("TBC_PRICE".equals(oracleKey)){
             return new BigDecimal("1.1666");
+        } else if ("AKC_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.1693");
         }
         if (chain.getChainId() == 5 && "SHM_PRICE".equals(oracleKey)){
             return new BigDecimal("0.01993");

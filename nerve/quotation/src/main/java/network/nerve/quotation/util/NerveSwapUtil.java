@@ -59,11 +59,12 @@ public class NerveSwapUtil {
         if (null == priceResult) {
             return null;
         }
-        Long amountOutMin = (Long) priceResult.get("amountOutMin");
-        if (null == amountOutMin) {
+        if (null == priceResult.get("amountOutMin")) {
             return null;
         }
-        BigDecimal priceValue = new BigDecimal(BigInteger.valueOf(amountOutMin), cfg.getBaseAssetDecimals());
+        BigInteger amountOutMin = new BigInteger("" + priceResult.get("amountOutMin"));
+
+        BigDecimal priceValue = new BigDecimal(amountOutMin, cfg.getBaseAssetDecimals());
         if (doit == 1) {
             BigDecimal aValue = new BigDecimal(aCount, cfg.getaAssetDecimals());
             aValue = aValue.multiply(priceValue).multiply(BigDecimal.valueOf(2));

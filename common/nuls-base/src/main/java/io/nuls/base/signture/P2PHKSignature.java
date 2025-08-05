@@ -32,6 +32,7 @@ import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.NulsSignData;
 import io.nuls.core.basic.Result;
 import io.nuls.core.crypto.ECKey;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.SerializeUtils;
@@ -118,6 +119,7 @@ public class P2PHKSignature extends BaseNulsData {
         stream.write(publicKey.length);
         stream.write(publicKey);
         stream.writeNulsData(signData);
+
     }
 
     @Override
@@ -126,6 +128,7 @@ public class P2PHKSignature extends BaseNulsData {
         this.publicKey = byteBuffer.readBytes(length);
         this.signData = new NulsSignData();
         this.signData.parse(byteBuffer);
+
     }
 
     @Override
@@ -171,4 +174,17 @@ public class P2PHKSignature extends BaseNulsData {
             return comparator.compare(k1.getPublicKey(), k2.getPublicKey());
         }
     };
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"signData\":")
+                .append('\"').append(signData).append('\"');
+
+        sb.append(",\"publicKey\":")
+                .append(HexUtil.encode(publicKey));
+
+        sb.append('}');
+        return sb.toString();
+    }
 }

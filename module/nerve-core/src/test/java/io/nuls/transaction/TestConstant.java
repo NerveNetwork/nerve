@@ -29,8 +29,10 @@ import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.data.*;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.crypto.Sha256Hash;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -72,6 +74,13 @@ public class TestConstant {
 
     public static NulsHash getHashD() {
         return NulsHash.fromHex(txhashD);
+    }
+
+    @Test
+    public void test() {
+        String tx = "02003e7888682439653137653464662d623864642d343463622d613938662d38303963626331363138633200fd160102170900010f530f8521c6d4355468e3bc29d963584e1215cb0900010000e2a7ca0000000000000000000000000000000000000000000000000000000008aa40f043b6cd288700170900010f530f8521c6d4355468e3bc29d963584e1215cb010092000000fc72abe5383a3c000000000000000000000000000000000000000000000008e2fdc9e1dbeb533d0002170900012fcb129a81c09781ca49d2f05ed369bf6123bd750900010000e2a7ca000000000000000000000000000000000000000000000000000000000000000000000000170900012fcb129a81c09781ca49d2f05ed369bf6123bd75010092000000fc72abe5383a3c00000000000000000000000000000000000000000000000000000000000000";
+        byte[] bytes = Sha256Hash.hashTwice(HexUtil.decode(tx));
+        System.out.println(HexUtil.encode(bytes));
     }
 
     public static CoinFrom getCoinFrom1() {

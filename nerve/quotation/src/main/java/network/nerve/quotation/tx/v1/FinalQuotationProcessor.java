@@ -321,6 +321,12 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                     return false;
                 }
             }
+            if(key.equals(ANCHOR_TOKEN_AKC)) {
+                if (height < protocol43Height) {
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
+                    return false;
+                }
+            }
 
             return true;
         }

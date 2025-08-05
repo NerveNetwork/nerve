@@ -25,6 +25,7 @@
 package network.nerve.swap.context;
 
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.model.bo.StableCoinGroup;
 
 import java.math.BigDecimal;
@@ -100,7 +101,10 @@ public class SwapContext {
     public static long PROTOCOL_1_31_0 = 0L;
     public static long PROTOCOL_1_35_0 = 0L;
     public static long PROTOCOL_1_36_0 = 0L;
+    public static long PROTOCOL_1_43_0 = 0L;
     public static String PASSWORD;
 
     public static StableCoinGroup stableCoinGroup = new StableCoinGroup();
+
+    public static SwapHelper swapHelper;
 }

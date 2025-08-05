@@ -53,6 +53,7 @@ import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.config.SwapConfig;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.context.SwapContext;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
 import network.nerve.swap.rpc.call.BlockCall;
@@ -88,6 +89,8 @@ public class SwapBootstrap extends RpcModule {
     private StableSwapPairCache stableSwapPairCache;
     @Autowired
     private SwapStablePairStorageService swapStablePairStorageService;
+    @Autowired
+    private SwapHelper swapHelper;
 
     public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
         initSys();
@@ -202,6 +205,13 @@ public class SwapBootstrap extends RpcModule {
             SwapContext.PROTOCOL_1_36_0 = heightVersion1_36_0;
         } catch (Exception e) {
             Log.error("Failed to get height_1_36_0", e);
+            throw new RuntimeException(e);
+        }
+        try {
+            long heightVersion1_43_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_43_0"));
+            SwapContext.PROTOCOL_1_43_0 = heightVersion1_43_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_43_0", e);
             throw new RuntimeException(e);
         }
         try {
@@ -323,6 +333,7 @@ public class SwapBootstrap extends RpcModule {
         SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeDestructionAddressPublicKey(), swapConfig.getChainId());
         // Initialize AggregationstableCombining
         String stablePairAddressSetStr = swapConfig.getStablePairAddressInitialSet();
+        SwapContext.swapHelper = swapHelper;
         if (StringUtils.isNotBlank(stablePairAddressSetStr)) {
             String[] array = stablePairAddressSetStr.split(",");
             if (array.length == 0) {

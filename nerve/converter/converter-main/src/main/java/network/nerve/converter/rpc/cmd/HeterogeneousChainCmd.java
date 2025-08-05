@@ -1782,7 +1782,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.SKIP_TX, version = 1.0, description = "unlock utxo")
+    @CmdAnnotation(cmd = ConverterCmdConstant.SKIP_TX, version = 1.0, description = "skip tx")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
             @Parameter(parameterName = "nerveTxHash", parameterType = "String", parameterDes = "nerveTxHash"),

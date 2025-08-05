@@ -40,6 +40,7 @@ import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.btc.txdata.RechargeData;
 import network.nerve.converter.btc.txdata.UTXOData;
 import network.nerve.converter.btc.txdata.WithdrawalUTXOTxData;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.ConverterCoreApi;
@@ -81,6 +82,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -1546,7 +1548,7 @@ public class BtcTransferTest {
 
     Object[] baseDataSegWitForWithdraw() throws IOException {
 
-        List<String> newPubs = new ArrayList<>();
+        /*List<String> newPubs = new ArrayList<>();
         newPubs.add("02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03");
         newPubs.add("028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b7");
         newPubs.add("029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b4");
@@ -1581,20 +1583,22 @@ public class BtcTransferTest {
         w.setHtgChainId(201);
         w.setFeeRate(feeRate);
         w.setPubs(newPubs.stream().map(p -> HexUtil.decode(p)).collect(Collectors.toList()));
-        w.setUtxoDataList(utxoDataList);
+        w.setUtxoDataList(utxoDataList);*/
+
+        Map map = JSONUtils.json2map(wutxoInfo);
+        WithdrawalUTXO w = this.getWithdrawalUTXO(map);
+        String nerveTxHash = "49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be";
+        String toAddress = "bc1qpvxf0kn2h0amnw9hctxwf7s674al4m2lv6z2dp";
+
+
         List<UTXOData> UTXOList = w.getUtxoDataList();
         // take pubkeys of all managers
         List<ECKey> newPubEcKeys = w.getPubs().stream().map(p -> ECKey.fromPublicOnly(p)).collect(Collectors.toList());
 
         // calc the min number of signatures
         int n = newPubEcKeys.size(), m = 10;
-        //long fee = BitCoinLibUtil.calcFeeMultiSignSizeP2WSH(UTXOList.size(), 1, new int[HexUtil.decode(nerveTxHash).length], m, n) * w.getFeeRate();
-        //long totalMoney = 0;
-        //for (int k = 0; k < UTXOList.size(); k++) {
-        //    totalMoney += UTXOList.get(k).getAmount().longValue();
-        //}
         List<ECKey> currentPubs = newPubEcKeys;
-        long amount = new BigDecimal("15").movePointRight(8).longValue();
+        long amount = new BigDecimal("0.08").movePointRight(8).longValue();
         List<byte[]> opReturns = List.of(HexUtil.decode(nerveTxHash));
         return new Object[]{currentPubs, amount, toAddress, UTXOList, opReturns, m, n, w.getFeeRate()};
     }
@@ -1602,6 +1606,7 @@ public class BtcTransferTest {
     @Test
     public void signDataForSegWitMultiTransferTest() throws Exception {
         setMain();
+        initContext();
         List<String> priList = new ArrayList<>();
         priList.add("ae22c8.....");
         priList.add("a2edb5.....");
@@ -2028,6 +2033,251 @@ public class BtcTransferTest {
             System.out.println(pubkey + ": " + BitCoinLibUtil.getBtcLegacyAddress(pubkey, false));
         }
         System.out.println();
+    }
+
+    String wutxoInfo = """
+            {
+                        "nerveTxHash": "49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be",
+                        "htgChainId": 201,
+                        "currentMultiSignAddress": "bc1q7l4q8kqekyur4ak3tf4s2rr9rp4nhz6axejxjwrc3f28ywm4tl8smz5dpd",
+                        "currentVirtualBankTotal": 14,
+                        "feeRate": 2,
+                        "pubs": [
+                            "02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03",
+                            "028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b7",
+                            "029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b4",
+                            "02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd",
+                            "02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b9",
+                            "02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0",
+                            "02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d",
+                            "023ad3fbc7d73473f2eca9c46237988682ebd690ab260077af70357efcf9afbe90",
+                            "03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df4",
+                            "039eefe5915a253db131c5a825f03ca048e5aad257edfcd295fea3fec78609d980",
+                            "03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c9",
+                            "03c363f44196aa1a57ef7e14c19845acad721c9eefd837dacdf3fe3af1ba08ee21",
+                            "0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b",
+                            "035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803",
+                            "03743d75ac0ee77257dd11477a737bba2bd01a1b26246c477ef2a59fb8e873572a"
+                        ],
+                        "utxoDataList": [
+                            {
+                                "txid": "b8d656ae8dccb70e9a9e6cfe2b40f7f55a5600bdaac16586ab19f6e256609c5a",
+                                "vout": 1,
+                                "amount": 2950
+                            },
+                            {
+                                "txid": "c9f59dbc29fc38e459343a81789d541e008a500aeb012594cdb1fae044a4bb45",
+                                "vout": 1,
+                                "amount": 39143153
+                            }
+                        ],
+                        "script": null
+                        }
+            """;
+
+    private WithdrawalUTXO getWithdrawalUTXO(Map map) {
+        WithdrawalUTXO utxo = new WithdrawalUTXO();
+        utxo.setNerveTxHash(map.get("nerveTxHash").toString());
+        utxo.setHtgChainId(Integer.parseInt(map.get("htgChainId").toString()));
+        utxo.setCurrentMultiSignAddress(map.get("currentMultiSignAddress").toString());
+        utxo.setCurrenVirtualBankTotal(Integer.parseInt(map.get("currentVirtualBankTotal").toString()));
+        utxo.setFeeRate(Integer.parseInt(map.get("feeRate").toString()));
+        List<String> pubs = (List<String>) map.get("pubs");
+        utxo.setPubs(pubs.stream().map(s -> HexUtil.decode(s)).collect(Collectors.toList()));
+        List<Map> utxoDataList = (List<Map>) map.get("utxoDataList");
+        utxo.setUtxoDataList(utxoDataList.stream().map(u -> {
+            UTXOData data = new UTXOData();
+            data.setTxid(u.get("txid").toString());
+            data.setVout(Integer.parseInt(u.get("vout").toString()));
+            data.setAmount(new BigInteger(u.get("amount").toString()));
+            return data;
+        }).collect(Collectors.toList()));
+        return utxo;
+    }
+
+    List<String> list = new ArrayList<>();
+
+    private void initList() {
+        list.add("Received node[13.214.10.225:54364], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LM2VLMwYRuXLUXA4bRXjEmWv3dBJRkSEH, autographhex:02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a0302473045022100d084cbaa0cab10876cb407608f4ad7a739dbec9e19ddd791358d59169bb7d50d0220745821fddb2476ccc46d3a2253efa3c1711f894e840303f8f86a9efbb85e99a4463044022055d7e63cfa6dc1db30fd461025704abacd0bbb25912e3105ef453d02555fdd36022040bf07a470c41466a6ef9ca0f0dea485862ff8fbbb1ef23315d26c29989c0e42");
+        list.add("Received node[18.222.188.112:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LmDSdJ4ZKwLdzMtw2cKkWcpdQYD27QYFs, autographhex:028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b702463044022049e605fde23ea2252c5d76d7501ab87339083dca57d88f2a70488b967b8b80c00220694fd0e72cf2074f9529601290c183bb4457db7394b2960d4e2636211c8b796846304402203fb91a1efe4474cce7c0f16a35560ff2e36ad57320e5760720dbfb04e34dc1e302206584a14672c906239a4674575df5ccf097b71d47fa8f540d12c776fbade66719");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LmDSdJ4ZKwLdzMtw2cKkWcpdQYD27QYFs, autographhex:028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b702463044022049e605fde23ea2252c5d76d7501ab87339083dca57d88f2a70488b967b8b80c00220694fd0e72cf2074f9529601290c183bb4457db7394b2960d4e2636211c8b796846304402203fb91a1efe4474cce7c0f16a35560ff2e36ad57320e5760720dbfb04e34dc1e302206584a14672c906239a4674575df5ccf097b71d47fa8f540d12c776fbade66719");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LmDSdJ4ZKwLdzMtw2cKkWcpdQYD27QYFs, autographhex:028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b702463044022049e605fde23ea2252c5d76d7501ab87339083dca57d88f2a70488b967b8b80c00220694fd0e72cf2074f9529601290c183bb4457db7394b2960d4e2636211c8b796846304402203fb91a1efe4474cce7c0f16a35560ff2e36ad57320e5760720dbfb04e34dc1e302206584a14672c906239a4674575df5ccf097b71d47fa8f540d12c776fbade66719");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1AsMDMbwVg3jQu7YwjbLdP4L2srrtMEgUG, autographhex:03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df40247304502210081261d12f7b1065ae8c721dcf7152d2c57ad778c5c5dec4aeac76f08c4dcbbb0022058c39345a9619efa0687219b5edd913df622fa54f7279bcbf872fa600d3054534730450221009ab1e0560cee94a0d1125fe5b607de51b40e2b32d140b08840c808d020514b3402207ec65585026bfe5dd1ef4e1e066c37b28687839846f5ea585beadadd35c1e6f4");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1G5UPUrUS7K8oiaDTWUbwxhu86foVyeiTM, autographhex:02a28a636088973c35ca0c28498b672cb8f61802164cf6904fc83463c4722c629202473045022100b9151c3bcef61bedaaecdef5f7ae27ec22ca4b0098438c095b932c1410602c15022073526e6d41db5f66d1888c02d571a6a37014f9f093a597f73d2a8817a9d439d7473045022100cf6ec2927f2da5269d0d1390fbabfbe6ded53630d3562b608a2d306fa2b4f02e022079a7bb4343d9cdaf3bd6220dc3a22ac6715fe94058912d47324ad6769a594af0");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1G5UPUrUS7K8oiaDTWUbwxhu86foVyeiTM, autographhex:02a28a636088973c35ca0c28498b672cb8f61802164cf6904fc83463c4722c629202473045022100b9151c3bcef61bedaaecdef5f7ae27ec22ca4b0098438c095b932c1410602c15022073526e6d41db5f66d1888c02d571a6a37014f9f093a597f73d2a8817a9d439d7473045022100cf6ec2927f2da5269d0d1390fbabfbe6ded53630d3562b608a2d306fa2b4f02e022079a7bb4343d9cdaf3bd6220dc3a22ac6715fe94058912d47324ad6769a594af0");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1AsMDMbwVg3jQu7YwjbLdP4L2srrtMEgUG, autographhex:03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df40247304502210081261d12f7b1065ae8c721dcf7152d2c57ad778c5c5dec4aeac76f08c4dcbbb0022058c39345a9619efa0687219b5edd913df622fa54f7279bcbf872fa600d3054534730450221009ab1e0560cee94a0d1125fe5b607de51b40e2b32d140b08840c808d020514b3402207ec65585026bfe5dd1ef4e1e066c37b28687839846f5ea585beadadd35c1e6f4");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LM2VLMwYRuXLUXA4bRXjEmWv3dBJRkSEH, autographhex:02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a0302473045022100d084cbaa0cab10876cb407608f4ad7a739dbec9e19ddd791358d59169bb7d50d0220745821fddb2476ccc46d3a2253efa3c1711f894e840303f8f86a9efbb85e99a4463044022055d7e63cfa6dc1db30fd461025704abacd0bbb25912e3105ef453d02555fdd36022040bf07a470c41466a6ef9ca0f0dea485862ff8fbbb1ef23315d26c29989c0e42");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1AxetbehKjojPrXMEap5N7RAEUvySZvRPy, autographhex:02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b90246304402207e6140ad6bad231ab0847039c15d2f507963bdb4aa5ced64697da21643381723022071fd9a41182a36b7ea583fe7f4c985ca244b55463f47d900dd0d7f634bfc752e46304402204c9cccd3346716c4ccd6a590fcb9d74a815373f02f2002588ed012ff927efae302203431cfc153825a5996d5a1ff2e8035926a61e6cecf0c51460cad133fb89b5481");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LmDSdJ4ZKwLdzMtw2cKkWcpdQYD27QYFs, autographhex:028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b702463044022049e605fde23ea2252c5d76d7501ab87339083dca57d88f2a70488b967b8b80c00220694fd0e72cf2074f9529601290c183bb4457db7394b2960d4e2636211c8b796846304402203fb91a1efe4474cce7c0f16a35560ff2e36ad57320e5760720dbfb04e34dc1e302206584a14672c906239a4674575df5ccf097b71d47fa8f540d12c776fbade66719");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LM2VLMwYRuXLUXA4bRXjEmWv3dBJRkSEH, autographhex:02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a0302473045022100d084cbaa0cab10876cb407608f4ad7a739dbec9e19ddd791358d59169bb7d50d0220745821fddb2476ccc46d3a2253efa3c1711f894e840303f8f86a9efbb85e99a4463044022055d7e63cfa6dc1db30fd461025704abacd0bbb25912e3105ef453d02555fdd36022040bf07a470c41466a6ef9ca0f0dea485862ff8fbbb1ef23315d26c29989c0e42");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EQLJmMNPqWvLDe559tBXKC9JGjhscY1YQ, autographhex:035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b80302473045022100852e2440e7cf72d546d6120e5690ef5c6bf3d471a87d8ea4a92393d6807a5f4e0220465b8fc6eb0e2438e2bb16fafca84b2629cc5b3fec637630f61c91db849ec53146304402200ef0299e52d2fb57e5ea7f0f68caeb763d08da19dcbc1dcea2b446e5a675ede30220688fd961d5bade43ce14c33563f61261bb2522d6e1e35917fa54f587d45c93de");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1AsMDMbwVg3jQu7YwjbLdP4L2srrtMEgUG, autographhex:03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df40247304502210081261d12f7b1065ae8c721dcf7152d2c57ad778c5c5dec4aeac76f08c4dcbbb0022058c39345a9619efa0687219b5edd913df622fa54f7279bcbf872fa600d3054534730450221009ab1e0560cee94a0d1125fe5b607de51b40e2b32d140b08840c808d020514b3402207ec65585026bfe5dd1ef4e1e066c37b28687839846f5ea585beadadd35c1e6f4");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EQLJmMNPqWvLDe559tBXKC9JGjhscY1YQ, autographhex:035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b80302473045022100852e2440e7cf72d546d6120e5690ef5c6bf3d471a87d8ea4a92393d6807a5f4e0220465b8fc6eb0e2438e2bb16fafca84b2629cc5b3fec637630f61c91db849ec53146304402200ef0299e52d2fb57e5ea7f0f68caeb763d08da19dcbc1dcea2b446e5a675ede30220688fd961d5bade43ce14c33563f61261bb2522d6e1e35917fa54f587d45c93de");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1AxetbehKjojPrXMEap5N7RAEUvySZvRPy, autographhex:02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b90246304402207e6140ad6bad231ab0847039c15d2f507963bdb4aa5ced64697da21643381723022071fd9a41182a36b7ea583fe7f4c985ca244b55463f47d900dd0d7f634bfc752e46304402204c9cccd3346716c4ccd6a590fcb9d74a815373f02f2002588ed012ff927efae302203431cfc153825a5996d5a1ff2e8035926a61e6cecf0c51460cad133fb89b5481");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1G5UPUrUS7K8oiaDTWUbwxhu86foVyeiTM, autographhex:02a28a636088973c35ca0c28498b672cb8f61802164cf6904fc83463c4722c629202473045022100b9151c3bcef61bedaaecdef5f7ae27ec22ca4b0098438c095b932c1410602c15022073526e6d41db5f66d1888c02d571a6a37014f9f093a597f73d2a8817a9d439d7473045022100cf6ec2927f2da5269d0d1390fbabfbe6ded53630d3562b608a2d306fa2b4f02e022079a7bb4343d9cdaf3bd6220dc3a22ac6715fe94058912d47324ad6769a594af0");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LmDSdJ4ZKwLdzMtw2cKkWcpdQYD27QYFs, autographhex:028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b702463044022049e605fde23ea2252c5d76d7501ab87339083dca57d88f2a70488b967b8b80c00220694fd0e72cf2074f9529601290c183bb4457db7394b2960d4e2636211c8b796846304402203fb91a1efe4474cce7c0f16a35560ff2e36ad57320e5760720dbfb04e34dc1e302206584a14672c906239a4674575df5ccf097b71d47fa8f540d12c776fbade66719");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1AsMDMbwVg3jQu7YwjbLdP4L2srrtMEgUG, autographhex:03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df40247304502210081261d12f7b1065ae8c721dcf7152d2c57ad778c5c5dec4aeac76f08c4dcbbb0022058c39345a9619efa0687219b5edd913df622fa54f7279bcbf872fa600d3054534730450221009ab1e0560cee94a0d1125fe5b607de51b40e2b32d140b08840c808d020514b3402207ec65585026bfe5dd1ef4e1e066c37b28687839846f5ea585beadadd35c1e6f4");
+        list.add("Received node[54.169.224.43:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:15rYy24bdN6voDyR4J2VLTMdfgJQeJWmNR, autographhex:02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d0247304502210096df6289b4a3024fbcda7c5192321de9043aefb89c66869cb33e9e0c438c7c3d0220723b9f64d39aed07e85d69f63b3cb89c3be7a0d4136dafc65c5c7b8f9df120344630440220586edc22bf40334a5e2e91b3f21449f3c31a825f552b011f52a429944201794a022038e6ddd207eec60f2f776c2cd85ca7c124437c53b6a5515a18c8ec2897e88118");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1G5UPUrUS7K8oiaDTWUbwxhu86foVyeiTM, autographhex:02a28a636088973c35ca0c28498b672cb8f61802164cf6904fc83463c4722c629202473045022100b9151c3bcef61bedaaecdef5f7ae27ec22ca4b0098438c095b932c1410602c15022073526e6d41db5f66d1888c02d571a6a37014f9f093a597f73d2a8817a9d439d7473045022100cf6ec2927f2da5269d0d1390fbabfbe6ded53630d3562b608a2d306fa2b4f02e022079a7bb4343d9cdaf3bd6220dc3a22ac6715fe94058912d47324ad6769a594af0");
+        list.add("Received node[3.134.76.235:60008], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:18zsADmbY6149Sd5yKQ4XYLJCwhbWGDRDf, autographhex:02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e304902473045022100dec6f435cb32c93fa6964fd474c6ca239eda8c329ce2f487383e163f9058b79002203344adf36cb63d28819c6144bf8cbd657dbda7c2853767ca02a8f80a3cd24ee546304402204cf61953fd9937cb8d48a0e9e0e35d9fdf9dd1f2cd03cd07626102ed004e3c4c02204460d91ba57a3cea5a0c4ab96c0c81992db7199550b0fbd530497c9358527e88");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:18zsADmbY6149Sd5yKQ4XYLJCwhbWGDRDf, autographhex:02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e304902473045022100dec6f435cb32c93fa6964fd474c6ca239eda8c329ce2f487383e163f9058b79002203344adf36cb63d28819c6144bf8cbd657dbda7c2853767ca02a8f80a3cd24ee546304402204cf61953fd9937cb8d48a0e9e0e35d9fdf9dd1f2cd03cd07626102ed004e3c4c02204460d91ba57a3cea5a0c4ab96c0c81992db7199550b0fbd530497c9358527e88");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:18zsADmbY6149Sd5yKQ4XYLJCwhbWGDRDf, autographhex:02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e304902473045022100dec6f435cb32c93fa6964fd474c6ca239eda8c329ce2f487383e163f9058b79002203344adf36cb63d28819c6144bf8cbd657dbda7c2853767ca02a8f80a3cd24ee546304402204cf61953fd9937cb8d48a0e9e0e35d9fdf9dd1f2cd03cd07626102ed004e3c4c02204460d91ba57a3cea5a0c4ab96c0c81992db7199550b0fbd530497c9358527e88");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:18zsADmbY6149Sd5yKQ4XYLJCwhbWGDRDf, autographhex:02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e304902473045022100dec6f435cb32c93fa6964fd474c6ca239eda8c329ce2f487383e163f9058b79002203344adf36cb63d28819c6144bf8cbd657dbda7c2853767ca02a8f80a3cd24ee546304402204cf61953fd9937cb8d48a0e9e0e35d9fdf9dd1f2cd03cd07626102ed004e3c4c02204460d91ba57a3cea5a0c4ab96c0c81992db7199550b0fbd530497c9358527e88");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:15rYy24bdN6voDyR4J2VLTMdfgJQeJWmNR, autographhex:02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d0247304502210096df6289b4a3024fbcda7c5192321de9043aefb89c66869cb33e9e0c438c7c3d0220723b9f64d39aed07e85d69f63b3cb89c3be7a0d4136dafc65c5c7b8f9df120344630440220586edc22bf40334a5e2e91b3f21449f3c31a825f552b011f52a429944201794a022038e6ddd207eec60f2f776c2cd85ca7c124437c53b6a5515a18c8ec2897e88118");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:18zsADmbY6149Sd5yKQ4XYLJCwhbWGDRDf, autographhex:02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e304902473045022100dec6f435cb32c93fa6964fd474c6ca239eda8c329ce2f487383e163f9058b79002203344adf36cb63d28819c6144bf8cbd657dbda7c2853767ca02a8f80a3cd24ee546304402204cf61953fd9937cb8d48a0e9e0e35d9fdf9dd1f2cd03cd07626102ed004e3c4c02204460d91ba57a3cea5a0c4ab96c0c81992db7199550b0fbd530497c9358527e88");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:15rYy24bdN6voDyR4J2VLTMdfgJQeJWmNR, autographhex:02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d0247304502210096df6289b4a3024fbcda7c5192321de9043aefb89c66869cb33e9e0c438c7c3d0220723b9f64d39aed07e85d69f63b3cb89c3be7a0d4136dafc65c5c7b8f9df120344630440220586edc22bf40334a5e2e91b3f21449f3c31a825f552b011f52a429944201794a022038e6ddd207eec60f2f776c2cd85ca7c124437c53b6a5515a18c8ec2897e88118");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LM2VLMwYRuXLUXA4bRXjEmWv3dBJRkSEH, autographhex:02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a0302473045022100d084cbaa0cab10876cb407608f4ad7a739dbec9e19ddd791358d59169bb7d50d0220745821fddb2476ccc46d3a2253efa3c1711f894e840303f8f86a9efbb85e99a4463044022055d7e63cfa6dc1db30fd461025704abacd0bbb25912e3105ef453d02555fdd36022040bf07a470c41466a6ef9ca0f0dea485862ff8fbbb1ef23315d26c29989c0e42");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1LM2VLMwYRuXLUXA4bRXjEmWv3dBJRkSEH, autographhex:02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a0302473045022100d084cbaa0cab10876cb407608f4ad7a739dbec9e19ddd791358d59169bb7d50d0220745821fddb2476ccc46d3a2253efa3c1711f894e840303f8f86a9efbb85e99a4463044022055d7e63cfa6dc1db30fd461025704abacd0bbb25912e3105ef453d02555fdd36022040bf07a470c41466a6ef9ca0f0dea485862ff8fbbb1ef23315d26c29989c0e42");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EQLJmMNPqWvLDe559tBXKC9JGjhscY1YQ, autographhex:035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b80302473045022100852e2440e7cf72d546d6120e5690ef5c6bf3d471a87d8ea4a92393d6807a5f4e0220465b8fc6eb0e2438e2bb16fafca84b2629cc5b3fec637630f61c91db849ec53146304402200ef0299e52d2fb57e5ea7f0f68caeb763d08da19dcbc1dcea2b446e5a675ede30220688fd961d5bade43ce14c33563f61261bb2522d6e1e35917fa54f587d45c93de");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EQLJmMNPqWvLDe559tBXKC9JGjhscY1YQ, autographhex:035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b80302473045022100852e2440e7cf72d546d6120e5690ef5c6bf3d471a87d8ea4a92393d6807a5f4e0220465b8fc6eb0e2438e2bb16fafca84b2629cc5b3fec637630f61c91db849ec53146304402200ef0299e52d2fb57e5ea7f0f68caeb763d08da19dcbc1dcea2b446e5a675ede30220688fd961d5bade43ce14c33563f61261bb2522d6e1e35917fa54f587d45c93de");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1AxetbehKjojPrXMEap5N7RAEUvySZvRPy, autographhex:02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b90246304402207e6140ad6bad231ab0847039c15d2f507963bdb4aa5ced64697da21643381723022071fd9a41182a36b7ea583fe7f4c985ca244b55463f47d900dd0d7f634bfc752e46304402204c9cccd3346716c4ccd6a590fcb9d74a815373f02f2002588ed012ff927efae302203431cfc153825a5996d5a1ff2e8035926a61e6cecf0c51460cad133fb89b5481");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1AxetbehKjojPrXMEap5N7RAEUvySZvRPy, autographhex:02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b90246304402207e6140ad6bad231ab0847039c15d2f507963bdb4aa5ced64697da21643381723022071fd9a41182a36b7ea583fe7f4c985ca244b55463f47d900dd0d7f634bfc752e46304402204c9cccd3346716c4ccd6a590fcb9d74a815373f02f2002588ed012ff927efae302203431cfc153825a5996d5a1ff2e8035926a61e6cecf0c51460cad133fb89b5481");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:15rYy24bdN6voDyR4J2VLTMdfgJQeJWmNR, autographhex:02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d0247304502210096df6289b4a3024fbcda7c5192321de9043aefb89c66869cb33e9e0c438c7c3d0220723b9f64d39aed07e85d69f63b3cb89c3be7a0d4136dafc65c5c7b8f9df120344630440220586edc22bf40334a5e2e91b3f21449f3c31a825f552b011f52a429944201794a022038e6ddd207eec60f2f776c2cd85ca7c124437c53b6a5515a18c8ec2897e88118");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:15rYy24bdN6voDyR4J2VLTMdfgJQeJWmNR, autographhex:02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d0247304502210096df6289b4a3024fbcda7c5192321de9043aefb89c66869cb33e9e0c438c7c3d0220723b9f64d39aed07e85d69f63b3cb89c3be7a0d4136dafc65c5c7b8f9df120344630440220586edc22bf40334a5e2e91b3f21449f3c31a825f552b011f52a429944201794a022038e6ddd207eec60f2f776c2cd85ca7c124437c53b6a5515a18c8ec2897e88118");
+        list.add("Received node[154.38.169.146:34232], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EG4E8GRqryWueUS8WC1rCKs1jHH61kVng, autographhex:029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b40246304402201de64c40c1674750bf2e04e46b8db39a1e777871f724e77264477f7f6737ba1202203f42aaa1b1fca9f11a3dfa2b9cfc463b7e31f4f714d56f41dbe01decf2c09cc3463044022063da4730a4e68ac93f8692fc87e35df59a2099a83644eaa041bacf96ba4bc98f0220153f81a02535145945a0ac52584602339f9ff846b2803145111d74a23ca568e5");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EG4E8GRqryWueUS8WC1rCKs1jHH61kVng, autographhex:029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b40246304402201de64c40c1674750bf2e04e46b8db39a1e777871f724e77264477f7f6737ba1202203f42aaa1b1fca9f11a3dfa2b9cfc463b7e31f4f714d56f41dbe01decf2c09cc3463044022063da4730a4e68ac93f8692fc87e35df59a2099a83644eaa041bacf96ba4bc98f0220153f81a02535145945a0ac52584602339f9ff846b2803145111d74a23ca568e5");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EG4E8GRqryWueUS8WC1rCKs1jHH61kVng, autographhex:029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b40246304402201de64c40c1674750bf2e04e46b8db39a1e777871f724e77264477f7f6737ba1202203f42aaa1b1fca9f11a3dfa2b9cfc463b7e31f4f714d56f41dbe01decf2c09cc3463044022063da4730a4e68ac93f8692fc87e35df59a2099a83644eaa041bacf96ba4bc98f0220153f81a02535145945a0ac52584602339f9ff846b2803145111d74a23ca568e5");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EG4E8GRqryWueUS8WC1rCKs1jHH61kVng, autographhex:029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b40246304402201de64c40c1674750bf2e04e46b8db39a1e777871f724e77264477f7f6737ba1202203f42aaa1b1fca9f11a3dfa2b9cfc463b7e31f4f714d56f41dbe01decf2c09cc3463044022063da4730a4e68ac93f8692fc87e35df59a2099a83644eaa041bacf96ba4bc98f0220153f81a02535145945a0ac52584602339f9ff846b2803145111d74a23ca568e5");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1EG4E8GRqryWueUS8WC1rCKs1jHH61kVng, autographhex:029da5a7bf42be5c32bb06732160d033acefdbef6a537b717caea41a22a60706b40246304402201de64c40c1674750bf2e04e46b8db39a1e777871f724e77264477f7f6737ba1202203f42aaa1b1fca9f11a3dfa2b9cfc463b7e31f4f714d56f41dbe01decf2c09cc3463044022063da4730a4e68ac93f8692fc87e35df59a2099a83644eaa041bacf96ba4bc98f0220153f81a02535145945a0ac52584602339f9ff846b2803145111d74a23ca568e5");
+        list.add("Received node[8.210.246.86:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1DENBn7VPgFwqpVEvTN6ChqHoTsL9boYUM, autographhex:03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c90246304402207c6d2a5773fb331799ddc7bf1db3d98fe8f7686c2240b4a3bb095d76074ac41402206c6b37b3fecb8b5d9ce7a5cbf90de3367d048406181c2bff8fea916ace43b6e04630440220566a1e244ae6286b9f32ac487cd1d6a80b534aa6e847a97977c28c80ebeeeb9702200bc57ffb6a2a9104a656217d69ff8cb076df9d6dec1ae07f1fe0c211b45c6a2f");
+        list.add("Received node[54.198.221.81:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:17wobLASDGXYiYbdhZWbgeDKzsaBo2wCgY, autographhex:02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd024630440220530cc47290e7cbd8f307d3241f89e5e6cd11b9b0c908210381a63a59a77fbe08022060127331d743bb47e7651d8994a6df5d6945681403cc334405099d95bc15443146304402204c59fb45000a601b2809e71040eb2259f03eb14964692677a368ab0ec1c514a002201beb27e01f7ec140c68a3e25d24dba8df58dbfcbf91932cebf669f90aa7c4b5d");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:17wobLASDGXYiYbdhZWbgeDKzsaBo2wCgY, autographhex:02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd024630440220530cc47290e7cbd8f307d3241f89e5e6cd11b9b0c908210381a63a59a77fbe08022060127331d743bb47e7651d8994a6df5d6945681403cc334405099d95bc15443146304402204c59fb45000a601b2809e71040eb2259f03eb14964692677a368ab0ec1c514a002201beb27e01f7ec140c68a3e25d24dba8df58dbfcbf91932cebf669f90aa7c4b5d");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:17wobLASDGXYiYbdhZWbgeDKzsaBo2wCgY, autographhex:02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd024630440220530cc47290e7cbd8f307d3241f89e5e6cd11b9b0c908210381a63a59a77fbe08022060127331d743bb47e7651d8994a6df5d6945681403cc334405099d95bc15443146304402204c59fb45000a601b2809e71040eb2259f03eb14964692677a368ab0ec1c514a002201beb27e01f7ec140c68a3e25d24dba8df58dbfcbf91932cebf669f90aa7c4b5d");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1DENBn7VPgFwqpVEvTN6ChqHoTsL9boYUM, autographhex:03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c90246304402207c6d2a5773fb331799ddc7bf1db3d98fe8f7686c2240b4a3bb095d76074ac41402206c6b37b3fecb8b5d9ce7a5cbf90de3367d048406181c2bff8fea916ace43b6e04630440220566a1e244ae6286b9f32ac487cd1d6a80b534aa6e847a97977c28c80ebeeeb9702200bc57ffb6a2a9104a656217d69ff8cb076df9d6dec1ae07f1fe0c211b45c6a2f");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1DENBn7VPgFwqpVEvTN6ChqHoTsL9boYUM, autographhex:03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c90246304402207c6d2a5773fb331799ddc7bf1db3d98fe8f7686c2240b4a3bb095d76074ac41402206c6b37b3fecb8b5d9ce7a5cbf90de3367d048406181c2bff8fea916ace43b6e04630440220566a1e244ae6286b9f32ac487cd1d6a80b534aa6e847a97977c28c80ebeeeb9702200bc57ffb6a2a9104a656217d69ff8cb076df9d6dec1ae07f1fe0c211b45c6a2f");
+        list.add("Received node[120.79.204.143:38108], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:17wobLASDGXYiYbdhZWbgeDKzsaBo2wCgY, autographhex:02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd024630440220530cc47290e7cbd8f307d3241f89e5e6cd11b9b0c908210381a63a59a77fbe08022060127331d743bb47e7651d8994a6df5d6945681403cc334405099d95bc15443146304402204c59fb45000a601b2809e71040eb2259f03eb14964692677a368ab0ec1c514a002201beb27e01f7ec140c68a3e25d24dba8df58dbfcbf91932cebf669f90aa7c4b5d");
+        list.add("Received node[118.31.171.80:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:17wobLASDGXYiYbdhZWbgeDKzsaBo2wCgY, autographhex:02a2edb535be21aa7fd4aa0748ae29e110e35783bc6a92fa7f417f3ffeeeec18cd024630440220530cc47290e7cbd8f307d3241f89e5e6cd11b9b0c908210381a63a59a77fbe08022060127331d743bb47e7651d8994a6df5d6945681403cc334405099d95bc15443146304402204c59fb45000a601b2809e71040eb2259f03eb14964692677a368ab0ec1c514a002201beb27e01f7ec140c68a3e25d24dba8df58dbfcbf91932cebf669f90aa7c4b5d");
+        list.add("Received node[54.164.126.161:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1DENBn7VPgFwqpVEvTN6ChqHoTsL9boYUM, autographhex:03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c90246304402207c6d2a5773fb331799ddc7bf1db3d98fe8f7686c2240b4a3bb095d76074ac41402206c6b37b3fecb8b5d9ce7a5cbf90de3367d048406181c2bff8fea916ace43b6e04630440220566a1e244ae6286b9f32ac487cd1d6a80b534aa6e847a97977c28c80ebeeeb9702200bc57ffb6a2a9104a656217d69ff8cb076df9d6dec1ae07f1fe0c211b45c6a2f");
+        list.add("Received node[54.198.219.95:7001], txhash: 49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be, Heterogeneous chainId:201, Signature address:1DENBn7VPgFwqpVEvTN6ChqHoTsL9boYUM, autographhex:03ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c90246304402207c6d2a5773fb331799ddc7bf1db3d98fe8f7686c2240b4a3bb095d76074ac41402206c6b37b3fecb8b5d9ce7a5cbf90de3367d048406181c2bff8fea916ace43b6e04630440220566a1e244ae6286b9f32ac487cd1d6a80b534aa6e847a97977c28c80ebeeeb9702200bc57ffb6a2a9104a656217d69ff8cb076df9d6dec1ae07f1fe0c211b45c6a2f");
+    }
+
+    @Test
+    public void verifyNativeSegwitMultiSignTest() throws Exception {
+        initContext();
+        this.initList();
+        Map<String, String> signMap = new HashMap<>();
+        for (String str : list) {
+            String[] data = this.parseSignData(str);
+            String addr = data[0];
+            String sign = data[1];
+            signMap.put(addr, sign);
+        }
+        signMap.put("1EPn9marJ9ThhfEDAP4MDwd8XfYT9KP5yJ", "0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b02473045022100af060892335214145d2bd7b75643139f4b0005dd010590de2589150b2d8cda5602200dd626e7352efa4cc72e28fcecaa56d501a311b9951e60a8af974b7e30b1f55b463044022064bbeb31727681f3812eeab22273791349263cee2c0bbb41cda0e287cc6cf6c10220432b17c349d9121ac2465612124ce2b8ec9af04313eeb028b9f6873822f17167");
+        System.out.println(String.format("signMap.size(): %s", signMap.size()));
+
+        Map map = JSONUtils.json2map(wutxoInfo);
+        WithdrawalUTXO withdrawlUTXO = this.getWithdrawalUTXO(map);
+
+
+        String txHash = "49b58a42cebd26af5dfd15d935950f8a708854a2c4cb9be4d2a144856e6732be";
+        String toAddress = "bc1qpvxf0kn2h0amnw9hctxwf7s674al4m2lv6z2dp";
+        BigInteger amount = new BigDecimal("0.08").movePointRight(8).toBigInteger();
+        Map<String, String> validSignMap = new HashMap<>();
+        for(Map.Entry<String, String> obj : signMap.entrySet()) {
+            String addr = obj.getKey();
+            String signature = obj.getValue();
+            boolean verify = this.verifyNativeSegwitMultiSign(withdrawlUTXO, txHash, toAddress, amount, signature);
+            if (verify) {
+                validSignMap.put(addr, signature);
+            }
+            //System.out.println(String.format("addr: %s, result: %s", addr, verify));
+        }
+        System.out.println(String.format("validSignMap.size(): %s", validSignMap.size()));
+        String txHex = this.testCreateNativeSegwitMultiSignTx(withdrawlUTXO, validSignMap.values(), toAddress, amount, txHash);
+        System.out.println(String.format("txHex: %s", txHex));
+    }
+
+    private static void initContext() {
+        ConverterContext.converterCoreApi = new ConverterCoreApi();
+        Chain chain = new Chain();
+        ConfigBean bean = new ConfigBean();
+        bean.setChainId(9);
+        chain.setConfig(bean);
+        chain.getLatestBasicBlock().setHeight(300);
+        ConverterContext.PROTOCOL_1_42_0 = 3000;
+        ConverterContext.converterCoreApi.setNerveChain(chain);
+    }
+
+    public String testCreateNativeSegwitMultiSignTx(WithdrawalUTXO withdrawlUTXO, Collection<String> signatureData, String to, BigInteger _amount, String nerveTxHash) throws Exception {
+        long amount = _amount.longValue();
+        Map<String, List<String>> signatures = new HashMap<>();
+        for (String signData : signatureData) {
+            BtcSignData signDataObj = new BtcSignData();
+            signDataObj.parse(HexUtil.decode(signData.trim()), 0);
+            String pub = HexUtil.encode(signDataObj.getPubkey());
+            signatures.put(pub, signDataObj.getSignatures().stream().map(s -> HexUtil.encode(s)).collect(Collectors.toList()));
+            System.out.println("pub: " + pub);
+        }
+        System.out.println(String.format("signatureData.size(): %s", signatureData.size()));
+
+        List<UTXOData> UTXOList = withdrawlUTXO.getUtxoDataList();
+        // take pubkeys of all managers
+        List<ECKey> pubEcKeys = withdrawlUTXO.getPubs().stream().map(p -> ECKey.fromPublicOnly(p)).collect(Collectors.toList());
+        // calc the min number of signatures
+        int n = withdrawlUTXO.getPubs().size(), m = BitCoinLibUtil.getByzantineCount(n);
+
+        Transaction tx = BitCoinLibUtil.createNativeSegwitMultiSignTx(
+                signatures, pubEcKeys,
+                amount,
+                to,
+                UTXOList,
+                List.of(HexUtil.decode(nerveTxHash)),
+                m, n,
+                withdrawlUTXO.getFeeRate(),
+                true,
+                0L
+        );
+        return HexUtil.encode(tx.serialize());
+    }
+
+    public String[] parseSignData(String input) {
+        // 分割字符串
+        String[] parts = input.split(", ");
+
+        String signatureAddress = "";
+        String autographHex = "";
+
+        // 遍历分割后的部分
+        for (String part : parts) {
+            if (part.startsWith("Signature address:")) {
+                signatureAddress = part.substring("Signature address:".length());
+            } else if (part.startsWith("autographhex:")) {
+                autographHex = part.substring("autographhex:".length());
+            }
+        }
+
+        // 输出结果
+        //System.out.println("Signature address: " + signatureAddress);
+        //System.out.println("autographhex: " + autographHex);
+        return new String[]{signatureAddress, autographHex};
+    }
+
+    public Boolean verifyNativeSegwitMultiSign(WithdrawalUTXO withdrawlUTXO, String txHash, String toAddress, BigInteger amount, String signature) throws Exception {
+
+        if (withdrawlUTXO == null) {
+            return false;
+        }
+        List<UTXOData> UTXOList = withdrawlUTXO.getUtxoDataList();
+        BtcSignData signData = new BtcSignData();
+        signData.parse(HexUtil.decode(signature), 0);
+        ECKey pub = ECKey.fromPublicOnly(signData.getPubkey());
+        // take pubkeys of all managers
+        List<ECKey> pubEcKeys = withdrawlUTXO.getPubs().stream().map(p -> ECKey.fromPublicOnly(p)).collect(Collectors.toList());
+        // calc the min number of signatures
+        int n = withdrawlUTXO.getPubs().size(), m = BitCoinLibUtil.getByzantineCount(n);
+
+        return BitCoinLibUtil.verifyNativeSegwitMultiSign(
+                pub,
+                signData.getSignatures().stream().map(s -> HexUtil.encode(s)).collect(Collectors.toList()),
+                pubEcKeys,
+                amount.longValue(),
+                toAddress,
+                UTXOList,
+                List.of(HexUtil.decode(txHash)),
+                m, n,
+                withdrawlUTXO.getFeeRate(),
+                true,
+                0L);
     }
 
     /*

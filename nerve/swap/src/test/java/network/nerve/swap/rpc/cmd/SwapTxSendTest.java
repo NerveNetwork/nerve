@@ -409,7 +409,7 @@ public class SwapTxSendTest {
         //this.create4(params);
         //this.create5(params);
         params.put("tokenAStr", new NerveToken(5, 1).str());
-        params.put("tokenBStr", new NerveToken(5, 9).str());
+        params.put("tokenBStr", new NerveToken(5, 5).str());
 
         this.sendTx(from, SWAP_CREATE_PAIR, params);
     }
@@ -507,7 +507,7 @@ public class SwapTxSendTest {
         amountA = new BigDecimal(amountA).scaleByPowerOfTen(8).toPlainString();
         amountB = new BigDecimal(amountB).scaleByPowerOfTen(18).toPlainString();
         params.put("tokenAStr", new NerveToken(5, 1).str());
-        params.put("tokenBStr", new NerveToken(5, 9).str());
+        params.put("tokenBStr", new NerveToken(5, 5).str());
         params.put("amountA", amountA);
         params.put("amountB", amountB);
 
@@ -569,7 +569,7 @@ public class SwapTxSendTest {
         String tokenIn = "5-1";
         String amountIn = "3";
         amountIn = new BigDecimal(amountIn).scaleByPowerOfTen(8).toPlainString();
-        String tokenOut = "5-9";
+        String tokenOut = "5-5";
 
         //String[] pairs = new String[]{"TNVTdTSQ4vfckRXy2GWUykx174o3np9b7TC5q",
         //                                "TNVTdTSQBq61Gw6s8R9g8Jd7p6M2859Wn7kXW",
@@ -762,7 +762,7 @@ public class SwapTxSendTest {
 
     @Test
     public void getPairInfo() throws Exception {
-        Map map = this.getSwapPairInfo(nvt.str(), "5-11");
+        Map map = this.getSwapPairInfo(nvt.str(), "5-5");
         System.out.println(JSONUtils.obj2PrettyJson(map));
     }
 
@@ -796,7 +796,7 @@ public class SwapTxSendTest {
 
     @Test
     public void getResult() throws Exception {
-        String hash = "837af8c6e26af13b100c6e6199e942768101e6c6d835647eba9bf1f089540e12";
+        String hash = "eb308c4864fa1f624a7265b7189fed30e7717d386fb5d0055b844cf6dc3519b0";
         Map map = this.getSwapResultInfo(hash);
         System.out.println(JSONUtils.obj2PrettyJson(map));
         System.out.println();

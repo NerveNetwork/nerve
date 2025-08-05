@@ -21,40 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package network.nerve.converter.heterogeneouschain.akc.context;
 
-package network.nerve.converter.heterogeneouschain.lib.storage;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContextNew;
 
+import java.io.Serializable;
+import java.math.BigInteger;
 
-
-import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
-
-import java.util.List;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_DOT_01;
 
 /**
  * @author: Mimi
- * @date: 2020-02-20
+ * @date: 2020-02-26
  */
-public interface HtgTxInvokeInfoStorageService {
+public class AkcContext extends HtgContextNew implements Serializable {
 
-    int save(String nerveTxHash, HtgWaitingTxPo ethTxPo) throws Exception;
+    public AkcContext() {
+        super.SET_VERSION((byte) 3);
+    }
 
-    HtgWaitingTxPo findEthWaitingTxPo(String nerveTxHash);
+    @Override
+    public int HTG_CHAIN_ID() {
+        return 143;
+    }
 
-    void deleteByTxHash(String nerveTxHash) throws Exception;
+    @Override
+    public BigInteger initialGas() {
+        return GWEI_DOT_01;
+    }
 
-    boolean existNerveTxHash(String nerveTxHash);
-
-    List<HtgWaitingTxPo> findAllWaitingTxPo();
-
-    int saveSentEthTx(String nerveTxHash) throws Exception;
-
-    boolean ifSentEthTx(String nerveTxHash) throws Exception;
-
-    public void deleteSentEthTx(String nerveTxHash) throws Exception;
-
-    int saveCompletedNerveTx(String nerveTxHash) throws Exception;
-
-    boolean ifCompletedNerveTx(String nerveTxHash) throws Exception;
-    int saveLastNerveTxHashWithTron(String nerveTxHash) throws Exception;
-    String getLastNerveTxHashWithTron() throws Exception;
 }

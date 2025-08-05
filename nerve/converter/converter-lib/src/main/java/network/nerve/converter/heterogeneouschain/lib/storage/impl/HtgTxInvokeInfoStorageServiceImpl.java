@@ -32,6 +32,7 @@ import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxInvokeInfoSto
 import network.nerve.converter.model.po.StringListPo;
 import network.nerve.converter.utils.ConverterDBUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,7 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
     private final String MERGE_KEY_PREFIX_NERVE_SENT;
     private final String MERGE_KEY_PREFIX_ETH_PO;
     private final byte[] MERGE_WAITING_TX_ALL_KEY;
+    private final byte[] LAST_NERVE_TXHASH_WITH_TRON_KEY;
 
     private final HtgContext htgContext;
     public HtgTxInvokeInfoStorageServiceImpl(HtgContext htgContext, String baseArea) {
@@ -64,6 +66,7 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
         this.MERGE_KEY_PREFIX_NERVE_SENT = htgChainId + "_TXINVOKE-NS-";
         this.MERGE_KEY_PREFIX_ETH_PO = htgChainId + "_TXINVOKE-P-";
         this.MERGE_WAITING_TX_ALL_KEY = stringToBytes(htgChainId + "_TXINVOKE-P-ALL");
+        this.LAST_NERVE_TXHASH_WITH_TRON_KEY = stringToBytes(htgChainId + "_LAST_NERVE_TXHASH_WITH_TRON");
     }
 
     private boolean merged = false;
@@ -219,5 +222,20 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
             return false;
         }
         return true;
+    }
+
+    @Override
+    public int saveLastNerveTxHashWithTron(String nerveTxHash) throws Exception {
+        RocksDBService.put(baseArea(), LAST_NERVE_TXHASH_WITH_TRON_KEY, nerveTxHash.getBytes(StandardCharsets.UTF_8));
+        return 0;
+    }
+
+    @Override
+    public String getLastNerveTxHashWithTron() throws Exception {
+        byte[] bytes = RocksDBService.get(baseArea(), LAST_NERVE_TXHASH_WITH_TRON_KEY);
+        if (bytes == null) {
+            return null;
+        }
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 }

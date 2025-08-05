@@ -17,6 +17,7 @@ import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteChoiceEnum;
 import network.nerve.converter.enums.ProposalVoteRangeTypeEnum;
+import network.nerve.converter.heterogeneouschain.akc.context.AkcContext;
 import network.nerve.converter.heterogeneouschain.arbitrum.context.ArbitrumContext;
 import network.nerve.converter.heterogeneouschain.avax.context.AvaxContext;
 import network.nerve.converter.heterogeneouschain.basechain.context.BaseChainContext;
@@ -179,6 +180,11 @@ public class TxSendTest {
     static String USDT_PULSE = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
     static String USD18_PULSE = "0x21615a84D8D834ca598a59D8E5C810128403DfaE";
     static String NVT_PULSE_MINTER = "0xE6b360C49A316fcc71d55B3074160ee043a7BD8B";
+
+    /** Akc testnet */
+    static String USDT_AKC = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
+    static String USD18_AKC = "0x21615a84D8D834ca598a59D8E5C810128403DfaE";
+    static String NVT_AKC_MINTER = "0xE6b360C49A316fcc71d55B3074160ee043a7BD8B";
 
     /** Merlin testnet */
     static String USDT_MERLIN = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
@@ -464,6 +470,7 @@ public class TxSendTest {
     PulseContext pulseContext = new PulseContext();
     MintContext mintContext = new MintContext();
     TbcContext tbcContext = new TbcContext();
+    AkcContext akcContext = new AkcContext();
 
     static int ethChainId = 101;
     static int bnbChainId = 102;
@@ -482,7 +489,7 @@ public class TxSendTest {
 
     @Before
     public void before() throws Exception {
-        password = "25eb1cb9-d19c-43d4-8899-32bef8b9b006";
+        //password = "25eb1cb9-d19c-43d4-8899-32bef8b9b006";
         AddressTool.addPrefix(5, "TNVT");
         NoUse.mockModule();
         ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":8771");
@@ -533,7 +540,7 @@ public class TxSendTest {
         importPriKey("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b", password);//29 tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn
         importPriKey("B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF", password);//30 ETH Test network address tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ
         importPriKey("4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39", password);//31 Test network address tNULSeBaMrQaVh1V7LLvbKa5QSN54bS4sdbXaF, 0xc11D9943805e56b630A401D4bd9A29550353EFa1 [Account 9]
-        //importPriKey(packageAddressPrivateKey, password);
+        importPriKey(packageAddressPrivateKey, password);
         //=================================================================//
         importPriKey("e70ea2ebe146d900bf84bc7a96a02f4802546869da44a23c29f599c7e42001da", password);//32 TNVTdTSPQj7T5LiVmL974o2YRWa1YPJJzJHhn
         importPriKey("4c6b4c5d9b07e364d6b306d1afe0f2c37e15c64ac5151a395a4c570f00ce867d", password);//33 TNVTdTSPKy4iLwK6XC52VNqVSnk1vncF5Z2mu
@@ -624,9 +631,12 @@ public class TxSendTest {
         System.out.println(String.format("%s address: %s", title, address));
 
         this.balanceInfoPrint("　Main asset NVT", new NerveAssetInfo(chainId, assetId), address, 8);
-        this.balanceInfoPrint("asset TBC", new NerveAssetInfo(5, 4), address, 6);
-        this.balanceInfoPrint("asset test_usdt", new NerveAssetInfo(5, 5), address, 18);
-        this.balanceInfoPrint("asset doge", new NerveAssetInfo(5, 6), address, 6);
+        this.balanceInfoPrint("asset AKC", new NerveAssetInfo(5, 2), address, 18);
+        this.balanceInfoPrint("asset USDT(akc)", new NerveAssetInfo(5, 3), address, 6);
+        this.balanceInfoPrint("asset USD18(akc)", new NerveAssetInfo(5, 4), address, 18);
+        //this.balanceInfoPrint("asset TBC", new NerveAssetInfo(5, 4), address, 6);
+        //this.balanceInfoPrint("asset test_usdt", new NerveAssetInfo(5, 5), address, 18);
+        //this.balanceInfoPrint("asset doge", new NerveAssetInfo(5, 6), address, 6);
         //this.balanceInfoPrint("asset USDTN", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("asset NVT_USDTN_LP", new NerveAssetInfo(5, 4), address, 18);
         //this.balanceInfoPrint("asset BNB", new NerveAssetInfo(5, 2), address, 18);
@@ -854,6 +864,18 @@ public class TxSendTest {
         // Main assets quantity
         BigInteger value = new BigDecimal("0.00002").movePointRight(18).toBigInteger();
         BigInteger fee = new BigInteger(Long.valueOf(20_0000_0000L).toString());
+        NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
+    public void withdrawalAKC() throws Exception {
+        int htgChainId = akcContext.HTG_CHAIN_ID();
+        String from = address31;
+        String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
+        // Main assets quantity
+        BigInteger value = new BigDecimal("0.01").movePointRight(18).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(2_0000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
@@ -1426,14 +1448,14 @@ public class TxSendTest {
 
     @Test
     public void withdrawalUSDT() throws Exception {
-        int htgChainId = mintContext.HTG_CHAIN_ID();
-        String contract = USDT_MINT;
+        int htgChainId = akcContext.HTG_CHAIN_ID();
+        String contract = USDT_AKC;
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         // USDTquantity 1.123456
         BigInteger value = new BigDecimal("0.823456").scaleByPowerOfTen(6).toBigInteger();
-        BigInteger fee = new BigInteger(Long.valueOf(20_0000_0000L).toString());
+        BigInteger fee = new BigInteger(Long.valueOf(2_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
@@ -1466,15 +1488,15 @@ public class TxSendTest {
 
     @Test
     public void withdrawalUSD18() throws Exception {
-        int htgChainId = mintContext.HTG_CHAIN_ID();
-        String contract = USD18_MINT;
+        int htgChainId = akcContext.HTG_CHAIN_ID();
+        String contract = USD18_AKC;
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         // USD18quantity
         BigInteger value = new BigDecimal("1230.123456789123456789").scaleByPowerOfTen(18).toBigInteger();
         //BigInteger value = new BigDecimal("13").scaleByPowerOfTen(18).toBigInteger();
-        BigInteger fee = new BigInteger(Long.valueOf(20_0000_0000L).toString());
+        BigInteger fee = new BigInteger(Long.valueOf(2_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
@@ -1523,14 +1545,14 @@ public class TxSendTest {
     @Test
     public void withdrawalNVT() throws Exception {
         int feeChainId = chainId;
-        int htgChainId = mintContext.HTG_CHAIN_ID();
-        String contract = "0x67Ce1821eFa30478e459ABFC5966d4Bc82Dbc17f";
+        int htgChainId = akcContext.HTG_CHAIN_ID();
+        String contract = NVT_AKC_MINTER;
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         // NVT quantity
         BigInteger value = new BigDecimal("200").movePointRight(8).toBigInteger();
-        BigInteger fee = new BigInteger(Long.valueOf(20_0000_0000L).toString());
+        BigInteger fee = new BigInteger(Long.valueOf(2_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, feeChainId, htgChainId, assetInfo);
     }
@@ -1630,8 +1652,10 @@ public class TxSendTest {
         //regERC20(x1Context.HTG_CHAIN_ID(), "USD18", USD18_X1, 18);
         //regERC20(pulseContext.HTG_CHAIN_ID(), "USDT", USDT_PULSE, 6);
         //regERC20(pulseContext.HTG_CHAIN_ID(), "USD18", USD18_PULSE, 18);
-        regERC20(mintContext.HTG_CHAIN_ID(), "USDT", USDT_MINT, 6);
-        regERC20(mintContext.HTG_CHAIN_ID(), "USD18", USD18_MINT, 18);
+        regERC20(akcContext.HTG_CHAIN_ID(), "USDT", USDT_AKC, 6);
+        regERC20(akcContext.HTG_CHAIN_ID(), "USD18", USD18_AKC, 18);
+        //regERC20(mintContext.HTG_CHAIN_ID(), "USDT", USDT_MINT, 6);
+        //regERC20(mintContext.HTG_CHAIN_ID(), "USD18", USD18_MINT, 18);
         //regERC20(mantaContext.HTG_CHAIN_ID(), "USDT", USDT_MANTA, 6);
         //regERC20(mantaContext.HTG_CHAIN_ID(), "USD18", USD18_MANTA, 18);
         //regERC20(bnbChainId, "USDX", USDX_BNB, 6);
@@ -1760,7 +1784,8 @@ public class TxSendTest {
         //regHeterogeneousMainAsset(kromaContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(zetaContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(x1Context.HTG_CHAIN_ID());
-        regHeterogeneousMainAsset(pulseContext.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(pulseContext.HTG_CHAIN_ID());
+        regHeterogeneousMainAsset(akcContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(mintContext.HTG_CHAIN_ID());
         // BNB
         //regHeterogeneousMainAsset(bnbContext.HTG_CHAIN_ID);
@@ -1830,18 +1855,19 @@ public class TxSendTest {
         //regHeterogeneousMainAsset(merlinContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(btcContext.HTG_CHAIN_ID());
         //regHeterogeneousMainAsset(bchUtxoContext.HTG_CHAIN_ID());
-        regHeterogeneousMainAsset(tbcContext.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(tbcContext.HTG_CHAIN_ID());
     }
 
     @Test
     public void bindContractAssetReg() throws Exception {
 
         //bindERC20(tbcContext.HTG_CHAIN_ID(), "test_usdt", "1707b71efdc207a476e7fefd6f7fa880a2201032c2b1d0a3cc20118ded505da4", 6, 5, 5);
-        bindERC20(tbcContext.HTG_CHAIN_ID(), "doge", "29a753233bf4f3b546b5eacd0a8ec7a7a236bf7b987f51390a7cac90bb1d8bcf", 6, 5, 6);
+        //bindERC20(tbcContext.HTG_CHAIN_ID(), "doge", "29a753233bf4f3b546b5eacd0a8ec7a7a236bf7b987f51390a7cac90bb1d8bcf", 6, 5, 6);
         //bindERC20(kromaContext.HTG_CHAIN_ID(), "NVT", NVT_KROMA_MINTER, 8, 5, 1);
         //bindERC20(zetaContext.HTG_CHAIN_ID(), "NVT", NVT_ZETA_MINTER, 8, 5, 1);
         //bindERC20(x1Context.HTG_CHAIN_ID(), "NVT", NVT_X1_MINTER, 8, 5, 1);
         //bindERC20(pulseContext.HTG_CHAIN_ID(), "NVT", NVT_PULSE_MINTER, 8, 5, 1);
+        bindERC20(akcContext.HTG_CHAIN_ID(), "NVTTest", NVT_AKC_MINTER, 8, 5, 1);
         //bindERC20(mintContext.HTG_CHAIN_ID(), "NVTTest", "0x67Ce1821eFa30478e459ABFC5966d4Bc82Dbc17f", 8, 5, 1);
         //bindERC20(mintContext.HTG_CHAIN_ID(), "NVT", NVT_MINT_MINTER, 8, 5, 1);
         //bindERC20(mantaContext.HTG_CHAIN_ID(), "NVT", NVT_MANTA_MINTER, 8, 5, 1);
