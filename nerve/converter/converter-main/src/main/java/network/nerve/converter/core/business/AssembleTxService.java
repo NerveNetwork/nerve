@@ -401,4 +401,12 @@ public interface AssembleTxService {
                                  String from,
                                  String password,
                                  String nerveTxHash) throws NulsException;
+    Transaction createRetryWithdrawalTx(Chain chain,
+                                 String from,
+                                 String password,
+                                 String nerveTxHash) throws NulsException;
+    Transaction createReUTXOTx(Chain chain,
+                                 String from,
+                                 String password,
+                                 String nerveTxHash) throws NulsException;
 }

@@ -37,7 +37,7 @@ import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
  * @author: Mimi
  * @date: 2020-02-20
  */
-@Component("htRegister")
+//@Component("htRegister")
 public class HtRegister extends HtgRegister {
 
     @Autowired

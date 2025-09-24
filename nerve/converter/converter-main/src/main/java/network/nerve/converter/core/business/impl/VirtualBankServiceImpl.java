@@ -199,6 +199,8 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         /* 2020/11/19 If the number of heterogeneous chains is different from that of virtual banking nodes（seed）The number of heterogeneous chain addresses maintained is inconsistent, Then it is necessary to initialize the virtual bank**/
         int heterogeneousSize = 0;
         for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
+            // delete htg chain
+            director.getHeterogeneousAddrMap().remove(143);
             if (director.getSeedNode()) {
                 heterogeneousSize = director.getHeterogeneousAddrMap().size();
                 if (chain.getChainId() == 5) {

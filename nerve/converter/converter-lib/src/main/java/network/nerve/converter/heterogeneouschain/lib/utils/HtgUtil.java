@@ -555,6 +555,10 @@ public class HtgUtil {
         if (currentNetworkAssetName == AssetName.KLAY) {
             return gasPriceNetwork;
         }
+        if (currentNetworkAssetName == AssetName.MATIC) {
+            BigDecimal gasX2 = gasPriceNetwork.multiply(BigDecimal.valueOf(2));
+            return gasX2.compareTo(gasPriceSupport) > 0 ? gasX2 : gasPriceSupport;
+        }
         // The maximum cost for other heterogeneous Ethernet networks is the current average network transaction fee1.1times
         BigDecimal maximumPrice;
         if ((maximumPrice = gasPriceNetwork.multiply(SMALL)).compareTo(gasPriceSupport) <= 0) {

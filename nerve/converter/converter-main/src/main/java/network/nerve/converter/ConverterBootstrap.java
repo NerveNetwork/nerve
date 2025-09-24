@@ -330,6 +330,13 @@ public class ConverterBootstrap extends RpcModule {
             Log.warn("Failed to get height_1_43_0", e);
         }
         try {
+            long heightVersion1_44_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_44_0"));
+            ConverterContext.PROTOCOL_1_44_0 = heightVersion1_44_0;
+            ConverterContext.protocolHeightMap.put(44, heightVersion1_44_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_44_0", e);
+        }
+        try {
             int sigMode = Integer.parseInt(configurationLoader.getValue(ModuleE.Constant.ACCOUNT, "sigMode"));
             ConverterContext.SIG_MODE = sigMode;
         } catch (Exception e) {

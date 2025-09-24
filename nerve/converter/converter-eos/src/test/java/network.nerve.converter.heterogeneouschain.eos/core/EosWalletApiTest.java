@@ -610,17 +610,18 @@ public class EosWalletApiTest extends Base {
      */
     @Test
     public void sendMainAssetWithdrawBySignDataTest() throws Exception {
-        setBeta();
+        setMain();
+        setMainData();
         // Preparing to send withdrawalKAVATransactions,nerveTxHash: 82c4799d737085d54daf2595336651b08b67f5d08147759bc32afe3ad1425663, signatureData: d51f3c0d4b844aa8c1705a9494af8b89d9b1b24494c4d179d48949605344a5e86b83ce890ee3c3e461a0ecda2fe61e486766f07d9980e432553a57d59611198d1bf6c0e6cdf9a8eb040ef1f490d19e6b9e2628d88f45227bcf948a04b536a386c02638cf00161cc55203d72e9c5019fe76be5a063a1dd79c18f8ec99aef765d95e1c
-        String txKey = "82c4799d737085d54daf2595336651b08b67f5d08147759bc32afe3ad1425663";
+        String txKey = "752fba366cc6496ce0c1b39fde0e1a032f4d25f554d5d681a272385126dfe582";
         // Recipient Address
-        String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
+        String toAddress = "0xE5573d7bF52abfBcF9a70eb4479b13261A934F0b";
         // Mint quantity
-        String value = "0.001";
-        String signData = "d51f3c0d4b844aa8c1705a9494af8b89d9b1b24494c4d179d48949605344a5e86b83ce890ee3c3e461a0ecda2fe61e486766f07d9980e432553a57d59611198d1bf6c0e6cdf9a8eb040ef1f490d19e6b9e2628d88f45227bcf948a04b536a386c02638cf00161cc55203d72e9c5019fe76be5a063a1dd79c18f8ec99aef765d95e1c";
+        String value = "5.010393000000000000";
+        String signData = "917c806b053ddccd9651b1bcc8c41c2c90ffb06856f477774a2d40512e59aba9262a097853d6a9542942133e262c72f44a07ed52a5e7a246ff7e29151617e9f71b281c952f5c4a979c73e9e6561b22a94044bc6b9a6b4e809b0c81ab878da027d03c740840d545cea72d7893768f9573aef7489db1e6cdf9998849252b72a1da421c2a5eefe9dfa7db7ab8ae3f97f12d9634d6a7a32a45cc977e418680b6ac45fdf05a7939e366785bd02fcbe953163afad46332d75e74b2db7a6cca7f38c38520a81b03ad2af30c371fd52d3392c3d98f401ae9d3b9f53e7deab7b78aca1b2c8582977fec48f2f0aabd1255b86d5d3387f1370bda0812912c31ca7f50893ce403e1f91ca9632543f9a3bbb418a1a92c304b0aa0eb50c818741efbcd14c06aa04a0ebd7563e187de6ca0893e54c1504c1f0034a08d628c8db7e3c7d7e002afc3e7f868f31c954672f0b98746a2b1b8eeb0e585c4e5857c67f1f92fd888861b0ec472082a875b90532ecbfcb4549b121bb628d50b6c1f98e5d0385ec93f5e36b521af7f42941c295b62ef98700056f43bde95cf2ef84c98f6293aaf1da15f77664bf969c18ca118b9df24bd8f0ff9fa9ebe07e85d819929a366e042952a290c81ae71badf8b3c1b52fbd35ab1b15e5c11fe059f3555a6b199a174640464be79080b45e9723b794a4a59c532811c4ed7febd9640ebea4c7a09b8aae80e087d4ff358c3c42faa5de31bf1d0a2b1aab20c92868d7b996b5775b6ca0cdcbbb7c4d974d74bb728ef00cb79092941862a6ac9c5338426223789166e0cbc598a6ece900ac573ab39e2ca807f1be56f39e8d6589478fb88fcf0212fa95af108e3847ed9041b44effa7996a39a165ed2897882ced8611fad47ae0eea3e92687521062aefc24bcd9d54fd78b653721b";
 
         String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
-        System.out.println(String.format("Withdrawal%sPieces,hash: %s", value, hash));
+        System.out.println(String.format("Withdrawal %s Pieces, hash: %s", value, hash));
     }
 
     /**
@@ -1043,6 +1044,25 @@ public class EosWalletApiTest extends Base {
             String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(100000L), gasPrice);
             System.out.println(String.format("towards[%s]Transfer%sindividualMainAsset, transactionhash: %s", to, sendAmount, txHash));
         }
+    }
+
+    @Test
+    public void withdrawEstimateGasTest() throws Exception {
+        setMainProxy();
+        setMainData();
+        String fromAddress = "0xd87F2ad3EF011817319FD25454FC186CA71B3B56";
+
+        String txKey = "752fba366cc6496ce0c1b39fde0e1a032f4d25f554d5d681a272385126dfe582";
+        String toAddress = "0xE5573d7bF52abfBcF9a70eb4479b13261A934F0b";
+        BigInteger value = BigInteger.valueOf(5010393000000000000L);
+        String erc20 = "0x0000000000000000000000000000000000000000";
+        String signData = "917c806b053ddccd9651b1bcc8c41c2c90ffb06856f477774a2d40512e59aba9262a097853d6a9542942133e262c72f44a07ed52a5e7a246ff7e29151617e9f71b281c952f5c4a979c73e9e6561b22a94044bc6b9a6b4e809b0c81ab878da027d03c740840d545cea72d7893768f9573aef7489db1e6cdf9998849252b72a1da421c2a5eefe9dfa7db7ab8ae3f97f12d9634d6a7a32a45cc977e418680b6ac45fdf05a7939e366785bd02fcbe953163afad46332d75e74b2db7a6cca7f38c38520a81b03ad2af30c371fd52d3392c3d98f401ae9d3b9f53e7deab7b78aca1b2c8582977fec48f2f0aabd1255b86d5d3387f1370bda0812912c31ca7f50893ce403e1f91ca9632543f9a3bbb418a1a92c304b0aa0eb50c818741efbcd14c06aa04a0ebd7563e187de6ca0893e54c1504c1f0034a08d628c8db7e3c7d7e002afc3e7f868f31c954672f0b98746a2b1b8eeb0e585c4e5857c67f1f92fd888861b0ec472082a875b90532ecbfcb4549b121bb628d50b6c1f98e5d0385ec93f5e36b521af7f42941c295b62ef98700056f43bde95cf2ef84c98f6293aaf1da15f77664bf969c18ca118b9df24bd8f0ff9fa9ebe07e85d819929a366e042952a290c81ae71badf8b3c1b52fbd35ab1b15e5c11fe059f3555a6b199a174640464be79080b45e9723b794a4a59c532811c4ed7febd9640ebea4c7a09b8aae80e087d4ff358c3c42faa5de31bf1d0a2b1aab20c92868d7b996b5775b6ca0cdcbbb7c4d974d74bb728ef00cb79092941862a6ac9c5338426223789166e0cbc598a6ece900ac573ab39e2ca807f1be56f39e8d6589478fb88fcf0212fa95af108e3847ed9041b44effa7996a39a165ed2897882ced8611fad47ae0eea3e92687521062aefc24bcd9d54fd78b653721b";
+        Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, value, false, erc20, signData);
+        // estimateGasLimit
+        EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, multySignContractAddress, function, BigInteger.ZERO);
+        //BigInteger estimateGas = estimateGasObj.getAmountUsed();
+        System.out.println(JSONUtils.obj2PrettyJson(estimateGasObj));
+        //System.out.println(JSONUtils.obj2PrettyJson(estimateGasObj.getError()));
     }
 
 

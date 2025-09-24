@@ -95,5 +95,7 @@ public interface ConverterCmdConstant {
     String CHECK_PAUSE_OUT = "cv_checkPauseOut";
     String GET_CROSS_OUT_TX_FEE = "cv_getCrossOutTxFee";
     String SKIP_TX = "cv_skip_tx";
+    String RETRY_WITHDRAWAL_TX = "cv_retry_withdrawal_tx";
+    String REBUILD_UTXO_TX = "cv_rebuild_utxo_tx";
 
 }

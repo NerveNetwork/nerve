@@ -44,6 +44,7 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Sign;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.http.HttpService;
@@ -108,13 +109,17 @@ public class Base {
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
         // Verify the legality of contract transactions
-        /*EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
-        if (ethCall.isReverted()) {
-            Log.error("[{}]Transaction verification failed, reason: {}", txType, ethCall.getRevertReason());
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
-        }
+        //EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
+        //if (ethCall.isReverted()) {
+        //    Log.error("[{}]Transaction verification failed, reason: {}", txType, ethCall.getRevertReason());
+        //    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
+        //}
         // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        Response.Error error = estimateGasObj.getError();
+        if (error != null) {
+            throw new RuntimeException(String.format("error: %s, code: %s, data: %s", error.getMessage(), error.getCode(), error.getData()));
+        }
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
 
         Log.info("Transaction type: {}, EstimatedGasLimit: {}", txType, estimateGas);
@@ -123,10 +128,12 @@ public class Base {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimateGasLimitfail");
             //estimateGas = BigInteger.valueOf(100000L);
         }
-        BigInteger gasLimit = estimateGas;*/
-        BigInteger gasLimit = BigInteger.valueOf(300000);
-        BigInteger gasPrice = BigDecimal.valueOf(800).movePointRight(9).toBigInteger();
-        BigInteger nonce = BigInteger.valueOf(43);
+        BigInteger gasLimit = estimateGas;
+        BigInteger gasPrice = null;
+        BigInteger nonce = null;
+        //BigInteger gasLimit = BigInteger.valueOf(300000);
+        //BigInteger gasPrice = BigDecimal.valueOf(800).movePointRight(9).toBigInteger();
+        //BigInteger nonce = BigInteger.valueOf(43);
         HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, gasPrice, nonce);
         String ethTxHash = htSendTransactionPo.getTxHash();
         return ethTxHash;

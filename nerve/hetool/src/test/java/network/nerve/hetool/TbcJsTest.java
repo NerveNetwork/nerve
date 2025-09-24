@@ -23,6 +23,8 @@
  */
 package network.nerve.hetool;
 
+import io.nuls.core.crypto.ECKey;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.hetool.model.TbcUTXO;
 import network.nerve.hetool.util.TbcTxUtil;
@@ -35,16 +37,14 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
  * @author: PierreLuo
  * @date: 2024/5/28
  */
-public class TdcJsTest {
+public class TbcJsTest {
 
     Context context;
     String[] pubKeys = new String[]{
@@ -102,11 +102,11 @@ public class TdcJsTest {
 
     @Test
     public void testMultiTransferTBC() throws Exception {
-        String multiSigAddress = "FJ5buUdNQ8FBpwh3ZT2W1peVUidHRvje2m";
-        String address_to = "1Gb3miXLcLKdm1su17jjfXviqXVRTFnE9E";
-        String amount_tbc = "0.103893";
-        List utxos = JSONUtils.json2list("[{\"txId\":\"7d6a31759bc98aeaec0016b1d54785245d52951599f6614ca88c37e971cd60d4\",\"outputIndex\":0,\"script\":\"527c01217f01217f5279527952797e7ea914865f135c66fb464723414179f6180fa5fed1c1ac8853ae\",\"satoshis\":2000},{\"txId\":\"39546fd19c4d106ecd9a4d6cd7289b73a229fd36199e3ef12d905257b070f67c\",\"outputIndex\":4,\"script\":\"527c01217f01217f5279527952797e7ea914865f135c66fb464723414179f6180fa5fed1c1ac8853ae\",\"satoshis\":6000},{\"txId\":\"cf574649eef7ebe647a3e6adfaaa68b1048d8a4b95f6651db99838ea2735966f\",\"outputIndex\":4,\"script\":\"527c01217f01217f5279527952797e7ea914865f135c66fb464723414179f6180fa5fed1c1ac8853ae\",\"satoshis\":96000}]", Map.class);//hTool查询
-        Map map = TbcTxUtil.buildMultiSigTransaction_sendTBC(context, multiSigAddress, address_to, amount_tbc, utxos, "888888887d6a31759bc98aeaec0016b1d54785245d52951599f6614ca88c37e971cd60d4");
+        String multiSigAddress = "jvBaMk4qKjXaQFYgBmS7HkwwktsYDdBxfa";
+        String address_to = "17vGwnxRxr5BJxeZKT3egTx6BSHetjtfmt";
+        String amount_tbc = "9.168668";
+        List utxos = JSONUtils.json2list("[{\"txId\":\"d07c66ce98bb298b63dbe9a8ecfd8c866a5901252ff772c7fe1490648152ebff\",\"outputIndex\":0,\"script\":\"567c01217f01217f01217f01217f01217f01217f01217f01217f01217f59795979597959795979597959795979597959797e7e7e7e7e7e7e7e7ea914a87114bb95a3ec4a16413b93b821b1641c122a34885aae\",\"satoshis\":537872152}]", Map.class);//hTool查询
+        Map map = TbcTxUtil.buildMultiSigTransaction_sendTBC(context, multiSigAddress, address_to, amount_tbc, utxos, "400e3c1365ea133fe4ee9317856873c9ea21a4dfbb5d39823e276e0e431b2548");
         System.out.println(map);
         //String tx = TbcTxUtil.finishMultiSigTransaction_sendTBC(context, map.get("txraw").toString(),
         //        new String[][]{
@@ -115,6 +115,41 @@ public class TdcJsTest {
         //                    "3045022100c82ab9d9bdffdaa1a91fb199e75a314356f7f5db3c54c75ddeb7dbda1e24c7b6022045008d466428d42a185b0110ea04331367effb03a4cc5789a36be8755ba3106e41"}
         //}, pubKeys);
         //System.out.println(tx);
+    }
+
+    String[] pubs = new String[] {
+            "02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03",
+            "028c232cfd2d3757e50cb6af2e010819a942ab231c92406170ece0846b23d323b7",
+            "02a28a636088973c35ca0c28498b672cb8f61802164cf6904fc83463c4722c6292",
+            "02ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b9",
+            "02ac649c3eaf32886342b7d2ed83c01c24f297de2d006ad88e36017973644e3049",
+            "02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0",
+            "02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d",
+            "0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b",
+            "035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b803",
+            "03929732b37e41a5a37b35122002c068f596432f4b9438ba4ac2a85e7dd31c3df4"
+    };
+
+    @Test
+    public void finshTBCtest() throws Exception {
+        List<ECKey> pubEcKeys = Arrays.asList(pubs).stream().map(p -> ECKey.fromPublicOnly(HexUtil.decode(p))).toList();
+        List<ECKey> sortedPubKeys = new ArrayList<>(pubEcKeys);
+        Collections.sort(sortedPubKeys, ECKey.PUBKEY_COMPARATOR);
+        List<String> sortedPubs = sortedPubKeys.stream().map(sk -> sk.getPublicKeyAsHex()).toList();
+        System.out.println("sortedPubs: " + sortedPubs);
+
+        String txraw = "0a00000001ffeb5281649014fec772f72f2501596a868cfdeca8e9db638b29bb98ce667cd00000000000ffffffff03145c831f0000000053567c01217f01217f01217f01217f01217f01217f01217f01217f01217f59795979597959795979597959795979597959797e7e7e7e7e7e7e7e7ea914a87114bb95a3ec4a16413b93b821b1641c122a34885aae1ce78b00000000001976a9144be41c52d6cda2a9693602ca6234f37537a0a22088ac000000000000000027006a2488888888400e3c1365ea133fe4ee9317856873c9ea21a4dfbb5d39823e276e0e431b254800000000";
+        String tx = TbcTxUtil.finishMultiSigTransaction_sendTBC(context, txraw,
+                new String[][]{
+                    new String[]{
+                            "304502210098ec4ede0627fe88919689cb79ede56e4c324a747c2f39ebdb826f0a0d1bcd8802204ea744c854c6f92bc01fe96bd828477699b23d1148391103a7f845c8397a462241",
+                            "30440220220d3a62c6077f3e1e1e691eb23957df6f7ca210148848d56306fc51bb512cb902204b47a4b5ae30e164aace656c51e0aa16b7bdd3cb05ed9ae93ec0f6a1df14b56a41",
+                            "304402205338b421db2a6a7cba47b1996709247ccc9c3f547f9bfb9cf60420a9085902de02207c0f4e8085002641e347ff0d96b14712e9a8b10ddaf83c226b3e582cf2d8afc941",
+                            "304402202aeccf97097dcd960c1e34f670dd2ef02590bb4a083921da3bb07056c614a8a802200a6a7cd437196148982d4c48d4a922efa12396065b680fab3a9426a3de0030e341",
+                            "304402201273b62b911de84b9300ca7081eb5aeea9d50a4b77dddb772478e213d704dcaa02207bbe45fdbb973f94f1bf7b46201c84f7154bb8b8458f75761e9905c71ab1544041",
+                            "30450221009fd8d61b0308a84aaf49de36b23aafccd2af906ade5973025c28bffa1026f308022023f897c2faf3320893421db0d8f60aaa4942171bcf1085877d7009839fcecbcf41"}
+        }, sortedPubs.toArray(new String[0]));
+        System.out.println(tx);
     }
 
 

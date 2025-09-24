@@ -46,6 +46,7 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Sign;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.http.HttpService;
@@ -116,7 +117,7 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://rpc.ankr.com/polygon";
+        String mainEthRpcAddress = "https://polygon-rpc.com";
         final OkHttpClient.Builder builder =
                 new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
         OkHttpClient okHttpClient = builder.build();
@@ -143,8 +144,12 @@ public class Base {
         //    Log.error("[{}]Transaction verification failed, reason: {}", txType, ethCall.getRevertReason());
         //    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         //}
-        //// estimateGasLimit
+        // estimateGasLimit
         //EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        //Response.Error error = estimateGasObj.getError();
+        //if (error != null) {
+        //    throw new RuntimeException(String.format("error: %s, code: %s, data: %s", error.getMessage(), error.getCode(), error.getData()));
+        //}
         //BigInteger estimateGas = estimateGasObj.getAmountUsed();
         //
         //Log.info("Transaction type: {}, EstimatedGasLimit: {}", txType, estimateGas);
@@ -153,12 +158,12 @@ public class Base {
         //    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimateGasLimitfail");
         //    //estimateGas = BigInteger.valueOf(100000L);
         //}
-        //BigInteger gasLimit = estimateGas;
+        //BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(20000L));
         //BigInteger gasPrice = null;
         //BigInteger nonce = null;
-        BigInteger gasLimit = BigInteger.valueOf(280000L);
-        BigInteger gasPrice = BigDecimal.valueOf(3000).movePointRight(9).toBigInteger();
-        BigInteger nonce = BigInteger.valueOf(2558);
+        BigInteger gasLimit = BigInteger.valueOf(300000L);
+        BigInteger gasPrice = BigDecimal.valueOf(500).movePointRight(9).toBigInteger();
+        BigInteger nonce = BigInteger.valueOf(3612);
 
         HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, gasPrice, nonce);
         String ethTxHash = htSendTransactionPo.getTxHash();

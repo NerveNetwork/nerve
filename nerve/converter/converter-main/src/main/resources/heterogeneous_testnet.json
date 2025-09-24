@@ -902,7 +902,7 @@
     "filterAddresses": "FJ5buUdNQ8FBpwh3ZT2W1peVUidHRvje2m"
   },
   {
-    "chainId": 143,
+    "chainId": 144,
     "chainIdOnHtgNetwork": 9070,
     "type": 1,
     "symbol": "AKC",
@@ -919,7 +919,7 @@
     "blockQueuePeriod": 5,
     "confirmTxQueuePeriod": 10,
     "waitingTxQueuePeriod": 10,
-    "protocolVersion": 43,
+    "protocolVersion": 44,
     "priceKey": "AKC_PRICE",
     "filterAddresses": "0x4F50AB8Ae16d0643C9dad2cc9debbb0E9F714507"
   }

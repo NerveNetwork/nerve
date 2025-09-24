@@ -80,7 +80,7 @@ public enum AssetName {
     MERLIN(140, 18),
     PULSE(141, 18),
     MINT(142, 18),
-    AKC(143, 18);
+    AKC(144, 18);
 
     // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
     private int chainId;

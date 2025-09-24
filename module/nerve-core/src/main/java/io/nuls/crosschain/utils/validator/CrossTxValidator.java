@@ -104,6 +104,7 @@ public class CrossTxValidator {
                 boolean verifyResult = false;
                 byte[] txHashByte = tx.getHash().getBytes();
                 for (P2PHKSignature signature : transactionSignature.getP2PHKSignatures()) {
+                    //todo personal sign???
                     if (!ECKey.verify(txHashByte, signature.getSignData().getSignBytes(), signature.getPublicKey())) {
                         chain.getLogger().error("Signature verification failed");
                         throw new NulsException(new Exception("Transaction signature error !"));

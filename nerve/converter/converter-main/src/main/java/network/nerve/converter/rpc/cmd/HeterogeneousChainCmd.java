@@ -1840,6 +1840,102 @@ public class HeterogeneousChainCmd extends BaseCmd {
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
+    @CmdAnnotation(cmd = ConverterCmdConstant.RETRY_WITHDRAWAL_TX, version = 1.0, description = "retrywithdrawal tx")
+    public Response retryWithdrawalTx(Map params) {
+        Chain chain = null;
+        try {
+            if (!converterCoreApi.isSeedVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_SEED_VIRTUAL_BANK);
+            }
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("password"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            String nerveTxHash = (String) params.get("nerveTxHash");
+            String address = (String) params.get("address");
+            String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
+                throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
+            }
+            Transaction tx = assembleTxService.createRetryWithdrawalTx(chain, address, password,
+                    nerveTxHash);
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", tx.getHash().toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+    @CmdAnnotation(cmd = ConverterCmdConstant.REBUILD_UTXO_TX, version = 1.0, description = "rebuild utxo tx")
+    public Response reUtxoTx(Map params) {
+        Chain chain = null;
+        try {
+            if (!converterCoreApi.isSeedVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_SEED_VIRTUAL_BANK);
+            }
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("password"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            String nerveTxHash = (String) params.get("nerveTxHash");
+            String address = (String) params.get("address");
+            String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
+                throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
+            }
+            Transaction tx = assembleTxService.createReUTXOTx(chain, address, password,
+                    nerveTxHash);
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", tx.getHash().toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
 
     @CmdAnnotation(cmd = ConverterCmdConstant.GET_SPLIT_GRANULARITY, version = 1.0, description = "GET_SPLIT_GRANULARITY")
     @Parameters(value = {

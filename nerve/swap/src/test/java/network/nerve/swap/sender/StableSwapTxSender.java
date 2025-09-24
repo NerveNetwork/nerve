@@ -51,8 +51,8 @@ public class StableSwapTxSender extends ApiTxSender {
     private static final int chainId = 9;
 
     public static void main(String[] args) throws Exception {
-        String coins = "9-696,9-697";
-        String lpName = "nercN";
+        String coins = "9-916,9-917,9-918";
+        String lpName = "DNN";
         new StableSwapTxSender().createStableSwap(coins, lpName);
     }
 

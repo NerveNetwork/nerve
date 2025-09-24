@@ -733,7 +733,7 @@ public class ConverterController {
     })
     )
     public RpcResult skipTx(List<Object> params) {
-        VerifyUtils.verifyParams(params, 5);
+        VerifyUtils.verifyParams(params, 4);
         int i = 0;
         int chainId = (int) params.get(i++);
         String nerveTxHash = (String) params.get(i++);
@@ -746,6 +746,41 @@ public class ConverterController {
         params1.put("address", address);
         params1.put("password", password);
         Result<Map<String, Object>> result = converterTools.commonRequest("cv_skip_tx", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+    @RpcMethod("retryWithdrawalTx")
+    public RpcResult retryWithdrawalTx(List<Object> params) {
+        VerifyUtils.verifyParams(params, 4);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        String nerveTxHash = (String) params.get(i++);
+        String address = (String) params.get(i++);
+        String password = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("nerveTxHash", nerveTxHash);
+        params1.put("address", address);
+        params1.put("password", password);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_retry_withdrawal_tx", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("rebuildUtxoTx")
+    public RpcResult rebuildUtxoTx(List<Object> params) {
+        VerifyUtils.verifyParams(params, 4);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        String nerveTxHash = (String) params.get(i++);
+        String address = (String) params.get(i++);
+        String password = (String) params.get(i++);
+
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("nerveTxHash", nerveTxHash);
+        params1.put("address", address);
+        params1.put("password", password);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_rebuild_utxo_tx", params1);
         return ResultUtil.getJsonRpcResult(result);
     }
 

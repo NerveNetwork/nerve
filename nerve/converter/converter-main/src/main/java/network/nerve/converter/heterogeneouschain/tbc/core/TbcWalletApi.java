@@ -88,8 +88,8 @@ public class TbcWalletApi extends BitCoinLibWalletApi {
         }
     }
 
-    private String rpcMain = "https://turingwallet.xyz";
-    private String rpcTest = "https://turingwallet.xyz";
+    private String rpcMain = "https://api.turingwallet.xyz";
+    private String rpcTest = "https://api.turingwallet.xyz";
     //private String rpcTest = "http://tbcdev.org:5000";
 
     public String rpc() {

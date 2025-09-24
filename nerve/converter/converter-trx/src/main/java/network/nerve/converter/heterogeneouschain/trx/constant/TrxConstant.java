@@ -213,7 +213,7 @@ public interface TrxConstant {
     BigInteger TRX_10 = BigInteger.valueOf(10_000000L);
     BigInteger TRX_20 = BigInteger.valueOf(20_000000L);
     BigInteger TRX_100 = BigInteger.valueOf(100_000000L);
-    BigInteger SUN_PER_ENERGY_BASE = BigInteger.valueOf(210);
+    BigInteger SUN_PER_ENERGY_BASE = BigInteger.valueOf(100);
     BigDecimal NUMBER_3 = new BigDecimal("3");
     BigDecimal NUMBER_1_DOT_3 = new BigDecimal("1.3");
     BigDecimal NUMBER_0_DOT_1 = new BigDecimal("0.1");

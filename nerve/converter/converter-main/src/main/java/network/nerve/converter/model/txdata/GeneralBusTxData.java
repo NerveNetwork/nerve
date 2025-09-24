@@ -37,6 +37,8 @@ public class GeneralBusTxData extends BaseNulsData {
     /**
      * type==1 Check and unlock abnormally locked UTXOs of heterogeneous chains of UTXO
      * type==2 Remove abnormal transactions from the cfmTask queue
+     * type==3 Delete the signature information saved in the node and let them collect signatures again
+     * type==4 Added a retry mechanism for BTC withdrawal transactions to collect UTXO consistency transactions
      */
     private int type;
     private byte[] data;

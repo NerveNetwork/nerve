@@ -695,6 +695,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public boolean isProtocol43() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_43_0;
     }
+    @Override
+    public boolean isProtocol44() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_44_0;
+    }
 
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
@@ -758,17 +762,20 @@ public class ConverterCoreApi implements IConverterCoreApi {
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDockingSmoothly(htgChainId);
 
         Coin feeCoin = null;
+        Coin withdrawalCoin = null;
         CoinData coinData = ConverterUtil.getInstance(nerveTx.getCoinData(), CoinData.class);
         byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, nerveChain.getChainId());
+        byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, nerveChain.getChainId());
         for (CoinTo coinTo : coinData.getTo()) {
             if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
                 // Subsidies for assembly and handling feescoinTo
                 feeCoin = coinTo;
-                break;
+            } else if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
+                withdrawalCoin = coinTo;
             }
         }
         AssetName assetName = this.getHtgMainAssetName(feeCoin);
-        HeterogeneousAssetInfo assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, feeCoin.getAssetsChainId(), feeCoin.getAssetsId());
+        HeterogeneousAssetInfo assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, withdrawalCoin.getAssetsChainId(), withdrawalCoin.getAssetsId());
         return docking.getCrossOutTxFee(assetName, assetInfo.getAssetId() > 1);
     }
 

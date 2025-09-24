@@ -96,6 +96,7 @@ public class MessageUtil {
             if (!config.isMainNet() && convertCtx.getType() == config.getCrossCtxType()) {
                 convertCtx = convertCtxService.get(hash, handleChainId);
             }
+            //todo personal sign???
             //Verify if the signature is correct. If it is a cross chain transfer transaction, the signature corresponds to the main network protocol signature
             if (!ECKey.verify(convertCtx.getHash().getBytes(), p2PHKSignature.getSignData().getSignBytes(), p2PHKSignature.getPublicKey())) {
                 chain.getLogger().info("Signature verification error,hash:{},autograph:{}\n\n", hashHex, signHex);

@@ -155,7 +155,7 @@ public class MessageServiceImpl implements MessageService {
         }
         //If the transaction has already been packaged, there is no need to broadcast the signature of the transaction again
         if (txPO.getStatus() != ByzantineStateEnum.UNTREATED.getStatus() || message.getP2PHKSignature() == null) {
-            LoggerUtil.LOG.info("The transaction has been processed at this node,Hash:{}\n\n", hash.toHex());
+            LoggerUtil.LOG.info("The transaction has been processed at this node, Hash:{}", hash.toHex());
             return;
         }
         try {

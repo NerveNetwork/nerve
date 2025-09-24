@@ -2355,8 +2355,22 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction createSkipTx(Chain chain, String from, String password, String nerveTxHash) throws NulsException {
+        return this.createBusTx(chain, from, password, 2, nerveTxHash);
+    }
+
+    @Override
+    public Transaction createRetryWithdrawalTx(Chain chain, String from, String password, String nerveTxHash) throws NulsException {
+        return this.createBusTx(chain, from, password, 3, nerveTxHash);
+    }
+
+    @Override
+    public Transaction createReUTXOTx(Chain chain, String from, String password, String nerveTxHash) throws NulsException {
+        return this.createBusTx(chain, from, password, 4, nerveTxHash);
+    }
+
+    private Transaction createBusTx(Chain chain, String from, String password, int type, String nerveTxHash) throws NulsException {
         GeneralBusTxData txData = new GeneralBusTxData();
-        txData.setType(2);
+        txData.setType(type);
         txData.setData(HexUtil.decode(nerveTxHash));
         byte[] txDataBytes;
         try {

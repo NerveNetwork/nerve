@@ -99,8 +99,8 @@ public class FchTransferTest {
     String fromPriKey;
     String multisigAddress;
     //byte[] sessionKey = HexUtil.decode("17fd649617d838b514ba8338caf050c4753a51d1a471c11e1ee743329828dd8a");
-    //byte[] sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
-    byte[] sessionKey = HexUtil.decode("fb0ceb389f17d6b54891d2d1fcedf992c91e68140afe8202a412a87b6c835392");
+    byte[] sessionKey = HexUtil.decode("b3928a1dc649b38fb1f4b21b0afc3def668bad9f335c99db4fc0ec54cac1e655");
+    //byte[] sessionKey = HexUtil.decode("fb0ceb389f17d6b54891d2d1fcedf992c91e68140afe8202a412a87b6c835392");
 
     @Before
     public void before() {
@@ -526,7 +526,7 @@ public class FchTransferTest {
     @Test
     public void getBestBlockTest() {
         ApipClient apipClient = FreeGetAPIs.getBestBlock(urlHead);
-        System.out.println(apipClient.getResponseBodyStr());
+        System.out.println("apipClient.getResponseBodyStr(): " + apipClient.getResponseBodyStr());
         Object data = apipClient.getResponseBody().getData();
         Type t = (new TypeToken<BlockInfo>() {
         }).getType();

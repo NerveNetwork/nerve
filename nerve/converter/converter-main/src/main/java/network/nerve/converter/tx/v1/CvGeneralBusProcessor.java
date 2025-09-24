@@ -43,10 +43,14 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
+import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.model.txdata.GeneralBusTxData;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
+import network.nerve.converter.storage.AsyncProcessedTxStorageService;
+import network.nerve.converter.storage.ComponentSignStorageService;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
+import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
 import network.nerve.converter.utils.ConverterUtil;
 
@@ -72,6 +76,12 @@ public class CvGeneralBusProcessor implements TransactionProcessor {
     private ConverterCoreApi converterCoreApi;
     @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
+    @Autowired
+    private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
+    @Autowired
+    private ComponentSignStorageService componentSignStorageService;
+    @Autowired
+    private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
 
 
     @Override
@@ -179,6 +189,41 @@ public class CvGeneralBusProcessor implements TransactionProcessor {
                         chain.getLogger().error("The original transaction does not exist , hash:{}", basicTxHash);
                         continue;
                     }
+                } else if (dataType == 3 || dataType == 4) {
+                    if (!converterCoreApi.isProtocol44()) {
+                        failsList.add(tx);
+                        // Withdrawal transactionshash
+                        errorCode = ConverterErrorCode.PROTOCOL_NOT_REACHED.getCode();
+                        log.error("On-chain data protocol not reached 42");
+                        continue;
+                    }
+                    // check unlock utxo from
+                    byte[] data = txData.getData();
+                    if (data == null || data.length < NulsHash.HASH_LENGTH) {
+                        failsList.add(tx);
+                        // Withdrawal transactionshash
+                        errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
+                        log.error("Original withdrawal transaction with additional transaction fees hash Not present! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
+                        continue;
+                    }
+                    String dataHex = HexUtil.encode(data);
+                    String basicTxHash = dataHex.substring(0, 64);
+                    Transaction basicTx = TransactionCall.getConfirmedTx(chain, basicTxHash);
+                    if (null == basicTx) {
+                        failsList.add(tx);
+                        errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
+                        chain.getLogger().error("The original transaction does not exist , hash:{}", basicTxHash);
+                        continue;
+                    }
+                    ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
+                    if (null != po) {
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
+                        failsList.add(tx);
+                        // NerveWithdrawal transaction does not exist
+                        errorCode = ConverterErrorCode.WITHDRAWAL_CONFIRMED.getCode();
+                        chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
+                        continue;
+                    }
                 }
             }
             result.put("txList", failsList);
@@ -224,6 +269,26 @@ public class CvGeneralBusProcessor implements TransactionProcessor {
                     String dataHex = HexUtil.encode(data);
                     String basicTxHash = dataHex.substring(0, 64);
                     converterCoreApi.addSkippedTransaction(basicTxHash);
+                } else if (txData.getType() == 3) {
+                    byte[] data = txData.getData();
+                    String dataHex = HexUtil.encode(data);
+                    String basicTxHash = dataHex.substring(0, 64);
+                    txSubsequentProcessStorageService.delete(chain, basicTxHash);
+                    componentSignStorageService.delete(chain, basicTxHash);
+                    asyncProcessedTxStorageService.removeComponentCall(chain, basicTxHash);
+                    TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
+                    pendingPO.setTx(tx);
+                    pendingPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
+                    BlockHeader header = new BlockHeader();
+                    header.setHeight(chain.getLatestBasicBlock().getHeight());
+                    pendingPO.setBlockHeader(header);
+                    txSubsequentProcessStorageService.save(chain, pendingPO);
+                    chain.getPendingTxQueue().offer(pendingPO);
+                } else if (txData.getType() == 4) {
+                    byte[] data = txData.getData();
+                    String dataHex = HexUtil.encode(data);
+                    String basicTxHash = dataHex.substring(0, 64);
+                    converterCoreApi.getUtxoExecuted().remove(basicTxHash);
                 }
                 chain.getLogger().info("[commit] GeneralBus transaction hash:{}, txData:{}", tx.getHash().toHex(), txData);
             }

@@ -321,7 +321,7 @@ public class AkcWalletApiTest extends Base {
      */
     @Test
     public void depositMainAssetByCrossOut() throws Exception {
-        setLocalNewTest();
+        setBeta();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // initialization account
         setAccount_5996();
@@ -998,7 +998,7 @@ public class AkcWalletApiTest extends Base {
 
     @Test
     public void getBlockHeight() throws Exception {
-        //setMain();
+        setMain();
         //setTestProxy();
         System.out.println(htgWalletApi.getBlockHeight());
     }

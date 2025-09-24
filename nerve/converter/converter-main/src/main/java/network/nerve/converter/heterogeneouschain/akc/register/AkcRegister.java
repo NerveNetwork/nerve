@@ -56,7 +56,7 @@ public class AkcRegister extends HtgRegister {
 
     @Override
     public int order() {
-        return 43;
+        return 44;
     }
 
     @Override

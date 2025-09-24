@@ -80,7 +80,7 @@ public class MaticWalletApiTest extends Base {
 
     }
 
-    protected void setDev() {
+    protected void setDev() throws Exception {
         list = new ArrayList<>();
         list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// 0xbe7fbb51979e0b0b70c48284e895e228290d9f73
         list.add("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75");// 0xcb1fa0c0b7b4d57848bddaa4276ce0776a3215d2
@@ -104,7 +104,7 @@ public class MaticWalletApiTest extends Base {
         this.multySignContractAddress = "";
         init();
     }
-    protected void setLocalTest() {
+    protected void setLocalTest() throws Exception {
         list = new ArrayList<>();
         list.add("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5");// 0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03
         list.add("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f");// 0xD16634629C638EFd8eD90bB096C216e7aEc01A91
@@ -119,7 +119,7 @@ public class MaticWalletApiTest extends Base {
         // spare: 0xB29A26df2702B10BFbCf8cd52914Ad1fc99A4540
         init();
     }
-    protected void setBeta() {
+    protected void setBeta() throws Exception {
         list = new ArrayList<>();
         list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 0x1a9f8b818a73b0f9fde200cd88c42b626d2661cd
         list.add("6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492");// 0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac
@@ -130,8 +130,8 @@ public class MaticWalletApiTest extends Base {
         init();
     }
 
-    public void init() {
-        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+    public void init() throws Exception {
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         this.address = Credentials.create(list.get(0)).getAddress();
         this.priKey = list.get(0);
     }
@@ -378,8 +378,8 @@ public class MaticWalletApiTest extends Base {
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setMainData() {
-        setMain();
+    protected void setMainData() throws Exception {
+        setMainProxy();
         // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
         // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
@@ -467,7 +467,7 @@ public class MaticWalletApiTest extends Base {
         System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setUpgradeMain() {
+    protected void setUpgradeMain() throws Exception {
         setMain();
         list = new ArrayList<>();
         // holdCCPut the private key first
@@ -871,15 +871,15 @@ public class MaticWalletApiTest extends Base {
     @Test
     public void sendMainAssetWithdrawBySignDataTest() throws Exception {
         setMainData();
-        String txKey = "de28388cf622eec27defc40bb235c4de5e116c371be4941967a6ea333dd1a0bb";
+        String txKey = "c420ef34398cce98b5e46d65d03df0c6946b3c4c49804a84437c07c95e4ed6c5";
         // Recipient Address
-        String toAddress = "0x27d528a3df520bcc1399a7d7b7d6a43fe2f01a1f";
+        String toAddress = "0xe99ca0a5b08f37b95267c5d1d637f5b0de8eed15";
         // quantity
-        String value = "4.867786919937388479";
-        String signData = "b6eb2fe21d3e55d242512adf7e4a95e2a8b548b109debb7d0667821f9f274815283a46a80f34b29cb84fdb5f220651bd76c74341e412d19024ed36e22e5de3dd1be094db7c59add8339632e9e7ac9073cac5e948c35dfbb37628181c9c4fbd014615ddcf5c40870d20bc1cd17d738611f789166d1d705687c013676c325e013dbc1cad5f0b724e611753f9c6dc04dcfff84984ae0b477ec923e27a6dc54d3fe7ff126595d103df32e43bfbede1bd5aea1f227674e4c74494864e52553b1f8bb4231e1cfe83913182e580610221090cb2e3ac7502e38a3eb2eb63693c3da472421f989c753ab7cb2e1c616a1a07eb8bf4a86768cf0141a1c85261585f54a7eeb58e712a1b0d2d39fd3cf40b085b9bd271c29ea98efd98dcff413373417e75ec1f45556bec07395bcc32c604766869cf1a5454ae8a03f627ef8cf60c041329cf00a41d30781ced229f4abc19226d4b65344241f68d06ab6a0be518d76d279fc52486e66c87297ff113b7fc733d9c3624cc94e280cd01e6c5652ae899b99573ac3393150bb41a1c08685d4fe1d465fbab59ae15c9fd1af9c32cd36020fb871c98a39a8c793f4f2a520ca793f482c2d74dd70f523650b00ad96a2450ce75d09233a91b50a4c0d0231cb028576474cdf0d39d50ee51bdab322decc9fc8af90cd24a11cac0da6d7e8b3578e6dbdd149730c850789deded4dadb4ce2b327bcff8a584bf7ed694499b6c1b1c5c4aa6e50c4a11aab33e7870a52baee2aee65bd3d55812df4ef107b8b43b991d0c3cc6b971ccdf9d52c9c792dfeb3f46f511638c6363ea20714b5bce318f943b1c3bb069f24a900bda575fafd209761fd82446a90f84b30d7d0618b21723e985681c43c69c39c50c0ac6316f57ab54a94c28597efe4bb782e77304940d80e2df0f1b";
+        String value = "179.229557740818223145";
+        String signData = "dcbd7752b9595ea67edd002a12ab052132a15198325aa0c76ac89fc22060c67e5f211aad1494fcd82ef157511c309fd187c659d4601d470ac2baff7d3450bbe41b72aae71068d983239afd0e92d41daab44655a167a461cf8fb3ac9f6d802283dc5cf79dd154aba594380eaef916411079a6261d005720b7e1ff48a3cabd68739e1caa7de853841ffe478a76496084a9415611aa3cfe95884b2922e49425a57d834a014b07fb64a95840042882ec88391fd7b062c33fc6edc025d1d3678d9b8223591ca5033ef29f58fb18f2ad842d305759a108f316b9c0ff6f8e99b8331c73bde1cd4f274bbfaa60afcb602b965e72d723cc46488a26e6b130f567cf1a2bdf03acf31b6e79851b6cfd68883ebf141f36f45175c0b78ffbdcbad11379aeab855948b7d5780929b2d7b87cd75c1988824e5674a5526bda367c759876b6d645494ad684ff1cce0afa8b469f8a589e231a6ecfe8e3b85130d13dcc823d934aa6cf54a52e529a50d99cddbd43b36c2b075ab4e75f65df4644f0d1115c87bb5f0135da9fea753e1bf68de34131ae7813e36812a81adf975c6fceee7633f0e637328d2e09fc4e6134233e3502735999c2ee8f36d39bed335f65859f21e8a58a574a6433eca030f6821c8e3625d7a4aeb48ea2885ae63d38cc079b9d5d6b31542223e8b2bfb7e38118b627f7f159aa8762b15db29d6cae85010e3d93a9bb25a1c92ba0bee8fb79e561ab1c711f40ec59c776d343b7112770ad77819f6d2e86f2f3f16caffc07e654be8bf011062ed68ad253697a55079e20b71e06fcc10a1904229a8bf6a54a7187307ab31c0617abc0c59e4379f726b7fb36e6ece060077e4edaa2122debafb3bc86ab493c26229162e1827e34976adaec725e87c2986e9b441097c4064b7a6f2d1f6fbfe81c";
 
         String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
-        System.out.println(String.format("Withdrawal%sPieces,hash: %s", value, hash));
+        System.out.println(String.format("Withdrawal %s Pieces, hash: %s", value, hash));
     }
 
     @Test

@@ -1699,9 +1699,9 @@ public class BnbWalletApiTest extends Base {
     public void allContractManagerSet() throws Exception {
         //localdev();
         //localdevII();
-        //setMain();
-        setLocalTest();
-        multySignContractAddress = "0xdC6B95B2032f4445a3ee4154E0Fa005814B447d1";
+        setMainData();
+        //setLocalTest();
+        //multySignContractAddress = "0xdC6B95B2032f4445a3ee4154E0Fa005814B447d1";
         //mainnetII();
         System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(multySignContractAddress);

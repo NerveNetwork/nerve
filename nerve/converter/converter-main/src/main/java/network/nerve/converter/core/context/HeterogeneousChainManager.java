@@ -134,6 +134,8 @@ public class HeterogeneousChainManager {
      */
     public void initHeterogeneousChainInfo() throws Exception {
         if (!isInited) {
+            heterogeneousChainInfoStorageService.deleteHeterogeneousChainInfo(143);
+            heterogeneousChainInfoStorageService.deleteHeterogeneousChainInfo(103);
             Chain chain = chainManager.getChain(converterConfig.getChainId());
             isInited = true;
             List<HeterogeneousChainInfo> storageList = heterogeneousChainInfoStorageService.getAllHeterogeneousChainInfoList();
